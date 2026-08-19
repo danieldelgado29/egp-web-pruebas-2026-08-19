@@ -1281,10 +1281,9 @@ body{
    EGP MUSICOS · COMPACTO + MOVIMIENTO SUAVE 2026-08-19
    ===================================================== */
 
-/* La tarjeta completa nunca debe crecer ni desplazarse */
+/* La tarjeta completa usa ahora movimiento controlado */
 .song-card.next{
   animation:none!important;
-  transform:none!important;
   filter:none!important;
 }
 
@@ -1384,7 +1383,6 @@ body{
 
 .song-card.next{
   animation:egpNextSoftGlow 2.6s ease-in-out infinite!important;
-  transform:none!important;
 }
 
 .song-card.next .song-number{
@@ -1474,3 +1472,45 @@ body{
   overflow-x:hidden!important;
 }
 
+
+
+/* =====================================================
+   EGP MUSICOS · TARJETA SIGUE MOVIMIENTO FINAL
+   ===================================================== */
+
+.song-card.next{
+  transform-origin:center center!important;
+  animation:egpTarjetaSigueFinal 2.15s ease-in-out infinite!important;
+}
+
+.song-card.next .song-number{
+  animation:egpNumeroSigueFinal 2.15s ease-in-out infinite!important;
+}
+
+@keyframes egpTarjetaSigueFinal{
+  0%,100%{
+    transform:translateY(0) scale(1);
+    filter:brightness(1);
+  }
+
+  50%{
+    transform:translateY(-3px) scale(1.006);
+    filter:brightness(1.07);
+  }
+}
+
+@keyframes egpNumeroSigueFinal{
+  0%,100%{
+    transform:scale(1);
+    filter:brightness(1);
+  }
+
+  50%{
+    transform:scale(1.035);
+    filter:brightness(1.12);
+  }
+}
+
+.queue-list{
+  padding-top:6px!important;
+}

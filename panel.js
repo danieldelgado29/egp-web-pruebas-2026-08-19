@@ -4859,8 +4859,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
   const EGP_REQUESTS_LAN_URL='http://10.10.10.2:8790';
   const EGP_DEV_LOCALHOST=(location.hostname==='localhost'||location.hostname==='127.0.0.1');
 
-  async function egpPublicarConfigLan(data={
-    if(EGP_DEV_LOCALHOST)return;}){
+  async function egpPublicarConfigLan(data={}){
+    if(EGP_DEV_LOCALHOST)return;
     if(EGP_DEV_LOCALHOST)return;
     try{
       const cfg=state.config||{};

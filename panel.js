@@ -381,6 +381,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
         if(state.config){
           state.config.whatsapp=data.pedidos_whatsapp!==false;
           if(!egpRemoteDesdeCache) state.config.requests=data.pedidos_panel===true;
+          state.config.requestsMode=data.pedidos_modo==='uno_por_turno'?'uno_por_turno':'libre';
           state.config.publicQueue=data.mostrar_cola!==false;
           $('#whatsappToggle').checked=state.config.whatsapp;
           $('#publicQueueToggle').checked=state.config.publicQueue;
@@ -415,6 +416,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       repertorioActivoIds:activeSongIds,
       pedidos_whatsapp:cfg.whatsapp!==false,
       pedidos_panel:cfg.requests===true,
+      pedidos_modo:cfg.requestsMode==='uno_por_turno'?'uno_por_turno':'libre',
       mostrar_cola:cfg.publicQueue!==false,
       lugar:cfg.venue||'',
       perfil_clientes:cfg.profile||'medio',
@@ -463,6 +465,19 @@ document.documentElement.dataset.egmVersion="6.36.92";
   async function publishShowPatch(patch){
     const revision=Date.now();
 
+    if(EGP_AUDIT_LOCAL){
+      const active=('show_activo' in patch)?patch.show_activo===true:Boolean(state.config);
+      const venue=('lugar' in patch)?patch.lugar:(state.config?.venue||'');
+      await localQueueRequest('/api/show',{active,venue:String(venue||'')});
+      await egpPublicarConfigLan({
+        show_activo:active,
+        inicio_show:('inicio_show' in patch)?patch.inicio_show:(state.config?.startedAt?new Date(state.config.startedAt).getTime():0),
+        pedidos_panel:('pedidos_panel' in patch)?patch.pedidos_panel:(state.config?.requests===true),
+        pedidos_modo:('pedidos_modo' in patch)?patch.pedidos_modo:(state.config?.requestsMode||'libre')
+      });
+      return revision;
+    }
+
     if(LOCAL_QUEUE_MODE){
       const active=('show_activo' in patch)?patch.show_activo:Boolean(state.config);
       const venue=('lugar' in patch)?patch.lugar:(state.config?.venue||'');
@@ -471,7 +486,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
         venue:String(venue||'')
       });
 
-      if(!navigator.onLine)return revision;
+      if(EGP_AUDIT_LOCAL||!navigator.onLine)return revision;
     }
 
     if(!remoteStateRef) await initRemoteSync();
@@ -794,6 +809,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
           repertoireName:data.repertorio_nombre||option?.dataset?.name||option?.textContent?.replace(/ · .*$/,'')||titleFromId(repertoire),
           profile:data.perfil_clientes||'medio', whatsapp:data.pedidos_whatsapp!==false,
           requests:options.preserveLocalRequests&&state.config?state.config.requests===true:data.pedidos_panel===true,
+          requestsMode:data.pedidos_modo==='uno_por_turno'?'uno_por_turno':'libre',
           publicQueue:data.mostrar_cola!==false,
           advertising:data.uso_publicidad===true,
           startedAt:new Date(Number(data.inicio_show)||Date.now()).toISOString()
@@ -836,7 +852,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
     e.preventDefault();
     const venue=$('#venueInput').value.trim();
     if(!venue) return toast('Escribe el lugar del show');
-    const config={venue,repertoire:$('#repertoireSelect').value,repertoireName:$('#repertoireSelect').selectedOptions[0].dataset.name||$('#repertoireSelect').selectedOptions[0].textContent,profile:$('#profileSelect').value,whatsapp:$('#whatsappToggle').checked,requests:$('#requestsToggle')?.checked===true,publicQueue:$('#publicQueueToggle').checked,advertising:$('#advertisingToggle').checked,startedAt:new Date().toISOString()};
+    const config={venue,repertoire:$('#repertoireSelect').value,repertoireName:$('#repertoireSelect').selectedOptions[0].dataset.name||$('#repertoireSelect').selectedOptions[0].textContent,profile:$('#profileSelect').value,whatsapp:$('#whatsappToggle').checked,requests:$('#requestsToggle')?.checked===true,requestsMode:$('#requestsModeSelect')?.value==='uno_por_turno'?'uno_por_turno':'libre',publicQueue:$('#publicQueueToggle').checked,advertising:$('#advertisingToggle').checked,startedAt:new Date().toISOString()};
     askConfirm('Comenzar nuevo show','Se guardará esta configuración y se reiniciará la cola del show anterior.',()=>{
       // Entrada inmediata: no esperar una lectura de verificación para mostrar Control en vivo.
       remoteShowGeneration++;localDesiredShowActive=true;localShowTransitionUntil=Date.now()+10000;
@@ -1098,7 +1114,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const select=$('#repertoireSelect');
     const repertoire=select.value;
     const repertoireName=select.selectedOptions[0]?.dataset?.name||select.selectedOptions[0]?.textContent?.replace(/ · .*$/,'')||titleFromId(repertoire);
-    state.config={...state.config,venue,repertoire,repertoireName,profile:$('#profileSelect').value,whatsapp:$('#whatsappToggle').checked,requests:$('#requestsToggle')?.checked===true,publicQueue:$('#publicQueueToggle').checked,advertising:$('#advertisingToggle').checked};
+    state.config={...state.config,venue,repertoire,repertoireName,profile:$('#profileSelect').value,whatsapp:$('#whatsappToggle').checked,requests:$('#requestsToggle')?.checked===true,requestsMode:$('#requestsModeSelect')?.value==='uno_por_turno'?'uno_por_turno':'libre',publicQueue:$('#publicQueueToggle').checked,advertising:$('#advertisingToggle').checked};
     addVenueOption(venue);invalidateRepertoireCache();saveStateLocalOnly();
     const ids=(repertoire==='todas'?state.songs:state.songs.filter(song=>(song.listas||[]).includes(repertoire))).map(song=>song.id);
     showLive();toast('Configuración actualizada. El show continúa.');
@@ -4843,7 +4859,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
   const EGP_REQUESTS_LAN_URL='http://10.10.10.2:8790';
   const EGP_DEV_LOCALHOST=(location.hostname==='localhost'||location.hostname==='127.0.0.1');
 
-  async function egpPublicarConfigLan(data={}){
+  async function egpPublicarConfigLan(data={
+    if(EGP_DEV_LOCALHOST)return;}){
     if(EGP_DEV_LOCALHOST)return;
     try{
       const cfg=state.config||{};
@@ -4882,17 +4899,36 @@ document.documentElement.dataset.egmVersion="6.36.92";
             <strong>Pedidos al panel</strong>
             <small>Recibir pedidos en una lista para aceptar antes de enviarlos a la cola.</small>
           </div>
-          <label class="switch">
-            <input id="requestsToggle" type="checkbox">
-            <span></span>
-          </label>
+          <div style="display:flex;align-items:center;gap:8px;flex:0 0 auto">
+            <select id="requestsModeSelect" aria-label="Modo de pedidos" style="width:116px;max-width:116px;border:1px solid #30343d;border-radius:9px;background:#0d0f13;color:inherit;padding:7px 6px;font-size:12px">
+              <option value="libre">Libre</option>
+              <option value="uno_por_turno">1 por turno</option>
+            </select>
+            <label class="switch">
+              <input id="requestsToggle" type="checkbox">
+              <span></span>
+            </label>
+          </div>
         `;
         card.insertAdjacentElement('afterend',nueva);
         const toggle=nueva.querySelector('#requestsToggle');
-        toggle.checked=localStorage.getItem(EGP_PEDIDOS_PANEL_KEY)==='1';
-        toggle.addEventListener('change',()=>{
+        const mode=nueva.querySelector('#requestsModeSelect');
+        toggle.checked=state.config?.requests===true;
+        mode.value=state.config?.requestsMode==='uno_por_turno'?'uno_por_turno':'libre';
+        const publishCurrent=async()=>{
           localStorage.setItem(EGP_PEDIDOS_PANEL_KEY,toggle.checked?'1':'0');
-        });
+          if(state.config){
+            state.config.requests=toggle.checked===true;
+            state.config.requestsMode=mode.value==='uno_por_turno'?'uno_por_turno':'libre';
+            saveStateLocalOnly();
+            await egpPublicarConfigLan({show_activo:true,inicio_show:new Date(state.config.startedAt).getTime(),pedidos_panel:state.config.requests,pedidos_modo:state.config.requestsMode});
+            if(!EGP_AUDIT_LOCAL){
+              try{await publishShowPatch({pedidos_panel:state.config.requests,pedidos_modo:state.config.requestsMode});}catch(err){console.warn('Pedidos pendientes de sincronizar',err);}
+            }
+          }
+        };
+        toggle.addEventListener('change',publishCurrent);
+        mode.addEventListener('change',publishCurrent);
       }
     }
 
@@ -5175,6 +5211,12 @@ document.documentElement.dataset.egmVersion="6.36.92";
       if(!configResponse.ok)return;
       const configLan=await configResponse.json();
 
+      if(configLan?.ok&&state.config){
+        state.config.requests=configLan.pedidos_panel===true;
+        state.config.requestsMode=configLan.pedidos_modo==='uno_por_turno'?'uno_por_turno':'libre';
+        const t=document.getElementById('requestsToggle');if(t)t.checked=state.config.requests;
+        const m=document.getElementById('requestsModeSelect');if(m)m.value=state.config.requestsMode;
+      }
       if(!configLan?.ok || configLan.show_active!==true || !configLan.show_id){
         egpPedidosLan=[];
         egpCombinarPedidosV85();

@@ -114,6 +114,7 @@ const estado = {
     lista_activa: "principal-diario",
     pedidos_whatsapp: false,
     pedidos_panel: false,
+    pedidos_modo: "libre",
     pedidos_panel_lista: [],
     mostrar_cola: true,
     inicio_show: 0,
@@ -886,6 +887,7 @@ async function iniciarFirebase(firebaseConfig) {
         : (Array.isArray(datos.repertorioActivoIds) ? datos.repertorioActivoIds : []),
       pedidos_whatsapp: Boolean(datos.pedidos_whatsapp),
       pedidos_panel: Boolean(datos.pedidos_panel),
+      pedidos_modo: datos.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre",
       pedidos_panel_lista: Array.isArray(datos.pedidos_panel_lista) ? datos.pedidos_panel_lista : [],
       mostrar_cola: datos.mostrar_cola !== false,
       inicio_show: Number(datos.inicio_show || 0),
@@ -918,6 +920,7 @@ async function iniciarFirebase(firebaseConfig) {
               lista_activa: estado.modo,
               pedidos_whatsapp: false,
               pedidos_panel: false,
+              pedidos_modo: "libre",
               mostrar_cola: true,
               inicio_show: Date.now(),
               cola: [],
@@ -943,6 +946,7 @@ async function iniciarFirebase(firebaseConfig) {
         lista_activa: listaAplicable,
         pedidos_whatsapp: Boolean(datos.pedidos_whatsapp),
         pedidos_panel: Boolean(datos.pedidos_panel),
+        pedidos_modo: datos.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre",
         pedidos_panel_lista: Array.isArray(datos.pedidos_panel_lista) ? datos.pedidos_panel_lista : [],
         mostrar_cola: datos.mostrar_cola !== false,
         inicio_show: Number(datos.inicio_show || 0),
@@ -2585,6 +2589,8 @@ function abrirPedido(cancion, modo = "whatsapp") {
   estado.pedidoSeleccionado = cancion;
   estado.pedidoModo = modo;
 
+  egpRestaurarVentanaPedidoV6();
+  egpRestaurarViewportPedidoV6();
   DOM.pedidoCancion.textContent = `${cancion.titulo} — ${cancion.artista}`;
   DOM.pedidoTelefono.value = "";
   DOM.pedidoError.hidden = true;
@@ -2602,6 +2608,31 @@ function abrirPedido(cancion, modo = "whatsapp") {
   }
 
   DOM.pedidoModal.hidden = false;
+  document.body.classList.add("egp-pedido-abierto-v6");
+
+  /* Si este mismo usuario ya tiene una canción activa en 1 por turno,
+     mostramos la advertencia inmediatamente EN VEZ del campo de teléfono. */
+  if (modo === "panel" && egpPedidoActivoLocalTurnoV6()) {
+    egpMostrarSoloBloqueoTurnoV6();
+    return;
+  }
+
+  requestAnimationFrame(egpAjustarPedidoAlTecladoV6);
+  setTimeout(egpAjustarPedidoAlTecladoV6, 120);
+  setTimeout(egpAjustarPedidoAlTecladoV6, 320);
+  setTimeout(egpAjustarPedidoAlTecladoV6, 600);
+
+  try {
+    DOM.pedidoTelefono.focus({ preventScroll: true });
+  } catch {
+    DOM.pedidoTelefono.focus();
+  }
+
+  requestAnimationFrame(() => {
+    try { DOM.pedidoTelefono.focus({ preventScroll: true }); }
+    catch { DOM.pedidoTelefono.focus(); }
+    egpAjustarPedidoAlTecladoV6();
+  });
 }
 
 function cerrarPedido() {
@@ -3534,4 +3565,98 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", iniciar, { once: true });
 } else {
   iniciar();
+}
+
+
+function egpPedidosModoActualV4() {
+  if (estado.egpFirebasePedidosAutoritativo) {
+    return estado.configRemota.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre";
+  }
+  if (estado.egpLanConfig?.ok) {
+    return estado.egpLanConfig.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre";
+  }
+  return estado.configRemota.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre";
+}
+
+
+function egpPedidoActivoLocalTurnoV6() {
+  if (egpPedidosModoActualV4() !== "uno_por_turno") return null;
+
+  const showId = String(
+    estado.egpLanConfig?.show_id ||
+    estado.configRemota.inicio_show ||
+    ""
+  );
+  if (!showId) return null;
+
+  const tocadas = new Set(
+    (Array.isArray(estado.configRemota.tocadas) ? estado.configRemota.tocadas : [])
+      .map(String)
+  );
+
+  const prefijo = `${showId}|`;
+  const candidatos = Object.entries(egpPedidosPropiosLeidos())
+    .filter(([clave, registro]) =>
+      clave.startsWith(prefijo) &&
+      registro &&
+      String(registro.telefono || "")
+    )
+    .map(([clave, registro]) => ({
+      songId: clave.slice(prefijo.length),
+      telefono: String(registro.telefono || ""),
+      creado_en_ms: Number(registro.creado_en_ms || 0)
+    }))
+    .filter((registro) => registro.songId && !tocadas.has(String(registro.songId)))
+    .sort((a, b) => b.creado_en_ms - a.creado_en_ms);
+
+  return candidatos[0] || null;
+}
+
+
+function egpRestaurarVentanaPedidoV6() {
+  const modal = DOM.pedidoModal;
+  if (!modal) return;
+  [
+    ".admin-panel__eyebrow",
+    "#pedidoCancion",
+    ".pedido-panel__label",
+    "#pedidoTelefono",
+    ".pedido-panel__nota",
+    "#pedidoEnviar"
+  ].forEach((selector) => {
+    const el = modal.querySelector(selector);
+    if (el) el.hidden = false;
+  });
+  if (DOM.pedidoError) {
+    DOM.pedidoError.hidden = true;
+    DOM.pedidoError.classList.remove("egp-turno-bloqueado");
+  }
+}
+
+
+function egpMostrarSoloBloqueoTurnoV6() {
+  const modal = DOM.pedidoModal;
+  if (!modal) return;
+
+  try { DOM.pedidoTelefono?.blur(); } catch {}
+  egpRestaurarViewportPedidoV6();
+
+  [".admin-panel__eyebrow", "#pedidoCancion"].forEach((selector) => {
+    const el = modal.querySelector(selector);
+    if (el) el.hidden = false;
+  });
+
+  [
+    ".pedido-panel__label",
+    "#pedidoTelefono",
+    ".pedido-panel__nota",
+    "#pedidoEnviar"
+  ].forEach((selector) => {
+    const el = modal.querySelector(selector);
+    if (el) el.hidden = true;
+  });
+
+  DOM.pedidoError.textContent = "Ya tienes una canción pedida. Podrás pedir otra cuando se toque.";
+  DOM.pedidoError.classList.add("egp-turno-bloqueado");
+  DOM.pedidoError.hidden = false;
 }

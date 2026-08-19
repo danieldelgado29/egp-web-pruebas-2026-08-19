@@ -16,6 +16,33 @@
   }
 
   const APP_VERSION = "6.36.94";
+
+  /* EGP REPO PRUEBAS SIN SERVICE WORKER */
+  const EGP_TEST_REPO =
+    location.hostname === "danieldelgado29.github.io" &&
+    location.pathname.startsWith("/egp-web-pruebas-2026-08-19/");
+
+  if (EGP_TEST_REPO) {
+    Promise.all([
+      ("serviceWorker" in navigator)
+        ? navigator.serviceWorker.getRegistrations()
+            .then(regs => Promise.all(regs.map(reg => reg.unregister())))
+        : Promise.resolve(),
+
+      ("caches" in window)
+        ? caches.keys().then(keys =>
+            Promise.all(
+              keys
+                .filter(k => k.startsWith("egm-") || k.startsWith("egm-panel-"))
+                .map(k => caches.delete(k))
+            )
+          )
+        : Promise.resolve()
+    ]).catch(()=>{});
+
+    return;
+  }
+
   const VERSION_URL = "./version.json";
   const UPDATE_INTERVAL = 5 * 60 * 1000;
   let registrationRef = null;

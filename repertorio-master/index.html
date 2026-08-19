@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="#080808" name="theme-color"/>
+<link href="./assets/apple-touch-icon-180.png" rel="apple-touch-icon" sizes="180x180"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="Elena Girjoaba · Repertorio" name="apple-mobile-web-app-title"/>
+<meta content="Elena Girjoaba Music — Repertorio completo. Explora todas las canciones disponibles para eventos y música en vivo." name="description"/>
+<meta content="Elena Girjoaba Music" name="author"/>
+<meta content="Elena Girjoaba Music" name="application-name"/>
+<meta content="2.0" name="version"/>
+<meta content="Elena Girjoaba Music | Repertorio completo" property="og:title"/>
+<meta content="Conoce el repertorio completo de Elena Girjoaba Music para eventos y música en vivo." property="og:description"/>
+<meta content="website" property="og:type"/>
+<meta content="assets/foto-banda.jpg" property="og:image"/>
+<title>Elena Girjoaba Music | Repertorio completo</title>
+<link href="assets/favicon.png" rel="icon" type="image/png"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="style.css?v=repertorio-master-4" rel="stylesheet"/>
+<link href="style.css?v=repertorio-master-1" rel="stylesheet"/>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const continuar = document.getElementById("continuarExperiencia");
+  const entrar = document.getElementById("entrarRepertorio");
+  const instagramLinks = Array.from(document.querySelectorAll('a[href*="instagram.com/elenagirjoabamusic"]'));
+  if (!continuar || !entrar) return;
+
+  function mostrarBoton() {
+    continuar.hidden = false;
+    entrar.hidden = false;
+    continuar.classList.remove("is-visible");
+    void continuar.offsetWidth;
+    continuar.classList.add("is-visible");
+  }
+
+  function registrarVisitaInstagram() {
+    try {
+      sessionStorage.setItem("egmInstagramVisitado", "1");
+      sessionStorage.setItem("egmInstagramDesbloqueo", String(Date.now() + 3000));
+    } catch (error) {}
+    window.setTimeout(mostrarBoton, 3000);
+  }
+
+  const ua = navigator.userAgent || "";
+  const esAndroid = /Android/i.test(ua);
+  const esIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const instagramWeb = "https://www.instagram.com/elenagirjoabamusic/";
+  const instagramIOS = "instagram://user?username=elenagirjoabamusic";
+  const instagramAndroid = "intent://instagram.com/_u/elenagirjoabamusic/#Intent;package=com.instagram.android;scheme=https;S.browser_fallback_url=https%3A%2F%2Fwww.instagram.com%2Felenagirjoabamusic%2F;end";
+
+  instagramLinks.forEach(function (link) {
+    link.href = instagramWeb;
+    link.rel = "noopener noreferrer";
+    if (esIOS || esAndroid) {
+      link.removeAttribute("target");
+      link.addEventListener("click", function (event) {
+        event.preventDefault();
+        registrarVisitaInstagram();
+        window.location.href = esAndroid ? instagramAndroid : instagramIOS;
+      });
+    } else {
+      link.target = "_blank";
+      link.addEventListener("click", registrarVisitaInstagram);
+    }
+  });
+
+  try {
+    const visitado = sessionStorage.getItem("egmInstagramVisitado") === "1";
+    const desbloqueo = Number(sessionStorage.getItem("egmInstagramDesbloqueo") || 0);
+    if (visitado) window.setTimeout(mostrarBoton, Math.max(0, desbloqueo - Date.now()));
+  } catch (error) {}
+});
+</script><script defer="" src="master-catalog.js?v=5"></script>
+</head>
+<body class="catalogo-publico sin-panel">
+
+<a class="skip-link" href="#contenidoPrincipal">Ir al contenido principal</a>
+<!-- =========================================================
+       PANTALLA INICIAL / LANDING
+       ========================================================= -->
+<section aria-labelledby="landingTitulo" class="landing" id="landing">
+<div aria-hidden="true" class="landing__fondo">
+<picture class="landing__media">
+<source media="(max-width: 760px)" srcset="assets/foto-banda-mobile.jpg"/>
+<img alt="" class="landing__imagen" fetchpriority="high" height="1200" src="assets/foto-banda.jpg" width="1800"/>
+</picture>
+</div>
+<div aria-hidden="true" class="landing__overlay"></div>
+<div class="landing__contenido">
+<p class="landing__marca">ELENA GIRJOABA MUSIC</p>
+<h1 class="landing__titulo" id="landingTitulo">
+<span>Música</span> en vivo para tu evento
+      </h1>
+<p class="landing__descripcion">
+        Explora nuestro repertorio y haz de este momento una experiencia inolvidable.
+      </p>
+<div aria-live="polite" class="landing__continuar" hidden="" id="continuarExperiencia">
+<p class="landing__continuar-etiqueta">SIGUIENTE PASO</p>
+<button aria-controls="app" class="boton boton--repertorio boton--repertorio-destacado" id="entrarRepertorio" type="button">
+<span aria-hidden="true" class="boton__icono boton__icono--grande">♪</span>
+<span class="boton__contenido">
+<strong>Música a la Carta</strong>
+<small>Entra y elige tu canción</small>
+</span>
+<span aria-hidden="true" class="boton__avance">›</span>
+</button>
+</div>
+<section aria-labelledby="formatosTitulo" class="bloque-formatos">
+<h2 class="formatos__encabezado" id="formatosTitulo">Formatos disponibles</h2>
+<div aria-label="Formatos disponibles" class="formatos">
+<article class="formato">
+<span aria-hidden="true" class="formato__icono">🎤</span>
+<h2 class="formato__titulo">Dúo</h2>
+<p class="formato__texto">Un formato íntimo, cercano y versátil.</p>
+</article>
+<article class="formato">
+<span aria-hidden="true" class="formato__icono">🥁</span>
+<h2 class="formato__titulo">Trío</h2>
+<p class="formato__texto">Más energía para celebraciones y eventos especiales.</p>
+</article>
+<article class="formato">
+<span aria-hidden="true" class="formato__icono">🎸</span>
+<h2 class="formato__titulo">Banda completa</h2>
+<p class="formato__texto">La fuerza de un concierto para una experiencia inolvidable.</p>
+</article>
+</div>
+</section>
+<div class="landing__acciones">
+<a aria-label="Abrir Instagram y seguir a Elena Girjoaba Music" class="boton boton--instagram" data-instagram-app="instagram://user?username=elenagirjoabamusic" data-instagram-web="https://instagram.com/elenagirjoabamusic" href="https://instagram.com/elenagirjoabamusic" id="seguirInstagram" rel="noopener noreferrer" target="_blank">
+<span aria-hidden="true" class="boton__icono">◎</span>
+<span class="boton__texto-doble"><strong>Síguenos para desbloquear la lista de canciones</strong><small>@elenagirjoabamusic</small></span>
+</a>
+</div>
+<p class="landing__repertorio">
+        Más de 130 canciones en inglés y español.
+        <strong>Tú eliges la canción, nosotros la tocamos.</strong>
+</p>
+<a class="landing__contrataciones landing__cotizacion" href="https://wa.me/593987388915" rel="noopener noreferrer">
+<span aria-hidden="true">💬</span>
+<span>
+<strong>Cotizar mi evento</strong>
+</span>
+</a>
+<p class="landing__tipos-evento">
+        Bodas · Eventos corporativos · Cumpleaños · Fiestas privadas
+      </p>
+</div>
+</section>
+<!-- =========================================================
+       APLICACIÓN / REPERTORIO
+       ========================================================= -->
+<div class="app" hidden="" id="app">
+<header class="hero" id="inicio">
+<picture aria-hidden="true" class="hero__media">
+<source media="(max-width: 760px)" srcset="assets/hero-mobile.jpg"/>
+<img alt="" class="hero__imagen" height="1200" src="assets/hero.jpg" width="1800"/>
+</picture>
+<div aria-hidden="true" class="hero__overlay"></div>
+<nav aria-label="Navegación principal" class="barra">
+<a aria-label="Ir al inicio" class="barra__marca" href="#inicio">
+          ELENA GIRJOABA MUSIC
+        </a>
+<div class="barra__enlaces">
+<a href="https://instagram.com/elenagirjoabamusic" rel="noopener noreferrer" target="_blank">
+            Instagram
+          </a>
+<a class="barra__contrataciones" href="https://wa.me/593987388915" rel="noopener noreferrer" target="_blank">
+            💬 Cotizar mi evento
+          </a>
+</div>
+</nav>
+<div class="hero__contenido">
+<p class="hero__marca">ELENA GIRJOABA MUSIC</p>
+<h2 class="hero__titulo">REPERTORIO COMPLETO</h2>
+<p class="hero__slogan">
+          Todas nuestras canciones en un solo lugar.
+        </p>
+<a aria-label="Bajar al repertorio" class="hero__flecha" href="#contenidoPrincipal">
+<span aria-hidden="true">⌄</span>
+</a>
+</div>
+</header>
+<main class="contenido-principal" id="contenidoPrincipal">
+<section aria-labelledby="tituloExplorador" class="explorador">
+<div class="explorador__encabezado">
+<p class="explorador__eyebrow">ELENA GIRJOABA MUSIC</p>
+<h2 class="explorador__titulo" id="tituloExplorador">
+            Repertorio completo
+          </h2>
+<p class="explorador__descripcion">
+            Explora todas nuestras canciones por nombre, artista o género.
+          </p>
+</div>
+<div aria-hidden="true" class="menu-ancla" id="menuCanciones"></div>
+<div class="controles-canciones" id="controlesCanciones">
+<button class="mostrar-todo mostrar-todo--principal" id="mostrarTodo" type="button">
+<span aria-hidden="true" class="mostrar-todo__icono">♫</span>
+<span class="mostrar-todo__contenido">
+<strong id="textoMostrarTodo">Todas las canciones</strong>
+<small><span id="totalCancionesBoton">0</span> canciones disponibles</small>
+</span>
+<span aria-hidden="true" class="mostrar-todo__flecha">›</span>
+</button>
+<div aria-label="Filtrar canciones por categoría" class="categorias" role="group">
+<button class="categoria categoria--rock" data-categoria="Rock" type="button">
+              Rock
+            </button>
+<button class="categoria" data-categoria="Rock Español" type="button">
+              Rock Español
+            </button>
+<button class="categoria" data-categoria="Pop" type="button">
+              Pop
+            </button>
+<button class="categoria" data-categoria="Bailables" type="button">
+              Bailables
+            </button>
+<button class="categoria" data-categoria="Románticas" type="button">
+              Románticas
+            </button>
+<button class="categoria" data-categoria="Reggae" type="button">
+              Reggae
+            </button>
+<button class="categoria" data-categoria="Blues" type="button">
+              Blues
+            </button>
+<button class="categoria" data-categoria="Jazz" type="button">
+              Jazz
+            </button>
+</div>
+<div class="buscador">
+<label class="sr-only" for="buscar">Buscar canción o artista</label>
+<span aria-hidden="true" class="buscador__icono">⌕</span>
+<input aria-describedby="ayudaBusqueda" autocomplete="off" class="buscador__campo" id="buscar" inputmode="search" placeholder="Buscar canción o artista..." type="search"/>
+<button aria-label="Limpiar búsqueda" class="buscador__limpiar" hidden="" id="limpiarBusqueda" type="button">
+              ×
+            </button>
+</div>
+<p class="buscador__ayuda" id="ayudaBusqueda">
+            Puedes escribir, por ejemplo: “Maná”, “Música Ligera” o “Amy Winehouse”.
+          </p>
+</div>
+<div aria-atomic="true" aria-live="polite" class="estado-lista">
+<p class="contador-canciones" id="contadorCanciones">
+            Cargando canciones...
+          </p>
+</div>
+<div aria-label="Lista de canciones" class="lista-canciones" data-modo="inicial" id="listaCanciones" role="list"></div>
+<div class="sin-resultados" hidden="" id="sinResultados">
+<span aria-hidden="true" class="sin-resultados__icono">♪</span>
+<h3>No encontramos esa canción.</h3>
+<p>
+            Prueba escribiendo parte del título o el artista.
+          </p>
+</div>
+<div class="error-carga" hidden="" id="errorCarga" role="alert">
+<h3>No pudimos cargar las canciones.</h3>
+<p>
+            Abre esta página desde GitHub Pages o mediante un servidor local e inténtalo nuevamente.
+          </p>
+<button id="reintentarCarga" type="button">Reintentar</button>
+</div>
+</section>
+<section aria-labelledby="colaPublicaTitulo" class="cola-publica-compacta" hidden="" id="estadoShowPublico">
+<div class="cola-publica-compacta__encabezado">
+<p class="explorador__eyebrow">SHOW EN VIVO</p>
+<h2 id="colaPublicaTitulo">Canciones a la cola</h2>
+</div>
+<ol class="cola-publica-compacta__lista" id="colaPublica"></ol>
+<p class="cola-publica-compacta__vacio" id="colaPublicaVacia">
+          Todavía no hay canciones a la cola.
+        </p>
+<div hidden="">
+<ul id="tocadasPublicas"></ul>
+<p id="tocadasPublicasVacia"></p>
+</div>
+</section>
+<section aria-labelledby="mensajeFinalTitulo" class="mensaje-final mensaje-final--acciones">
+<p aria-hidden="true" class="mensaje-final__simbolo">✦</p>
+<h2 id="mensajeFinalTitulo">Gracias por acompañarnos</h2>
+<div class="cierre-acciones">
+<article class="cierre-accion">
+<p class="cierre-accion__etiqueta">¿Te gustó nuestra música?</p>
+<a class="boton boton--cotizar-final" href="https://wa.me/593987388915" rel="noopener noreferrer">
+<span aria-hidden="true">💬</span>
+<span class="boton__texto-doble">
+<strong>Cotizar mi evento</strong>
+</span>
+</a>
+<p class="cierre-accion__nota">
+              Bodas · Eventos corporativos · Cumpleaños · Fiestas privadas
+            </p>
+</article>
+<article class="cierre-accion">
+<p class="cierre-accion__etiqueta">Sigamos conectados</p>
+<p class="cierre-accion__descripcion">
+              Conoce nuevos videos, próximos eventos y las nuevas canciones que se suman a nuestro repertorio.
+            </p>
+<a class="boton boton--instagram cierre-instagram" href="https://instagram.com/elenagirjoabamusic" rel="noopener noreferrer">
+<span aria-hidden="true" class="boton__icono">◎</span>
+<span class="boton__texto-doble">
+<strong>Seguir en Instagram</strong>
+<small>@elenagirjoabamusic</small>
+</span>
+</a>
+</article>
+</div>
+</section>
+</main>
+<footer class="footer">
+<div class="footer__contenido">
+<div class="footer__marca">
+<strong>ELENA GIRJOABA MUSIC</strong>
+<span>Música en vivo para momentos inolvidables</span>
+</div>
+<div class="footer__enlaces">
+<a class="footer__boton footer__boton--instagram" href="https://instagram.com/elenagirjoabamusic" rel="noopener noreferrer" target="_blank">
+            ◎ Instagram · @elenagirjoabamusic
+          </a>
+<a href="https://wa.me/593987388915" rel="noopener noreferrer" target="_blank">
+            💬 Cotizar mi evento
+          </a>
+</div>
+</div>
+<p class="footer__copyright">
+        © <span id="anioActual"></span> Elena Girjoaba Music.
+      </p>
+</footer>
+<button aria-label="Volver a Ver todas las canciones, categorías y buscador" class="volver-arriba" id="volverArriba" type="button">
+<span aria-hidden="true" class="volver-arriba__flecha">↑</span>
+<span class="volver-arriba__texto">Menú</span>
+</button>
+</div>
+
+
+
+
+
+
+
+<div aria-live="polite" class="aviso-app" hidden="" id="avisoApp" role="status"></div>
+<div aria-hidden="true" class="version-prueba">Master público v5</div>
+<noscript>
+<div class="noscript">
+      Esta página necesita JavaScript para mostrar y filtrar las canciones.
+    </div>
+</noscript>
+</body>
+</html>

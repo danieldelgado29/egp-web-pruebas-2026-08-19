@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Elena Girjoaba Music</title>
+  <link rel="stylesheet" href="style.css?v=1787155513">
+</head>
+
+<body>
+
+  <main class="hero">
+
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+
+      <div class="brand">
+        <div class="brand-name">ELENA GIRJOABA</div>
+        <div class="brand-sub">MUSIC</div>
+      </div>
+
+      <a class="enter-btn" href="../informacion/">
+        INGRESAR
+      </a>
+
+    </div>
+
+  </main>
+
+
+<script id="egpPortadaDinamica">
+(function(){
+
+  function rgba(hex, alpha){
+    hex = String(hex || '#000000').replace('#','');
+
+    if(hex.length !== 6)
+      return 'rgba(0,0,0,'+alpha+')';
+
+    const n = parseInt(hex,16);
+
+    return 'rgba('+
+      (n>>16)+','+
+      ((n>>8)&255)+','+
+      (n&255)+','+
+      alpha+')';
+  }
+
+
+  function cargarPortada(){
+
+    let sources = {};
+    let settings = {};
+
+    try{
+      sources =
+        JSON.parse(
+          localStorage.getItem(
+            'egm-photo-originals'
+          ) || '{}'
+        );
+
+      settings =
+        JSON.parse(
+          localStorage.getItem(
+            'egm-photo-settings'
+          ) || '{}'
+        );
+
+    }catch(_){}
+
+
+    const hero =
+      document.querySelector('.hero');
+
+    const overlay =
+      document.querySelector('.hero-overlay');
+
+    if(!hero) return;
+
+
+    const src =
+      sources.portada || '';
+
+    const d =
+      settings.portada || {};
+
+
+    /*
+     * Si todavía no se configuró:
+     * conserva hero.jpg / hero-mobile.jpg.
+     */
+
+    if(src){
+      hero.style.backgroundImage =
+        'url("' + src + '")';
+    }
+
+
+    if(
+      d.x !== undefined ||
+      d.y !== undefined
+    ){
+      hero.style.backgroundPosition =
+        (d.x ?? 50) + '% ' +
+        (d.y ?? 50) + '%';
+    }
+
+
+    if(d.zoom !== undefined){
+      hero.style.backgroundSize =
+        Number(d.zoom) + '%';
+    }
+
+
+    if(overlay){
+
+      const intensity =
+        Number(d.intensity ?? 55) / 100;
+
+      const opacity =
+        Number(d.opacity ?? 70) / 100;
+
+      const alpha =
+        intensity * opacity;
+
+      const direction =
+        d.direction || 'to bottom';
+
+      const color =
+        d.color || '#000000';
+
+      overlay.style.background =
+        'linear-gradient('+
+        direction+','+
+        rgba(color,0)+' 0%,'+
+        rgba(color,alpha)+' 100%)';
+    }
+  }
+
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    cargarPortada
+  );
+
+
+  window.addEventListener(
+    'storage',
+    function(e){
+      if(
+        e.key === 'egm-photo-originals' ||
+        e.key === 'egm-photo-settings'
+      ){
+        cargarPortada();
+      }
+    }
+  );
+
+})();
+</script>
+
+</body>
+</html>

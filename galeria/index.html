@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Fotos y videos · Elena Girjoaba Music</title>
+  <link rel="stylesheet" href="style.css?v=1787174002">
+</head>
+
+<body>
+
+<header class="topbar">
+  <a class="back-btn" href="../informacion/#galeria">← ATRÁS</a>
+
+  <div class="brand">
+    <strong>ELENA GIRJOABA</strong>
+    <span>MUSIC</span>
+  </div>
+</header>
+
+
+<main>
+
+  <section class="hero">
+    <p>ELENA GIRJOABA MUSIC</p>
+    <h1>Fotos y videos</h1>
+    <span>Momentos de nuestros shows y eventos.</span>
+  </section>
+
+
+  <section class="gallery-shell">
+
+    <div class="tabs">
+      <button class="is-active" data-tab="image">
+        FOTOS <span id="photoCount">0</span>
+      </button>
+
+      <button data-tab="video">
+        VIDEOS <span id="videoCount">0</span>
+      </button>
+    </div>
+
+    <div id="galleryGrid" class="gallery-grid"></div>
+
+  </section>
+
+</main>
+
+
+<dialog id="viewer">
+
+  <div class="viewer-card">
+
+    <button id="viewerClose" class="viewer-close" type="button">×</button>
+
+    <div id="viewerStage" class="viewer-stage">
+      <img id="viewerImage" hidden alt="Foto">
+      <video id="viewerVideo" playsinline preload="metadata" hidden></video>
+    </div>
+
+    <div id="videoControls" class="video-controls" hidden>
+      <button id="playBtn" type="button">▶</button>
+      <span id="currentTime">0:00</span>
+
+      <input
+        id="videoProgress"
+        type="range"
+        min="0"
+        max="1000"
+        value="0"
+      >
+
+      <span id="durationTime">0:00</span>
+
+      <button id="muteBtn" type="button">🔊</button>
+      <button id="fullscreenBtn" type="button">⛶</button>
+    </div>
+
+  </div>
+
+</dialog>
+
+
+<script src="script.js?v=1"></script>
+
+</body>
+</html>

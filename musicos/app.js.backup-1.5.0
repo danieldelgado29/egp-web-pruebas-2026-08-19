@@ -1,0 +1,392 @@
+const $ = selector => document.querySelector(selector);
+const installView = $("#installView");
+const appView = $("#appView");
+const installBtn = $("#installBtn");
+const installHint = $("#installHint");
+const iosHelp = $("#iosHelp");
+const androidHelp = $("#androidHelp");
+const venueName = $("#venueName");
+const queueCount = $("#queueCount");
+const queueList = $("#queueList");
+const emptyState = $("#emptyState");
+const connectionDot = $("#connectionDot");
+const appError = $("#appError");
+const installDialog = $("#installDialog");
+const openChromeBtn = $("#openChromeBtn");
+
+let deferredPrompt = null;
+let songs = new Map();
+let unsubscribe = null;
+const LAST_STATE_KEY = "egp-musicos-last-state-v1";
+const LOCAL_CORE = "https://core.elenagirjoaba.com";
+let localCoreOnline = false;
+let localCoreTimer = null;
+let firebaseOnline = false;
+let latestFirebaseState = null;
+
+function saveLastState(data){ try{ localStorage.setItem(LAST_STATE_KEY,JSON.stringify(data||{})); }catch(_){} }
+function loadLastState(){ try{ return JSON.parse(localStorage.getItem(LAST_STATE_KEY)||"null"); }catch(_){ return null; } }
+
+function localCoreToMusicos(data){
+  const queue = Array.isArray(data?.queue) ? data.queue : [];
+  return {
+    show_activo: data?.show?.active === true,
+    lugar: String(data?.show?.venue || ""),
+    cola: queue.map(item => String(item.id)),
+    tocadas: queue.filter(item => item?.played === true).map(item => String(item.id))
+  };
+}
+
+async function pollLocalCore(){
+  try{
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 1800);
+
+    const res = await fetch(LOCAL_CORE + "/api/state", {
+      cache: "no-store",
+      signal: controller.signal
+    });
+
+    clearTimeout(timeout);
+    if(!res.ok) throw new Error("Local Core HTTP " + res.status);
+
+    const raw = await res.json();
+    if(raw?.ok !== true) throw new Error("Local Core inválido");
+
+    const data = localCoreToMusicos(raw);
+    localCoreOnline = true;
+    connectionDot.classList.add("online");
+    appError.hidden = true;
+    saveLastState(data);
+    render(data);
+  }catch(_){
+    const wasLocal = localCoreOnline;
+    localCoreOnline = false;
+
+    if(firebaseOnline && latestFirebaseState){
+      connectionDot.classList.add("online");
+      if(wasLocal){
+        saveLastState(latestFirebaseState);
+        render(latestFirebaseState);
+      }
+    }else{
+      connectionDot.classList.remove("online");
+    }
+  }
+}
+
+function startLocalCore(){
+  if(localCoreTimer) return;
+  pollLocalCore();
+  localCoreTimer = setInterval(pollLocalCore, 1200);
+}
+
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const ownPwaLaunch = new URL(location.href).searchParams.get("musicos_pwa") === "1";
+const testMode = new URL(location.href).searchParams.get("test") === "1";
+const noCoreTest = new URL(location.href).searchParams.get("no_core") === "1";
+const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isAndroid = /android/i.test(navigator.userAgent);
+
+function chromeIntentUrl() {
+  const target = location.origin + location.pathname + "?install=1";
+  return `intent://${target.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(target)};end`;
+}
+if (openChromeBtn && isAndroid) openChromeBtn.href = chromeIntentUrl();
+
+function esc(value = "") {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[char]));
+}
+
+function showInstall() {
+  installView.hidden = false;
+  appView.hidden = true;
+}
+
+function showApp() {
+  installView.hidden = true;
+  appView.hidden = false;
+  startApp();
+}
+
+function showError(message) {
+  appView.hidden = false;
+  appError.hidden = false;
+  appError.textContent = message;
+  connectionDot.classList.remove("online");
+}
+
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  deferredPrompt = event;
+  installBtn.disabled = false;
+  installBtn.textContent = "Instalar app";
+  installHint.textContent = "";
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredPrompt = null;
+  installBtn.textContent = "App instalada";
+  installHint.textContent = "Ábrela desde el icono EGP MUSICOS.";
+});
+
+installBtn.addEventListener("click", async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    return;
+  }
+
+  if (isiOS) {
+    iosHelp.hidden = false;
+    installHint.textContent = "Sigue los tres pasos mostrados abajo.";
+    return;
+  }
+
+  if (standalone && (!isAndroid || ownPwaLaunch)) {
+    showApp();
+    return;
+  }
+
+  if (isAndroid) {
+    androidHelp.hidden = false;
+    installHint.textContent = "Para instalar EGP MUSICOS debe abrirse en Chrome.";
+    // Si el QR abrió esta URL dentro de la PWA del Panel, salir de ese scope y abrir Chrome.
+    if (standalone && !ownPwaLaunch) {
+      openChromeBtn.hidden = false;
+      installBtn.hidden = true;
+      installHint.textContent = "Abre esta página en Chrome y allí instala EGP MUSICOS.";
+    }
+    return;
+  }
+
+  installHint.textContent = "Usa la opción Instalar aplicación del navegador.";
+});
+
+$("#closeDialog")?.addEventListener("click", () => installDialog.close());
+
+async function startApp() {
+  if (startApp.started) return;
+  startApp.started = true;
+  appError.hidden = true;
+
+  let cfg = null;
+  try {
+    const [cfgRes, songsRes] = await Promise.all([
+      fetch("../configuracion.json", { cache: "no-store" }),
+      fetch("../canciones.json", { cache: "no-store" })
+    ]);
+    if (!cfgRes.ok || !songsRes.ok) throw new Error("base no disponible");
+    cfg = await cfgRes.json();
+    const list = await songsRes.json();
+    songs = new Map((Array.isArray(list) ? list : []).map(song => [String(song.id), song]));
+  } catch (error) {
+    // El Service Worker debe resolver estos archivos desde caché. Si todavía no controla
+    // esta apertura, mantenemos la última vista disponible en el dispositivo.
+    console.warn("Base offline músicos:", error);
+  }
+
+  const cachedState = loadLastState();
+  if (cachedState) {
+    render(cachedState);
+    venueName.textContent = String(cachedState?.lugar || cachedState?.show?.venue || venueName.textContent || "Último estado guardado");
+  }
+
+  // En EGP-MUSICOS, Local Core es la fuente preferida.
+  // Fuera de esa red, Firebase continúa funcionando normalmente.
+  if (!noCoreTest) startLocalCore();
+
+  // Sin Internet la app NO falla: conserva la última cola guardada.
+  // Firebase se carga dinámicamente únicamente cuando está disponible.
+  try {
+    if (!cfg?.firebase) throw new Error("Firebase no disponible");
+    const [{ initializeApp }, { initializeFirestore, doc, onSnapshot }] = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js")
+    ]);
+    const firebase = initializeApp(cfg.firebase, "egp-musicos");
+    const db = initializeFirestore(firebase, {
+      experimentalAutoDetectLongPolling: true,
+      useFetchStreams: false
+    });
+    unsubscribe?.();
+    unsubscribe = onSnapshot(doc(db, "config", "estado"), snapshot => {
+      connectionDot.classList.add("online");
+      appError.hidden = true;
+      const data = snapshot.exists() ? snapshot.data() : {};
+      firebaseOnline = true;
+      latestFirebaseState = data;
+      if (!localCoreOnline) {
+        saveLastState(data);
+        render(data);
+      }
+    }, error => {
+      console.warn("Firebase músicos offline:", error);
+      firebaseOnline = false;
+      if(!localCoreOnline) connectionDot.classList.remove("online");
+      if (!cachedState) {
+        emptyState.hidden = false;
+        emptyState.textContent = "Sin conexión · esperando último estado guardado";
+      }
+    });
+  } catch (error) {
+    console.warn("EGP MÚSICOS en modo offline:", error);
+    connectionDot.classList.remove("online");
+    if (!cachedState) {
+      emptyState.hidden = false;
+      emptyState.textContent = "Sin conexión · abre una vez con datos para guardar el estado inicial";
+    }
+  }
+}
+
+function render(data) {
+  const active = data.show_activo === true;
+  const venue = String(data.lugar || "").trim();
+  venueName.textContent = active ? (venue || "Show activo") : "No hay show activo";
+
+  const ids = active && Array.isArray(data.cola) ? data.cola.map(String) : [];
+  const playedIds = new Set(Array.isArray(data.tocadas) ? data.tocadas.map(String) : []);
+
+  const queueItems = ids
+    .map((id, originalIndex) => ({
+      id,
+      song: songs.get(id),
+      originalIndex,
+      played: playedIds.has(id)
+    }))
+    .filter(item => item.song);
+
+  const pendingItems = queueItems.filter(item => !item.played);
+  const playedItems = queueItems.filter(item => item.played);
+
+  // El contador conserva la cola pendiente REAL.
+  // Una tarjeta SONANDO añadida solo visualmente no aumenta este número.
+  queueCount.textContent =
+    `${pendingItems.length} ${pendingItems.length === 1 ? "canción" : "canciones"}`;
+
+  const showInicio = String(data.inicio_show || "");
+  const sonandoId = active ? String(data.sonando_id || "") : "";
+  const sonandoShowInicio = String(data.sonando_show_inicio || "");
+
+  // SONANDO solo pertenece al show actual.
+  const sonandoValido =
+    Boolean(sonandoId) &&
+    Boolean(showInicio) &&
+    sonandoShowInicio === showInicio &&
+    songs.has(sonandoId);
+
+  let sonandoItem = null;
+
+  if (sonandoValido) {
+    sonandoItem =
+      queueItems.find(item => item.id === sonandoId) ||
+      {
+        id: sonandoId,
+        song: songs.get(sonandoId),
+        originalIndex: -1,
+        played: playedIds.has(sonandoId)
+      };
+  }
+
+  // SONANDO gana prioridad visual aunque también figure como Tocada.
+  const pendientesVisuales =
+    pendingItems.filter(item => item.id !== sonandoId);
+
+  const tocadasVisuales =
+    playedItems.filter(item => item.id !== sonandoId);
+
+  const siguienteId = pendientesVisuales[0]?.id || "";
+
+  const visualItems = [
+    ...(sonandoItem ? [{ ...sonandoItem, playing: true }] : []),
+    ...pendientesVisuales,
+    ...tocadasVisuales
+  ];
+
+  queueList.innerHTML = visualItems.map(item => {
+    const song = item.song;
+    const isPlaying = item.playing === true;
+    const isNext = !isPlaying && !item.played && item.id === siguienteId;
+
+    const rawNumber =
+      song.numero ||
+      song.n ||
+      (item.originalIndex >= 0 ? item.originalIndex + 1 : "");
+
+    const number =
+      rawNumber === "" ? "—" : String(rawNumber).padStart(2, "0");
+
+    let label = "";
+
+    if (isPlaying) {
+      label = `
+        <div class="song-label playing-label">
+          <span>SONANDO</span>
+          <span class="egp-eq" aria-hidden="true">
+            <i></i><i></i><i></i><i></i>
+          </span>
+        </div>`;
+    } else if (isNext) {
+      label = '<div class="song-label">Sigue</div>';
+    } else if (item.played) {
+      label = '<div class="song-label played-label">Tocada</div>';
+    }
+
+    return `
+      <article class="song-card
+        ${isPlaying ? "playing" : ""}
+        ${isNext ? "next" : ""}
+        ${item.played && !isPlaying ? "played" : ""}">
+        <div class="song-number">${esc(number)}</div>
+        <div>
+          ${label}
+          <div class="song-title">${esc(song.titulo || "Sin título")}</div>
+          <div class="song-artist">${esc(song.artista || "")}</div>
+        </div>
+      </article>`;
+  }).join("");
+
+  queueList.hidden = visualItems.length === 0;
+  emptyState.hidden = visualItems.length > 0;
+  emptyState.textContent = active ? "No hay canciones en cola" : "No hay show activo";
+}
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("./service-worker.js?v=1.5.0", {
+        scope: "./",
+        updateViaCache: "none"
+      });
+      await registration.update();
+    } catch (error) {
+      console.warn("Service Worker músicos:", error);
+    }
+  });
+}
+
+// Una PWA instalada siempre entra directamente a la cola.
+// No depende de localStorage ni del evento appinstalled, que iOS no garantiza.
+if (testMode || (standalone && (!isAndroid || ownPwaLaunch))) {
+  showApp();
+} else {
+  showInstall();
+  if (isiOS) {
+    installBtn.textContent = "Cómo instalar";
+    installHint.textContent = "Sigue los tres pasos mostrados abajo.";
+    iosHelp.hidden = false;
+  } else {
+    installBtn.disabled = false;
+    if (isAndroid && standalone && !ownPwaLaunch) {
+      installBtn.hidden = true;
+      openChromeBtn.hidden = false;
+      installHint.textContent = "Abre Chrome para instalar EGP MUSICOS como una app independiente.";
+      androidHelp.hidden = false;
+    } else {
+      installHint.textContent = "";
+    }
+  }
+}

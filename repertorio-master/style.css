@@ -1,0 +1,5949 @@
+
+/* =========================================================
+   ELENA GIRJOABA MUSIC
+   style.css
+   ========================================================= */
+
+/* 01. VARIABLES
+   --------------------------------------------------------- */
+:root {
+  --negro: #070707;
+  --negro-2: #0d0d0d;
+  --negro-3: #131313;
+  --negro-4: #1a1a1a;
+  --blanco: #f7f7f5;
+  --blanco-suave: #d8d8d2;
+  --gris: #9b9b95;
+  --gris-2: #6c6c67;
+  --dorado: #d5b268;
+  --dorado-claro: #ead399;
+  --dorado-oscuro: #8f6f33;
+  --rojo-rock: #a31313;
+  --rojo-rock-hover: #c41f1f;
+  --instagram-1: #6d37bf;
+  --instagram-2: #d44b7b;
+  --instagram-3: #f09a3e;
+  --verde-whatsapp: #1cae62;
+
+  --fuente: "Montserrat", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --contenedor: 1180px;
+  --radio-xs: 8px;
+  --radio-sm: 12px;
+  --radio-md: 18px;
+  --radio-lg: 28px;
+  --sombra-suave: 0 18px 50px rgba(0, 0, 0, 0.28);
+  --sombra-profunda: 0 28px 90px rgba(0, 0, 0, 0.5);
+  --transicion: 220ms ease;
+  --transicion-lenta: 520ms cubic-bezier(.22, .7, .2, 1);
+}
+
+/* 02. RESET Y BASE
+   --------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--negro);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--blanco);
+  background:
+    radial-gradient(circle at 20% 10%, rgba(213, 178, 104, .07), transparent 26%),
+    radial-gradient(circle at 80% 30%, rgba(170, 20, 20, .05), transparent 24%),
+    linear-gradient(180deg, #070707 0%, #0b0b0b 100%);
+  font-family: var(--fuente);
+  line-height: 1.5;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .16;
+  background-image:
+    linear-gradient(rgba(255,255,255,.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.012) 1px, transparent 1px);
+  background-size: 38px 38px;
+}
+
+img,
+picture,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+a {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+::selection {
+  color: var(--negro);
+  background: var(--dorado-claro);
+}
+
+:focus-visible {
+  outline: 2px solid var(--dorado-claro);
+  outline-offset: 4px;
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 9999;
+  transform: translateY(-180%);
+  padding: 10px 16px;
+  color: var(--negro);
+  background: var(--dorado-claro);
+  border-radius: 999px;
+  font-weight: 700;
+  transition: transform var(--transicion);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* 03. LANDING
+   --------------------------------------------------------- */
+.landing {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 48px 22px 28px;
+}
+
+.landing__fondo,
+.landing__overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.landing__fondo {
+  z-index: -3;
+  background:
+    linear-gradient(rgba(0,0,0,.08), rgba(0,0,0,.15)),
+    url("assets/foto-banda.jpg") center 28% / cover no-repeat;
+  transform: scale(1.025);
+  animation: landingZoom 12s ease-out both;
+}
+
+.landing__overlay {
+  z-index: -2;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.22) 0%, rgba(0,0,0,.36) 24%, rgba(0,0,0,.84) 76%, #070707 100%),
+    radial-gradient(circle at 50% 18%, rgba(213,178,104,.12), transparent 34%),
+    linear-gradient(90deg, rgba(0,0,0,.52), transparent 20%, transparent 80%, rgba(0,0,0,.48));
+}
+
+.landing::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 120px;
+  z-index: -1;
+  background: linear-gradient(180deg, transparent, var(--negro));
+}
+
+.landing__contenido {
+  width: min(100%, 980px);
+  margin: auto;
+  text-align: center;
+  animation: fadeUp .9s ease both;
+}
+
+.landing__marca,
+.hero__marca,
+.explorador__eyebrow {
+  margin: 0;
+  color: var(--dorado-claro);
+  font-size: clamp(.7rem, 1.4vw, .82rem);
+  font-weight: 700;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+}
+
+.landing__titulo {
+  max-width: 900px;
+  margin: 16px auto 14px;
+  font-size: clamp(2.2rem, 6.5vw, 5.6rem);
+  line-height: .98;
+  letter-spacing: -.045em;
+  text-wrap: balance;
+  text-shadow: 0 10px 40px rgba(0,0,0,.5);
+}
+
+.landing__descripcion {
+  max-width: 760px;
+  margin: 0 auto;
+  color: var(--blanco-suave);
+  font-size: clamp(1rem, 2.1vw, 1.2rem);
+  line-height: 1.65;
+  text-wrap: balance;
+}
+
+.formatos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 900px;
+  margin: 34px auto 28px;
+}
+
+.formato {
+  position: relative;
+  padding: 22px 18px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.035)),
+    rgba(10,10,10,.46);
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: var(--radio-md);
+  box-shadow: 0 16px 45px rgba(0,0,0,.24);
+  backdrop-filter: blur(12px);
+  transition:
+    transform var(--transicion),
+    border-color var(--transicion),
+    background var(--transicion);
+}
+
+.formato::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(213,178,104,.16), transparent 48%);
+  transition: opacity var(--transicion);
+}
+
+.formato:hover {
+  transform: translateY(-4px);
+  border-color: rgba(213,178,104,.4);
+}
+
+.formato:hover::before {
+  opacity: 1;
+}
+
+.formato__icono {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+  background: rgba(0,0,0,.32);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 50%;
+  font-size: 1.35rem;
+}
+
+.formato__titulo {
+  position: relative;
+  margin: 0 0 6px;
+  font-size: 1rem;
+  letter-spacing: .02em;
+}
+
+.formato__texto {
+  position: relative;
+  margin: 0;
+  color: var(--gris);
+  font-size: .84rem;
+  line-height: 1.55;
+}
+
+.landing__llamada {
+  margin-top: 10px;
+}
+
+.landing__pregunta {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+
+.landing__ayuda {
+  margin: 5px 0 0;
+  color: var(--gris);
+  font-size: .9rem;
+}
+
+.landing__acciones {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px auto 0;
+}
+
+.boton {
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: .92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform var(--transicion),
+    box-shadow var(--transicion),
+    border-color var(--transicion),
+    background var(--transicion);
+}
+
+.boton:hover {
+  transform: translateY(-2px);
+}
+
+.boton:active {
+  transform: translateY(0) scale(.985);
+}
+
+.boton__icono {
+  font-size: 1.1rem;
+}
+
+.boton--instagram {
+  color: white;
+  background:
+    linear-gradient(100deg, var(--instagram-1), var(--instagram-2) 58%, var(--instagram-3));
+  box-shadow: 0 12px 32px rgba(186, 63, 118, .26);
+}
+
+.boton--instagram:hover {
+  box-shadow: 0 16px 42px rgba(186, 63, 118, .38);
+}
+
+.boton--repertorio {
+  color: var(--blanco);
+  background: rgba(10,10,10,.72);
+  border-color: rgba(255,255,255,.25);
+  backdrop-filter: blur(10px);
+}
+
+.boton--repertorio:hover {
+  border-color: var(--dorado);
+  box-shadow: 0 12px 32px rgba(213,178,104,.13);
+}
+
+.landing__repertorio {
+  max-width: 720px;
+  margin: 20px auto 0;
+  color: var(--gris);
+  font-size: .83rem;
+}
+
+.landing__repertorio strong {
+  color: var(--blanco-suave);
+}
+
+.landing__contrataciones {
+  display: inline-block;
+  margin-top: 13px;
+  color: var(--dorado-claro);
+  font-size: .83rem;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(213,178,104,.4);
+  transition: color var(--transicion), border-color var(--transicion);
+}
+
+.landing__contrataciones:hover {
+  color: var(--blanco);
+  border-color: var(--blanco);
+}
+
+.landing__saltar {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  border: 0;
+  color: rgba(255,255,255,.62);
+  background: transparent;
+  font-size: .76rem;
+  cursor: pointer;
+  transition: color var(--transicion);
+}
+
+.landing__saltar:hover {
+  color: var(--blanco);
+}
+
+/* Estados animados de la landing */
+.landing.is-leaving {
+  animation: landingOut .65s cubic-bezier(.7,0,.25,1) forwards;
+}
+
+.landing.instagram-visitado .boton--repertorio {
+  border-color: rgba(213,178,104,.72);
+  background: rgba(213,178,104,.11);
+  box-shadow: 0 0 0 1px rgba(213,178,104,.08), 0 16px 40px rgba(213,178,104,.12);
+}
+
+/* 04. APP Y HERO
+   --------------------------------------------------------- */
+.app {
+  min-height: 100vh;
+  background: var(--negro);
+}
+
+.app.is-visible {
+  animation: appIn .75s ease both;
+}
+
+.hero {
+  position: relative;
+  min-height: min(92svh, 920px);
+  display: grid;
+  align-items: end;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(0,0,0,.08), rgba(0,0,0,.14)),
+    url("assets/hero.jpg") center 22% / cover no-repeat;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(circle at 56% 22%, rgba(213,178,104,.10), transparent 34%),
+    linear-gradient(180deg, rgba(0,0,0,.08) 0%, rgba(0,0,0,.22) 36%, rgba(0,0,0,.82) 82%, var(--negro) 100%);
+}
+
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.28), transparent 34%, transparent 72%, rgba(0,0,0,.36));
+}
+
+.barra {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px max(22px, calc((100vw - var(--contenedor)) / 2));
+  background: linear-gradient(180deg, rgba(0,0,0,.72), transparent);
+}
+
+.barra__marca {
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+}
+
+.barra__enlaces {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: var(--blanco-suave);
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+.barra__enlaces a {
+  transition: color var(--transicion), transform var(--transicion);
+}
+
+.barra__enlaces a:hover {
+  color: var(--blanco);
+  transform: translateY(-1px);
+}
+
+.barra__contrataciones {
+  padding: 9px 14px;
+  border: 1px solid rgba(213,178,104,.55);
+  border-radius: 999px;
+  color: var(--dorado-claro) !important;
+  background: rgba(0,0,0,.25);
+}
+
+.hero__contenido {
+  position: relative;
+  z-index: 2;
+  width: min(100%, var(--contenedor));
+  margin: 0 auto;
+  padding: 0 24px 72px;
+  text-align: center;
+}
+
+.hero__titulo {
+  margin: 12px 0 6px;
+  color: var(--dorado);
+  font-size: clamp(2.4rem, 8.8vw, 7.2rem);
+  line-height: .93;
+  letter-spacing: -.055em;
+  text-shadow: 0 10px 42px rgba(0,0,0,.5);
+}
+
+.hero__slogan {
+  margin: 0;
+  color: var(--blanco);
+  font-size: clamp(.98rem, 2vw, 1.35rem);
+  font-weight: 500;
+  text-wrap: balance;
+}
+
+.hero__flecha {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  margin: 24px auto 0;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 50%;
+  color: var(--blanco-suave);
+  background: rgba(0,0,0,.26);
+  backdrop-filter: blur(8px);
+  animation: floatArrow 2.2s ease-in-out infinite;
+}
+
+/* 05. EXPLORADOR
+   --------------------------------------------------------- */
+.contenido-principal {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(213,178,104,.06), transparent 26%),
+    var(--negro);
+}
+
+.explorador {
+  width: min(100%, var(--contenedor));
+  margin: 0 auto;
+  padding: 84px 22px 44px;
+}
+
+.explorador__encabezado {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.explorador__titulo {
+  margin: 10px 0 12px;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1.05;
+  letter-spacing: -.04em;
+  text-wrap: balance;
+}
+
+.explorador__descripcion {
+  margin: 0 auto;
+  color: var(--gris);
+  font-size: clamp(.95rem, 1.8vw, 1.06rem);
+}
+
+.mostrar-todo {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 30px auto 22px;
+  padding: 0 24px;
+  color: var(--blanco);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)),
+    var(--negro-2);
+  border: 1px solid rgba(255,255,255,.24);
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 14px 32px rgba(0,0,0,.24);
+  transition:
+    transform var(--transicion),
+    border-color var(--transicion),
+    box-shadow var(--transicion),
+    background var(--transicion);
+}
+
+.mostrar-todo:hover,
+.mostrar-todo.is-active {
+  transform: translateY(-2px);
+  border-color: rgba(213,178,104,.72);
+  background: rgba(213,178,104,.08);
+  box-shadow: 0 16px 36px rgba(213,178,104,.10);
+}
+
+.categorias {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 0 auto 26px;
+}
+
+.categoria {
+  min-height: 40px;
+  padding: 0 15px;
+  color: var(--blanco-suave);
+  background: var(--negro-3);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 999px;
+  font-size: .8rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    transform var(--transicion),
+    color var(--transicion),
+    border-color var(--transicion),
+    background var(--transicion);
+}
+
+.categoria:hover {
+  transform: translateY(-2px);
+  color: var(--blanco);
+  border-color: rgba(213,178,104,.4);
+}
+
+.categoria.is-active,
+.categoria[aria-pressed="true"] {
+  color: var(--negro);
+  background: var(--dorado-claro);
+  border-color: var(--dorado-claro);
+}
+
+.categoria--rock {
+  color: #fff;
+  background: rgba(163,19,19,.88);
+  border-color: rgba(255,255,255,.08);
+}
+
+.categoria--rock:hover,
+.categoria--rock.is-active,
+.categoria--rock[aria-pressed="true"] {
+  color: #fff;
+  background: var(--rojo-rock-hover);
+  border-color: rgba(255,255,255,.15);
+}
+
+/* 06. BUSCADOR
+   --------------------------------------------------------- */
+.buscador {
+  position: relative;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.buscador__campo {
+  width: 100%;
+  min-height: 58px;
+  padding: 0 54px 0 50px;
+  color: var(--blanco);
+  caret-color: var(--dorado);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012)),
+    var(--negro-2);
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 999px;
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 16px 38px rgba(0,0,0,.25);
+  transition:
+    border-color var(--transicion),
+    box-shadow var(--transicion),
+    background var(--transicion);
+}
+
+.buscador__campo::placeholder {
+  color: var(--gris-2);
+}
+
+.buscador__campo:focus {
+  border-color: rgba(213,178,104,.72);
+  box-shadow:
+    0 0 0 4px rgba(213,178,104,.08),
+    0 18px 46px rgba(0,0,0,.32);
+}
+
+.buscador__icono,
+.buscador__limpiar {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.buscador__icono {
+  left: 19px;
+  color: var(--dorado);
+  font-size: 1.24rem;
+  pointer-events: none;
+}
+
+.buscador__limpiar {
+  right: 13px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: var(--gris);
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: color var(--transicion), background var(--transicion);
+}
+
+.buscador__limpiar:hover {
+  color: var(--blanco);
+  background: rgba(255,255,255,.06);
+}
+
+.buscador__ayuda {
+  margin: 11px auto 0;
+  color: var(--gris-2);
+  font-size: .76rem;
+  text-align: center;
+}
+
+.estado-lista {
+  min-height: 26px;
+  margin: 24px 0 10px;
+}
+
+.contador-canciones {
+  margin: 0;
+  color: var(--gris);
+  font-size: .82rem;
+  text-align: center;
+}
+
+/* 07. LISTA Y TARJETAS
+   --------------------------------------------------------- */
+.lista-canciones {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.cancion {
+  position: relative;
+  min-height: 116px;
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 20px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.032), rgba(255,255,255,.012)),
+    var(--negro-2);
+  border: 1px solid rgba(255,255,255,.085);
+  border-radius: var(--radio-md);
+  box-shadow: 0 14px 38px rgba(0,0,0,.20);
+  cursor: pointer;
+  transition:
+    transform var(--transicion),
+    border-color var(--transicion),
+    background var(--transicion),
+    box-shadow var(--transicion);
+}
+
+.cancion::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 0% 50%, rgba(213,178,104,.14), transparent 36%),
+    linear-gradient(90deg, rgba(213,178,104,.05), transparent 38%);
+  transition: opacity var(--transicion);
+}
+
+.cancion:hover {
+  transform: translateY(-3px);
+  border-color: rgba(213,178,104,.34);
+  box-shadow: 0 20px 48px rgba(0,0,0,.28);
+}
+
+.cancion:hover::before {
+  opacity: 1;
+}
+
+.cancion.is-selected {
+  border-color: rgba(213,178,104,.72);
+  background:
+    linear-gradient(180deg, rgba(213,178,104,.075), rgba(255,255,255,.012)),
+    var(--negro-2);
+  box-shadow:
+    0 0 0 1px rgba(213,178,104,.12),
+    0 18px 48px rgba(213,178,104,.10);
+  animation: cardPulse .46s ease;
+}
+
+.numero {
+  position: relative;
+  z-index: 1;
+  color: var(--dorado);
+  font-size: clamp(1.65rem, 3vw, 2.25rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -.04em;
+  text-align: center;
+}
+
+.info {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.titulo {
+  margin: 0;
+  color: var(--blanco);
+  font-size: clamp(.96rem, 1.6vw, 1.08rem);
+  font-weight: 750;
+  line-height: 1.32;
+}
+
+.artista {
+  margin: 5px 0 0;
+  color: var(--gris);
+  font-size: .84rem;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  color: var(--blanco-suave);
+  background: rgba(255,255,255,.045);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 999px;
+  font-size: .67rem;
+  font-weight: 600;
+}
+
+.cancion-enter {
+  animation: cardIn .42s ease both;
+}
+
+/* 08. ESTADOS VACÍOS Y ERROR
+   --------------------------------------------------------- */
+.sin-resultados,
+.error-carga {
+  max-width: 680px;
+  margin: 38px auto 0;
+  padding: 34px 24px;
+  text-align: center;
+  background: var(--negro-2);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radio-md);
+  box-shadow: var(--sombra-suave);
+}
+
+.sin-resultados__icono {
+  display: inline-grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 14px;
+  color: var(--dorado);
+  background: rgba(213,178,104,.08);
+  border: 1px solid rgba(213,178,104,.2);
+  border-radius: 50%;
+  font-size: 1.5rem;
+}
+
+.sin-resultados h3,
+.error-carga h3 {
+  margin: 0 0 8px;
+  font-size: 1.18rem;
+}
+
+.sin-resultados p,
+.error-carga p {
+  margin: 0;
+  color: var(--gris);
+  font-size: .9rem;
+  line-height: 1.65;
+}
+
+.error-carga button {
+  margin-top: 18px;
+  padding: 10px 18px;
+  color: var(--negro);
+  background: var(--dorado-claro);
+  border: 0;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* 09. MENSAJE FINAL
+   --------------------------------------------------------- */
+.mensaje-final {
+  width: min(calc(100% - 44px), 980px);
+  margin: 34px auto 84px;
+  padding: 52px 30px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(213,178,104,.12), transparent 48%),
+    linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.012)),
+    var(--negro-2);
+  border: 1px solid rgba(213,178,104,.16);
+  border-radius: var(--radio-lg);
+}
+
+.mensaje-final__simbolo {
+  margin: 0 0 12px;
+  color: var(--dorado);
+  font-size: 1.35rem;
+}
+
+.mensaje-final h2 {
+  margin: 0 0 10px;
+  font-size: clamp(1.7rem, 4vw, 3rem);
+  letter-spacing: -.035em;
+}
+
+.mensaje-final > p:not(.mensaje-final__simbolo) {
+  max-width: 690px;
+  margin-left: auto;
+  margin-right: auto;
+  color: var(--gris);
+}
+
+.mensaje-final__nota {
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,.07);
+  font-size: .84rem;
+}
+
+/* 10. FOOTER
+   --------------------------------------------------------- */
+.footer {
+  border-top: 1px solid rgba(255,255,255,.07);
+  background: #050505;
+}
+
+.footer__contenido {
+  width: min(100%, var(--contenedor));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin: 0 auto;
+  padding: 30px 22px 20px;
+}
+
+.footer__marca {
+  display: grid;
+  gap: 4px;
+}
+
+.footer__marca strong {
+  font-size: .78rem;
+  letter-spacing: .16em;
+}
+
+.footer__marca span {
+  color: var(--gris-2);
+  font-size: .76rem;
+}
+
+.footer__enlaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: var(--gris);
+  font-size: .78rem;
+}
+
+.footer__enlaces a {
+  transition: color var(--transicion);
+}
+
+.footer__enlaces a:hover {
+  color: var(--dorado-claro);
+}
+
+.footer__copyright {
+  margin: 0;
+  padding: 0 22px 22px;
+  color: var(--gris-2);
+  font-size: .7rem;
+  text-align: center;
+}
+
+.volver-arriba {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--blanco);
+  background: rgba(15,15,15,.88);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 50%;
+  box-shadow: 0 14px 36px rgba(0,0,0,.35);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition:
+    transform var(--transicion),
+    border-color var(--transicion),
+    opacity var(--transicion);
+}
+
+.volver-arriba:hover {
+  transform: translateY(-3px);
+  border-color: rgba(213,178,104,.55);
+}
+
+.noscript {
+  position: fixed;
+  inset: auto 16px 16px;
+  z-index: 999;
+  padding: 14px 18px;
+  color: #fff;
+  background: #9f1515;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: var(--sombra-profunda);
+}
+
+/* 11. ANIMACIONES
+   --------------------------------------------------------- */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landingZoom {
+  from { transform: scale(1.06); }
+  to   { transform: scale(1.025); }
+}
+
+@keyframes landingOut {
+  to {
+    opacity: 0;
+    transform: scale(1.015);
+    visibility: hidden;
+  }
+}
+
+@keyframes appIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatArrow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes cardPulse {
+  0% { transform: scale(1); }
+  45% { transform: scale(.985); }
+  100% { transform: scale(1); }
+}
+
+/* 12. RESPONSIVE
+   --------------------------------------------------------- */
+@media (max-width: 980px) {
+  .landing {
+    align-items: end;
+    padding-top: 120px;
+  }
+
+  .landing__contenido {
+    padding-top: 180px;
+  }
+
+  .landing__fondo {
+    background-position: center 20%;
+  }
+
+  .formatos {
+    max-width: 760px;
+  }
+
+  .hero {
+    min-height: 80svh;
+  }
+
+  .lista-canciones {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .landing {
+    min-height: 100svh;
+    padding: 100px 16px 26px;
+  }
+
+  .landing__contenido {
+    padding-top: 230px;
+  }
+
+  .landing__titulo {
+    max-width: 620px;
+    margin-top: 12px;
+  }
+
+  .landing__descripcion {
+    font-size: .96rem;
+  }
+
+  .formatos {
+    grid-template-columns: 1fr;
+    gap: 9px;
+    margin-top: 24px;
+  }
+
+  .formato {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    column-gap: 13px;
+    align-items: center;
+    padding: 14px;
+    text-align: left;
+  }
+
+  .formato__icono {
+    grid-row: 1 / 3;
+    width: 42px;
+    height: 42px;
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  .formato__titulo {
+    margin: 0;
+    font-size: .92rem;
+  }
+
+  .formato__texto {
+    font-size: .76rem;
+  }
+
+  .landing__acciones {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .boton {
+    width: 100%;
+  }
+
+  .landing__saltar {
+    position: static;
+    display: block;
+    margin: 18px auto 0;
+  }
+
+  .barra {
+    padding: 18px 16px;
+  }
+
+  .barra__marca {
+    font-size: .66rem;
+  }
+
+  .barra__enlaces {
+    gap: 10px;
+    font-size: .72rem;
+  }
+
+  .barra__enlaces > a:first-child {
+    display: none;
+  }
+
+  .barra__contrataciones {
+    padding: 8px 11px;
+  }
+
+  .hero {
+    min-height: 74svh;
+    background-position: center 20%;
+  }
+
+  .hero__contenido {
+    padding: 0 18px 46px;
+  }
+
+  .hero__marca {
+    font-size: .66rem;
+  }
+
+  .hero__slogan {
+    font-size: .92rem;
+  }
+
+  .explorador {
+    padding: 62px 16px 34px;
+  }
+
+  .mostrar-todo {
+    width: 100%;
+  }
+
+  .categorias {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 2px 8px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .categorias::-webkit-scrollbar {
+    display: none;
+  }
+
+  .categoria {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  .buscador__campo {
+    min-height: 54px;
+  }
+
+  .cancion {
+    min-height: 108px;
+    grid-template-columns: 48px 1fr;
+    gap: 14px;
+    padding: 17px 15px;
+  }
+
+  .numero {
+    font-size: 1.7rem;
+  }
+
+  .tag {
+    min-height: 22px;
+    padding: 0 8px;
+    font-size: .62rem;
+  }
+
+  .mensaje-final {
+    width: calc(100% - 32px);
+    margin-bottom: 58px;
+    padding: 38px 20px;
+  }
+
+  .footer__contenido {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing__contenido {
+    padding-top: 205px;
+  }
+
+  .landing__titulo {
+    font-size: clamp(2rem, 11vw, 3rem);
+  }
+
+  .landing__descripcion {
+    line-height: 1.55;
+  }
+
+  .landing__ayuda {
+    font-size: .8rem;
+  }
+
+  .landing__repertorio {
+    font-size: .74rem;
+  }
+
+  .hero {
+    min-height: 68svh;
+  }
+
+  .hero__titulo {
+    font-size: clamp(2.35rem, 13vw, 3.65rem);
+  }
+
+  .explorador__titulo {
+    font-size: 2rem;
+  }
+
+  .buscador__ayuda {
+    font-size: .7rem;
+  }
+
+  .cancion {
+    border-radius: 15px;
+  }
+
+  .titulo {
+    font-size: .95rem;
+  }
+
+  .artista {
+    font-size: .78rem;
+  }
+
+  .footer__enlaces {
+    display: grid;
+  }
+}
+
+/* 13. ACCESIBILIDAD Y REDUCCIÓN DE MOVIMIENTO
+   --------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* 14. SCROLLBAR
+   --------------------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--dorado-oscuro) #0b0b0b;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #0b0b0b;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--dorado-oscuro), #6f5527);
+  border: 2px solid #0b0b0b;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--dorado);
+}
+
+
+/* =========================================================
+   AJUSTES DE EXPERIENCIA — VERSIÓN 1.1
+   ========================================================= */
+.boton--repertorio[hidden] { display: none !important; }
+.menu-canciones { margin-top: 25px; }
+.menu-canciones .categorias { margin-bottom: 16px; }
+.menu-canciones .mostrar-todo { margin-top: 0; }
+.formato { cursor: default; }
+.mensaje-final__cta {
+  max-width: 700px;
+  margin: 30px auto 0;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.mensaje-final__cta h3 {
+  margin: 0 0 8px;
+  color: var(--blanco);
+  font-size: clamp(1.2rem, 3vw, 1.65rem);
+}
+.mensaje-final__cta p {
+  margin: 0 auto 18px;
+  color: var(--gris);
+  font-size: .9rem;
+  line-height: 1.65;
+}
+.mensaje-final__instagram { width: fit-content; margin: 0 auto; }
+.mensaje-final__cta small {
+  display: block;
+  margin-top: 14px;
+  color: var(--gris-2);
+  font-size: .72rem;
+}
+.volver-arriba {
+  width: auto;
+  min-width: 68px;
+  height: auto;
+  min-height: 54px;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 7px 15px 8px;
+  border-color: rgba(213,178,104,.5);
+  border-radius: 18px;
+}
+.volver-arriba__flecha {
+  color: var(--dorado-claro);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.volver-arriba__texto {
+  font-size: .67rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+@media (hover: none), (pointer: coarse) {
+  .formato:hover { transform: none; border-color: rgba(255,255,255,.13); }
+  .formato:hover::before { opacity: 0; }
+  .boton:hover, .categoria:hover, .mostrar-todo:hover, .cancion:hover, .volver-arriba:hover { transform: none; }
+  .cancion:hover {
+    border-color: rgba(255,255,255,.085);
+    box-shadow: 0 14px 38px rgba(0,0,0,.20);
+  }
+  .cancion:hover::before { opacity: 0; }
+}
+@media (max-width: 760px) {
+  .menu-canciones { margin-top: 22px; }
+  .mensaje-final__instagram { width: 100%; }
+  .volver-arriba {
+    right: 14px;
+    bottom: 14px;
+    min-width: 64px;
+    min-height: 52px;
+    padding: 7px 13px;
+  }
+}
+
+
+/* =========================================================
+   AJUSTES DEFINITIVOS — VERSIÓN 1.2
+   ========================================================= */
+
+/* Orden original: botón, categorías y buscador. */
+.menu-canciones {
+  margin-top: 30px;
+  scroll-margin-top: 18px;
+}
+
+.menu-canciones .mostrar-todo {
+  margin: 0 auto 22px;
+}
+
+.menu-canciones .categorias {
+  margin: 0 auto 26px;
+}
+
+/* Dúo, Trío y Banda completa son información, no controles. */
+.formato,
+.formato:hover,
+.formato:active,
+.formato:focus,
+.formato:focus-visible {
+  transform: none !important;
+  transition: none !important;
+  cursor: default !important;
+  border-color: rgba(255,255,255,.13) !important;
+  box-shadow: 0 16px 45px rgba(0,0,0,.24) !important;
+}
+
+.formato::before,
+.formato:hover::before,
+.formato:active::before,
+.formato:focus::before {
+  opacity: 0 !important;
+  transition: none !important;
+}
+
+/* El botón flotante siempre queda visible sobre las canciones cuando corresponde. */
+.volver-arriba:not([hidden]) {
+  display: inline-flex !important;
+  opacity: 1;
+  visibility: visible;
+  animation: menuFloatIn .24s ease both;
+}
+
+.volver-arriba {
+  z-index: 999;
+  background: rgba(9,9,9,.92);
+  border: 1px solid rgba(213,178,104,.72);
+  box-shadow: 0 12px 36px rgba(0,0,0,.5), 0 0 0 1px rgba(213,178,104,.07);
+}
+
+@keyframes menuFloatIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 760px) {
+  .menu-canciones {
+    margin-top: 26px;
+    scroll-margin-top: 12px;
+  }
+
+  .menu-canciones .mostrar-todo {
+    margin-bottom: 20px;
+  }
+
+  .menu-canciones .categorias {
+    margin-bottom: 22px;
+  }
+
+  .lista-canciones {
+    gap: 17px;
+  }
+}
+
+
+/* =========================================================
+   PULIDO V1.3 — BOTÓN PRINCIPAL Y MENÚ FLOTANTE
+   ========================================================= */
+
+/* Dúo, Trío y Banda completa: información totalmente estática. */
+.formato {
+  pointer-events: none !important;
+  touch-action: pan-y !important;
+  user-select: none;
+  -webkit-user-select: none;
+  animation: none !important;
+}
+
+.formato,
+.formato *,
+.formato::before,
+.formato::after {
+  transition: none !important;
+}
+
+/* Botón principal más grande y visible. */
+.mostrar-todo--principal {
+  position: relative;
+  width: min(100%, 650px);
+  min-height: 82px;
+  display: grid;
+  grid-template-columns: 54px 1fr 28px;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 22px;
+  overflow: hidden;
+  text-align: left;
+  border: 1px solid rgba(213,178,104,.78);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 15% 50%, rgba(213,178,104,.16), transparent 32%),
+    linear-gradient(135deg, rgba(213,178,104,.09), rgba(255,255,255,.025)),
+    #0d0d0d;
+  box-shadow:
+    0 20px 54px rgba(0,0,0,.36),
+    0 0 0 1px rgba(213,178,104,.08),
+    0 0 34px rgba(213,178,104,.09);
+}
+
+.mostrar-todo--principal::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -35%;
+  width: 24%;
+  height: 180%;
+  opacity: .42;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+  animation: brilloBotonPrincipal 4.8s ease-in-out 1.2s infinite;
+  pointer-events: none;
+}
+
+.mostrar-todo__icono {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: var(--dorado-claro);
+  background: rgba(213,178,104,.10);
+  border: 1px solid rgba(213,178,104,.35);
+  border-radius: 50%;
+  font-size: 1.45rem;
+}
+
+.mostrar-todo__contenido {
+  display: grid;
+  gap: 3px;
+}
+
+.mostrar-todo__contenido strong {
+  color: var(--blanco);
+  font-size: clamp(1rem, 2.4vw, 1.16rem);
+  line-height: 1.2;
+}
+
+.mostrar-todo__contenido small {
+  color: var(--gris);
+  font-size: .76rem;
+  font-weight: 500;
+}
+
+.mostrar-todo__flecha {
+  color: var(--dorado-claro);
+  font-size: 1.8rem;
+  line-height: 1;
+  transition: transform var(--transicion);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mostrar-todo--principal:hover {
+    transform: translateY(-3px);
+    border-color: var(--dorado-claro);
+    box-shadow:
+      0 24px 64px rgba(0,0,0,.44),
+      0 0 0 1px rgba(213,178,104,.14),
+      0 0 42px rgba(213,178,104,.15);
+  }
+
+  .mostrar-todo--principal:hover .mostrar-todo__flecha {
+    transform: translateX(4px);
+  }
+}
+
+.mostrar-todo--principal:active {
+  transform: scale(.985);
+}
+
+/* Botón flotante más visible. */
+.volver-arriba {
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  min-width: 72px;
+  min-height: 58px;
+  padding: 8px 16px 9px;
+  border-color: rgba(234,211,153,.9);
+  background: rgba(7,7,7,.95);
+  box-shadow:
+    0 18px 46px rgba(0,0,0,.58),
+    0 0 0 2px rgba(213,178,104,.08),
+    0 0 28px rgba(213,178,104,.14);
+}
+
+.volver-arriba__flecha {
+  font-size: 1.15rem;
+}
+
+.volver-arriba__texto {
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+
+@keyframes brilloBotonPrincipal {
+  0%, 68%, 100% {
+    left: -35%;
+    opacity: 0;
+  }
+  75% {
+    opacity: .42;
+  }
+  90% {
+    left: 115%;
+    opacity: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .mostrar-todo--principal {
+    min-height: 78px;
+    grid-template-columns: 48px 1fr 24px;
+    gap: 13px;
+    padding: 12px 16px;
+    border-radius: 18px;
+  }
+
+  .mostrar-todo__icono {
+    width: 44px;
+    height: 44px;
+  }
+
+  .mostrar-todo__contenido strong {
+    font-size: .98rem;
+  }
+
+  .mostrar-todo__contenido small {
+    font-size: .7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mostrar-todo--principal::after {
+    animation: none !important;
+  }
+}
+
+
+/* =========================================================
+   V1.4 — CONTINUACIÓN TRAS INSTAGRAM Y MENÚ FLOTANTE
+   ========================================================= */
+
+.menu-ancla {
+  height: 1px;
+  scroll-margin-top: 22px;
+}
+
+/* El siguiente paso aparece arriba de los formatos y domina la landing. */
+.landing__continuar[hidden] {
+  display: none !important;
+}
+
+.landing__continuar {
+  width: min(100%, 720px);
+  margin: 28px auto 22px;
+}
+
+.landing__continuar.is-visible {
+  animation: continuarEntrada .62s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.landing__continuar-etiqueta {
+  margin: 0 0 9px;
+  color: var(--dorado-claro);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .22em;
+}
+
+.boton--repertorio-destacado {
+  position: relative;
+  width: 100%;
+  min-height: 92px;
+  display: grid;
+  grid-template-columns: 58px 1fr 30px;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 24px;
+  overflow: hidden;
+  color: var(--blanco);
+  text-align: left;
+  border: 1px solid rgba(234,211,153,.95);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 12% 50%, rgba(213,178,104,.24), transparent 30%),
+    linear-gradient(125deg, rgba(213,178,104,.18), rgba(255,255,255,.035)),
+    rgba(7,7,7,.93);
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.58),
+    0 0 0 2px rgba(213,178,104,.09),
+    0 0 48px rgba(213,178,104,.22);
+}
+
+.boton--repertorio-destacado::after {
+  content: "";
+  position: absolute;
+  top: -45%;
+  left: -35%;
+  width: 22%;
+  height: 190%;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+  animation: brilloContinuar 4.2s ease-in-out .7s infinite;
+  pointer-events: none;
+}
+
+.boton__icono--grande {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  color: var(--negro);
+  background: var(--dorado-claro);
+  border-radius: 50%;
+  font-size: 1.45rem;
+}
+
+.boton__contenido {
+  display: grid;
+  gap: 4px;
+}
+
+.boton__contenido strong {
+  font-size: clamp(1.15rem, 3vw, 1.48rem);
+  line-height: 1.1;
+}
+
+.boton__contenido small {
+  color: var(--blanco-suave);
+  font-size: .78rem;
+  font-weight: 500;
+}
+
+.boton__avance {
+  color: var(--dorado-claro);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.landing.instagram-visitado .boton--instagram {
+  opacity: .72;
+  filter: saturate(.82);
+}
+
+/* Fuerza visibilidad del control flotante cuando JavaScript quita hidden. */
+.volver-arriba:not([hidden]) {
+  display: inline-flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.volver-arriba {
+  position: fixed !important;
+  z-index: 9999 !important;
+}
+
+@keyframes continuarEntrada {
+  from { opacity: 0; transform: translateY(18px) scale(.975); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes brilloContinuar {
+  0%, 67%, 100% { left: -35%; opacity: 0; }
+  74% { opacity: .6; }
+  91% { left: 118%; opacity: 0; }
+}
+
+@media (max-width: 760px) {
+  .landing__continuar {
+    margin: 23px auto 17px;
+  }
+
+  .boton--repertorio-destacado {
+    min-height: 84px;
+    grid-template-columns: 50px 1fr 24px;
+    gap: 13px;
+    padding: 12px 16px;
+    border-radius: 19px;
+  }
+
+  .boton__icono--grande {
+    width: 48px;
+    height: 48px;
+  }
+
+  .boton__contenido small {
+    font-size: .7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boton--repertorio-destacado::after {
+    animation: none !important;
+  }
+}
+
+
+/* =========================================================
+   V1.5 — CONTINUACIÓN MÁS VISIBLE Y MENÚ FLOTANTE UNIVERSAL
+   ========================================================= */
+
+/* Entrada deliberadamente lenta al regresar desde Instagram. */
+.landing__continuar.is-visible {
+  animation: continuarEntradaLenta 1.45s cubic-bezier(.16,.78,.18,1) both !important;
+}
+
+.boton--repertorio-destacado {
+  min-height: 102px;
+  border-width: 2px;
+  box-shadow:
+    0 30px 86px rgba(0,0,0,.64),
+    0 0 0 3px rgba(213,178,104,.10),
+    0 0 62px rgba(213,178,104,.32);
+  animation: respiracionRepertorio 5.8s ease-in-out 1.6s infinite;
+}
+
+.boton--repertorio-destacado::after {
+  animation: brilloContinuarLento 6.6s ease-in-out 1.8s infinite !important;
+}
+
+.landing__continuar-etiqueta {
+  font-size: .72rem;
+  text-shadow: 0 0 18px rgba(213,178,104,.34);
+}
+
+.volver-arriba:not([hidden]) {
+  display: inline-flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  animation: menuFlotanteEntrada .34s ease both;
+}
+
+.volver-arriba {
+  position: fixed !important;
+  right: 20px !important;
+  bottom: 20px !important;
+  z-index: 99999 !important;
+  color: var(--blanco) !important;
+  background: rgba(5,5,5,.97) !important;
+  border: 2px solid var(--dorado-claro) !important;
+  box-shadow:
+    0 22px 58px rgba(0,0,0,.72),
+    0 0 32px rgba(213,178,104,.28) !important;
+}
+
+@keyframes continuarEntradaLenta {
+  0% {
+    opacity: 0;
+    transform: translateY(34px) scale(.94);
+    filter: blur(7px);
+  }
+  55% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes respiracionRepertorio {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 30px 86px rgba(0,0,0,.64),
+      0 0 0 3px rgba(213,178,104,.10),
+      0 0 48px rgba(213,178,104,.22);
+  }
+  50% {
+    transform: scale(1.012);
+    box-shadow:
+      0 34px 94px rgba(0,0,0,.68),
+      0 0 0 4px rgba(213,178,104,.15),
+      0 0 76px rgba(213,178,104,.38);
+  }
+}
+
+@keyframes brilloContinuarLento {
+  0%, 70%, 100% {
+    left: -35%;
+    opacity: 0;
+  }
+  77% {
+    opacity: .72;
+  }
+  93% {
+    left: 120%;
+    opacity: 0;
+  }
+}
+
+@keyframes menuFlotanteEntrada {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 760px) {
+  .boton--repertorio-destacado {
+    min-height: 94px;
+  }
+
+  .volver-arriba {
+    right: max(14px, env(safe-area-inset-right)) !important;
+    bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boton--repertorio-destacado,
+  .boton--repertorio-destacado::after,
+  .landing__continuar.is-visible,
+  .volver-arriba:not([hidden]) {
+    animation: none !important;
+  }
+}
+
+
+/* =========================================================
+   ELENA GIRJOABA MUSIC — VERSIÓN 2.0
+   OPTIMIZACIÓN MÓVIL Y NUEVA ESTRUCTURA
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   01. IMÁGENES RESPONSIVE REALES
+   --------------------------------------------------------- */
+.landing__fondo,
+.hero {
+  background-image: none !important;
+}
+
+.landing__media,
+.hero__media {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  overflow: hidden;
+}
+
+.landing__imagen,
+.hero__imagen {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.landing__imagen {
+  object-position: center 28%;
+  transform: scale(1.025);
+  animation: landingZoom 12s ease-out both;
+}
+
+.hero__imagen {
+  object-position: center 22%;
+}
+
+.landing__fondo {
+  background: none !important;
+}
+
+.hero__media {
+  z-index: -3;
+}
+
+/* ---------------------------------------------------------
+   02. ENLACE DE ACCESIBILIDAD
+   Nunca debe quedar visible sin foco real.
+   --------------------------------------------------------- */
+.skip-link:not(:focus):not(:focus-visible) {
+  transform: translateY(-220%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* ---------------------------------------------------------
+   03. BOTÓN MÚSICA A LA CARTA
+   --------------------------------------------------------- */
+.landing__continuar {
+  width: min(100%, 760px);
+  margin: 26px auto 24px;
+}
+
+.landing__continuar[hidden] {
+  display: none !important;
+}
+
+.landing__continuar.is-visible {
+  display: block;
+  animation: continuarEntradaV2 1.55s cubic-bezier(.16,.78,.18,1) both;
+}
+
+.boton--repertorio-destacado {
+  position: relative;
+  width: 100%;
+  min-height: 110px;
+  display: grid;
+  grid-template-columns: 58px 1fr 34px;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 24px;
+  overflow: hidden;
+  color: var(--blanco);
+  text-align: left;
+  background:
+    radial-gradient(circle at 12% 50%, rgba(234,211,153,.22), transparent 34%),
+    linear-gradient(135deg, rgba(213,178,104,.16), rgba(255,255,255,.035)),
+    rgba(8,8,8,.96);
+  border: 2px solid rgba(234,211,153,.92);
+  border-radius: 24px;
+  box-shadow:
+    0 28px 88px rgba(0,0,0,.62),
+    0 0 0 4px rgba(213,178,104,.08),
+    0 0 72px rgba(213,178,104,.30);
+  animation: respiracionRepertorioV2 6.4s ease-in-out 1.8s infinite;
+}
+
+.boton--repertorio-destacado::after {
+  content: "";
+  position: absolute;
+  top: -45%;
+  left: -35%;
+  width: 24%;
+  height: 190%;
+  opacity: 0;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.34), transparent);
+  animation: brilloContinuarV2 7.2s ease-in-out 2.2s infinite;
+  pointer-events: none;
+}
+
+.landing__continuar .boton__icono {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  color: var(--dorado-claro);
+  background: rgba(213,178,104,.12);
+  border: 1px solid rgba(234,211,153,.48);
+  border-radius: 50%;
+  font-size: 1.55rem;
+}
+
+.landing__continuar-texto {
+  display: grid;
+  gap: 4px;
+}
+
+.landing__continuar-etiqueta {
+  color: var(--dorado-claro);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.landing__continuar-titulo {
+  color: var(--blanco);
+  font-size: clamp(1.05rem, 2.5vw, 1.35rem);
+  font-weight: 800;
+  line-height: 1.18;
+}
+
+.landing__continuar-flecha {
+  color: var(--dorado-claro);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+/* ---------------------------------------------------------
+   04. FORMATOS: COMPLETAMENTE INFORMATIVOS
+   --------------------------------------------------------- */
+.formato {
+  pointer-events: none !important;
+  cursor: default !important;
+  user-select: none;
+  -webkit-user-select: none;
+  animation: none !important;
+  transform: none !important;
+}
+
+.formato,
+.formato *,
+.formato::before,
+.formato::after {
+  transition: none !important;
+}
+
+.formato:hover,
+.formato:active,
+.formato:focus {
+  transform: none !important;
+  border-color: rgba(255,255,255,.13) !important;
+  box-shadow: 0 16px 45px rgba(0,0,0,.24) !important;
+}
+
+.formato:hover::before,
+.formato:active::before {
+  opacity: 0 !important;
+}
+
+/* ---------------------------------------------------------
+   05. CONTROLES DEL REPERTORIO
+   --------------------------------------------------------- */
+.controles-canciones {
+  scroll-margin-top: 18px;
+}
+
+.menu-ancla {
+  height: 1px;
+  scroll-margin-top: 18px;
+}
+
+.mostrar-todo--principal {
+  width: min(100%, 720px);
+  min-height: 92px;
+  grid-template-columns: 58px 1fr 30px;
+  gap: 18px;
+  margin: 32px auto 22px;
+  padding: 16px 24px;
+  border-radius: 22px;
+  border-color: rgba(234,211,153,.92);
+  box-shadow:
+    0 24px 62px rgba(0,0,0,.44),
+    0 0 0 2px rgba(213,178,104,.08),
+    0 0 42px rgba(213,178,104,.16);
+}
+
+.mostrar-todo__icono {
+  width: 52px;
+  height: 52px;
+  font-size: 1.55rem;
+}
+
+.mostrar-todo__contenido strong {
+  font-size: clamp(1.05rem, 2.6vw, 1.25rem);
+}
+
+.mostrar-todo__contenido small {
+  font-size: .8rem;
+}
+
+.categorias {
+  margin-top: 0;
+}
+
+/* ---------------------------------------------------------
+   06. BOTÓN MENÚ SIEMPRE VISIBLE EN EL REPERTORIO
+   --------------------------------------------------------- */
+.volver-arriba {
+  position: fixed !important;
+  right: max(16px, env(safe-area-inset-right)) !important;
+  bottom: max(16px, env(safe-area-inset-bottom)) !important;
+  z-index: 99999 !important;
+  min-width: 76px;
+  min-height: 60px;
+  display: inline-flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 16px 9px;
+  color: var(--blanco) !important;
+  background: rgba(5,5,5,.96) !important;
+  border: 2px solid var(--dorado-claro) !important;
+  border-radius: 19px;
+  box-shadow:
+    0 20px 58px rgba(0,0,0,.7),
+    0 0 34px rgba(213,178,104,.25) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.volver-arriba[hidden] {
+  display: inline-flex !important;
+}
+
+.volver-arriba__flecha {
+  color: var(--dorado-claro);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.volver-arriba__texto {
+  color: var(--blanco);
+  font-size: .69rem;
+  font-weight: 800;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------
+   07. LISTA: GANCHO PARA ORDEN POR COLUMNAS
+   El JavaScript V2 activará data-modo="todas".
+   --------------------------------------------------------- */
+.lista-canciones[data-modo="todas"] {
+  grid-auto-flow: column;
+}
+
+@media (min-width: 761px) {
+  .lista-canciones[data-modo="todas"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(65, auto);
+  }
+}
+
+/* ---------------------------------------------------------
+   08. MÓVIL
+   --------------------------------------------------------- */
+@media (max-width: 760px) {
+  .landing {
+    min-height: 100svh;
+    align-items: end;
+    padding: 92px 16px 24px;
+  }
+
+  .landing__contenido {
+    padding-top: 245px;
+  }
+
+  .landing__imagen {
+    object-position: center 20%;
+    transform: none;
+  }
+
+  .landing__overlay {
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.08) 0%, rgba(0,0,0,.20) 32%, rgba(0,0,0,.82) 72%, #070707 100%),
+      radial-gradient(circle at 50% 18%, rgba(213,178,104,.10), transparent 38%);
+  }
+
+  .hero {
+    min-height: 72svh;
+  }
+
+  .hero__imagen {
+    object-position: center 18%;
+  }
+
+  .hero::before {
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.08) 0%, rgba(0,0,0,.18) 35%, rgba(0,0,0,.80) 78%, var(--negro) 100%);
+  }
+
+  .hero__contenido {
+    padding-bottom: 44px;
+  }
+
+  .landing__continuar {
+    margin: 22px auto 20px;
+  }
+
+  .boton--repertorio-destacado {
+    min-height: 98px;
+    grid-template-columns: 50px 1fr 24px;
+    gap: 14px;
+    padding: 15px 16px;
+    border-radius: 20px;
+  }
+
+  .landing__continuar .boton__icono {
+    width: 48px;
+    height: 48px;
+    font-size: 1.35rem;
+  }
+
+  .landing__continuar-etiqueta {
+    font-size: .64rem;
+  }
+
+  .landing__continuar-titulo {
+    font-size: 1rem;
+  }
+
+  .mostrar-todo--principal {
+    min-height: 84px;
+    grid-template-columns: 48px 1fr 22px;
+    gap: 13px;
+    padding: 13px 15px;
+    border-radius: 19px;
+  }
+
+  .mostrar-todo__icono {
+    width: 44px;
+    height: 44px;
+    font-size: 1.35rem;
+  }
+
+  .mostrar-todo__contenido strong {
+    font-size: 1rem;
+  }
+
+  .mostrar-todo__contenido small {
+    font-size: .71rem;
+  }
+
+  .lista-canciones[data-modo="todas"] {
+    grid-auto-flow: row;
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+
+  .lista-canciones {
+    gap: 17px;
+  }
+
+  .volver-arriba {
+    right: max(12px, env(safe-area-inset-right)) !important;
+    bottom: max(12px, env(safe-area-inset-bottom)) !important;
+    min-width: 68px;
+    min-height: 56px;
+    padding: 7px 13px 8px;
+  }
+}
+
+/* ---------------------------------------------------------
+   09. ANIMACIONES V2
+   --------------------------------------------------------- */
+@keyframes continuarEntradaV2 {
+  0% {
+    opacity: 0;
+    transform: translateY(34px) scale(.94);
+    filter: blur(7px);
+  }
+  58% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes respiracionRepertorioV2 {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 28px 88px rgba(0,0,0,.62),
+      0 0 0 4px rgba(213,178,104,.08),
+      0 0 54px rgba(213,178,104,.24);
+  }
+  50% {
+    transform: scale(1.012);
+    box-shadow:
+      0 34px 96px rgba(0,0,0,.68),
+      0 0 0 5px rgba(213,178,104,.13),
+      0 0 82px rgba(213,178,104,.40);
+  }
+}
+
+@keyframes brilloContinuarV2 {
+  0%, 70%, 100% {
+    left: -35%;
+    opacity: 0;
+  }
+  78% {
+    opacity: .72;
+  }
+  94% {
+    left: 120%;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing__imagen,
+  .landing__continuar.is-visible,
+  .boton--repertorio-destacado,
+  .boton--repertorio-destacado::after {
+    animation: none !important;
+  }
+}
+
+
+/* =========================================================
+   V2.1 — FOTOGRAFÍAS ORIGINALES EN MÓVIL
+   Sin recortes agresivos, sin montaje y sin bordes visibles
+   ========================================================= */
+
+@media (max-width: 760px) {
+  /* La fotografía original completa se muestra horizontal,
+     centrada y fundida con el fondo oscuro de la landing. */
+  .landing__fondo {
+    background: #070707 !important;
+    overflow: hidden;
+  }
+
+  .landing__media {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(7,7,7,.08) 0%,
+        rgba(7,7,7,.04) 20%,
+        rgba(7,7,7,.20) 43%,
+        rgba(7,7,7,.76) 68%,
+        #070707 88%
+      );
+  }
+
+  .landing__imagen {
+    position: relative;
+    z-index: 0;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    margin-top: 74px;
+    object-fit: contain;
+    object-position: center top;
+    transform: none !important;
+    animation: fotoOriginalRespira 14s ease-in-out infinite alternate;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 5%,
+      #000 72%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 5%,
+      #000 72%,
+      transparent 100%
+    );
+  }
+
+  .landing__overlay {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(0,0,0,.08) 0%,
+        rgba(0,0,0,.12) 27%,
+        rgba(0,0,0,.46) 50%,
+        rgba(0,0,0,.86) 72%,
+        #070707 100%
+      ) !important;
+  }
+
+  /* El logo ya está dentro de la fotografía; evitamos repetir la marca. */
+  .landing__marca {
+    display: none !important;
+  }
+
+  .landing__contenido {
+    padding-top: min(56vw, 430px) !important;
+  }
+
+  /* Hero del repertorio con la fotografía original completa,
+     centrada y sin cortar el logo integrado. */
+  .hero {
+    min-height: 78svh;
+    background: #070707 !important;
+  }
+
+  .hero__media {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background: #070707;
+  }
+
+  .hero__imagen {
+    width: 100%;
+    height: auto;
+    margin-top: 64px;
+    object-fit: contain;
+    object-position: center top;
+    transform: none !important;
+    animation: heroOriginalRespira 15s ease-in-out infinite alternate;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 5%,
+      #000 74%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 5%,
+      #000 74%,
+      transparent 100%
+    );
+  }
+
+  .hero::before {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(0,0,0,.04) 0%,
+        rgba(0,0,0,.08) 30%,
+        rgba(0,0,0,.48) 56%,
+        rgba(0,0,0,.88) 80%,
+        #070707 100%
+      ) !important;
+  }
+
+  .hero__contenido {
+    padding-top: min(54vw, 410px);
+    padding-bottom: 42px;
+  }
+
+  /* En móvil la fotografía ya contiene el logo, así que la marca
+     superior del hero se oculta para evitar superposición. */
+  .hero__marca {
+    display: none !important;
+  }
+}
+
+@keyframes fotoOriginalRespira {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.018);
+  }
+}
+
+@keyframes heroOriginalRespira {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.016);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing__imagen,
+  .hero__imagen {
+    animation: none !important;
+  }
+}
+
+
+/* =========================================================
+   DISEÑO FINAL — TEXTOS Y LLAMADAS A LA ACCIÓN
+   ========================================================= */
+
+.boton__texto-doble {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.boton__texto-doble strong {
+  font-size: inherit;
+  line-height: 1.15;
+}
+
+.boton__texto-doble small {
+  color: rgba(255,255,255,.72);
+  font-size: .7rem;
+  font-weight: 500;
+}
+
+.landing__cotizacion {
+  min-height: 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  margin-top: 18px;
+  padding: 10px 20px;
+  color: var(--blanco);
+  background: rgba(12,12,12,.78);
+  border: 1px solid rgba(213,178,104,.62);
+  border-radius: 999px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.3);
+  text-decoration: none;
+}
+
+.landing__cotizacion > span:last-child {
+  display: grid;
+  text-align: left;
+}
+
+.landing__cotizacion strong {
+  font-size: .88rem;
+}
+
+.landing__cotizacion small {
+  color: var(--gris);
+  font-size: .68rem;
+}
+
+.landing__tipos-evento {
+  margin: 11px auto 0;
+  color: var(--gris-2);
+  font-size: .7rem;
+  letter-spacing: .02em;
+}
+
+.barra__contrataciones {
+  white-space: nowrap;
+}
+
+.mensaje-final--acciones {
+  width: min(calc(100% - 44px), 1080px);
+}
+
+.cierre-acciones {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.cierre-accion {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 24px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(213,178,104,.08), transparent 48%),
+    rgba(255,255,255,.018);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 22px;
+}
+
+.cierre-accion__etiqueta {
+  margin: 0 0 15px;
+  color: var(--blanco);
+  font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+  font-weight: 750;
+}
+
+.cierre-accion__descripcion {
+  max-width: 430px;
+  margin: -3px auto 18px;
+  color: var(--gris);
+  font-size: .86rem;
+  line-height: 1.65;
+}
+
+.cierre-accion__nota {
+  margin: 13px 0 0;
+  color: var(--gris-2);
+  font-size: .69rem;
+}
+
+.boton--cotizar-final,
+.cierre-instagram {
+  width: min(100%, 360px);
+  min-height: 62px;
+}
+
+.boton--cotizar-final {
+  color: var(--blanco);
+  background:
+    linear-gradient(135deg, rgba(213,178,104,.16), rgba(255,255,255,.025)),
+    #0d0d0d;
+  border-color: rgba(213,178,104,.72);
+  box-shadow: 0 18px 44px rgba(213,178,104,.10);
+}
+
+.footer__enlaces {
+  align-items: center;
+}
+
+.footer__boton {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 13px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  background: rgba(255,255,255,.025);
+}
+
+.footer__boton--instagram {
+  border-color: rgba(212,75,123,.35);
+}
+
+.footer__boton--whatsapp {
+  border-color: rgba(213,178,104,.35);
+}
+
+/* Cabecera móvil: acciones claras, sin superposición con el logo de la foto. */
+@media (max-width: 760px) {
+  .barra {
+    justify-content: flex-end;
+    padding: 14px 12px;
+  }
+
+  .barra__marca {
+    display: none !important;
+  }
+
+  .barra__enlaces {
+    width: 100%;
+    display: grid;
+    grid-template-columns: .8fr 1.2fr;
+    gap: 8px;
+  }
+
+  .barra__enlaces > a:first-child {
+    display: inline-flex !important;
+  }
+
+  .barra__enlaces a {
+    min-height: 38px;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 9px;
+    color: var(--blanco-suave);
+    background: rgba(5,5,5,.68);
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 999px;
+    backdrop-filter: blur(10px);
+    font-size: .68rem;
+    text-align: center;
+  }
+
+  .barra__contrataciones {
+    color: var(--dorado-claro) !important;
+    border-color: rgba(213,178,104,.6) !important;
+  }
+
+  .landing__cotizacion {
+    width: 100%;
+  }
+
+  .landing__tipos-evento {
+    max-width: 320px;
+    line-height: 1.55;
+  }
+
+  .cierre-acciones {
+    grid-template-columns: 1fr;
+  }
+
+  .cierre-accion {
+    min-height: auto;
+    padding: 27px 18px;
+  }
+
+  .boton--cotizar-final,
+  .cierre-instagram {
+    width: 100%;
+  }
+
+  .footer__enlaces {
+    width: 100%;
+    display: grid;
+    gap: 9px;
+  }
+
+  .footer__boton {
+    justify-content: center;
+  }
+}
+
+
+/* =========================================================
+   AJUSTES V3.1 — FOTOS, FORMATOS Y CONTROLES
+   ========================================================= */
+
+/* Título de formatos */
+.bloque-formatos {
+  width: 100%;
+  margin-top: 28px;
+}
+
+.formatos__encabezado {
+  margin: 0 0 16px;
+  color: var(--dorado-claro);
+  font-size: clamp(.82rem, 2vw, 1rem);
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Al quitar el texto informativo, acercamos el botón de Instagram. */
+.landing__acciones {
+  margin-top: 22px;
+}
+
+/* Botones WhatsApp sin subtítulo: texto centrado y limpio. */
+.landing__cotizacion > span:last-child,
+.boton--cotizar-final .boton__texto-doble {
+  display: block;
+  text-align: center;
+}
+
+.boton--cotizar-final .boton__texto-doble strong,
+.landing__cotizacion strong {
+  display: block;
+}
+
+/* Fotos con más fuerza y color. */
+.landing__imagen,
+.hero__imagen {
+  filter:
+    saturate(1.28)
+    contrast(1.16)
+    brightness(1.03)
+    sepia(.015);
+}
+
+/* Reducir el aspecto lavado de las capas oscuras. */
+.landing__overlay {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,.03) 0%,
+      rgba(0,0,0,.07) 30%,
+      rgba(0,0,0,.34) 55%,
+      rgba(0,0,0,.82) 82%,
+      #070707 100%
+    ) !important;
+}
+
+.hero::before {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,.02) 0%,
+      rgba(0,0,0,.06) 32%,
+      rgba(0,0,0,.36) 58%,
+      rgba(0,0,0,.84) 84%,
+      #070707 100%
+    ) !important;
+}
+
+@media (max-width: 760px) {
+  /* Eliminar el gran espacio negro superior. */
+  .landing {
+    padding-top: 0 !important;
+  }
+
+  .landing__media {
+    align-items: flex-start;
+  }
+
+  .landing__imagen {
+    margin-top: 0 !important;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 74%,
+      transparent 100%
+    ) !important;
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 74%,
+      transparent 100%
+    ) !important;
+  }
+
+  .landing__contenido {
+    padding-top: min(51vw, 390px) !important;
+  }
+
+  .hero__imagen {
+    margin-top: 0 !important;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 76%,
+      transparent 100%
+    ) !important;
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 76%,
+      transparent 100%
+    ) !important;
+  }
+
+  .hero__contenido {
+    padding-top: min(49vw, 370px) !important;
+  }
+
+  .bloque-formatos {
+    margin-top: 24px;
+  }
+
+  .formatos__encabezado {
+    margin-bottom: 13px;
+    font-size: .76rem;
+  }
+}
+
+
+/* =========================================================
+   AJUSTE V3.2 — RESTAURAR FRANJA SUPERIOR DEL REPERTORIO
+   La primera landing continúa sin espacio negro.
+   La segunda pantalla conserva la franja para Instagram
+   y Cotizar mi evento.
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .hero__imagen {
+    margin-top: 64px !important;
+  }
+
+  .hero__contenido {
+    padding-top: min(54vw, 410px) !important;
+  }
+}
+
+
+/* =========================================================
+   AJUSTE V3.4 — CENTRAR “COTIZAR MI EVENTO”
+   EN LA SEGUNDA PÁGINA
+   ========================================================= */
+
+.barra__contrataciones {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+@media (max-width: 760px) {
+  .barra__enlaces {
+    align-items: stretch;
+  }
+
+  .barra__enlaces a {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1.15;
+  }
+
+  .barra__contrataciones {
+    width: 100%;
+    min-height: 38px;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+}
+
+
+/* =========================================================
+   V4.0 — LISTAS DINÁMICAS Y MENÚ PRIVADO
+   ========================================================= */
+.footer__admin-trigger {
+  appearance: none;
+  width: 100%;
+  padding: 12px 16px 18px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: default;
+  font: inherit;
+}
+
+.admin-modal[hidden] { display: none !important; }
+.admin-modal { position: fixed; inset: 0; z-index: 120000; display: grid; place-items: center; padding: 18px; }
+.admin-modal__fondo { position: absolute; inset: 0; background: rgba(0,0,0,.82); backdrop-filter: blur(10px); }
+.admin-panel {
+  position: relative; z-index: 1; width: min(100%, 520px); max-height: min(88vh, 760px); overflow: auto;
+  padding: 30px 24px 24px; color: var(--blanco); background: #0b0b0b;
+  border: 1px solid rgba(213,178,104,.58); border-radius: 24px;
+  box-shadow: 0 28px 100px rgba(0,0,0,.75), 0 0 48px rgba(213,178,104,.12);
+}
+.admin-panel__cerrar { position: absolute; top: 12px; right: 14px; width: 38px; height: 38px; color: var(--blanco); background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); border-radius: 50%; font-size: 1.4rem; }
+.admin-panel__eyebrow { margin: 0 0 7px; color: var(--dorado-claro); font-size: .68rem; font-weight: 800; letter-spacing: .16em; }
+.admin-panel h2 { margin: 0 38px 24px 0; font-size: clamp(1.25rem,4vw,1.7rem); }
+.admin-panel__label { display: block; margin-bottom: 8px; color: var(--gris); font-size: .78rem; }
+.admin-panel__input { width: 100%; min-height: 54px; padding: 0 16px; color: var(--blanco); background: #121212; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; font-size: 1.15rem; letter-spacing: .3em; text-align: center; }
+.admin-panel__error { margin: 9px 0 0; color: #ff9b9b; font-size: .76rem; }
+.admin-panel__boton { width: 100%; min-height: 54px; margin-top: 18px; color: #080808; background: linear-gradient(135deg,var(--dorado-claro),var(--dorado)); border: 0; border-radius: 14px; font-weight: 800; }
+.admin-opciones { display: grid; gap: 9px; }
+.admin-opcion { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 10px; min-height: 54px; padding: 10px 13px; background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.10); border-radius: 14px; }
+.admin-opcion:has(input:checked) { border-color: rgba(213,178,104,.75); background: rgba(213,178,104,.09); }
+.admin-opcion input { accent-color: var(--dorado); }
+.admin-opcion__nombre { font-size: .83rem; font-weight: 700; }
+.admin-opcion__cantidad { color: var(--gris-2); font-size: .7rem; }
+.admin-panel__estado { min-height: 20px; margin: 14px 0 -4px; color: var(--gris); font-size: .76rem; text-align: center; }
+.admin-panel__enlace { display: block; margin-top: 16px; color: var(--dorado-claro); font-size: .76rem; text-align: center; }
+body.admin-abierto { overflow: hidden; }
+
+@media (min-width: 761px) {
+  .lista-canciones[data-modo="todas"] { grid-template-rows: repeat(var(--filas-lista, 65), auto) !important; }
+}
+
+
+/* =========================================================
+   LIVE MANAGER V5.0
+   Cola pública, estados y panel maestro
+   ========================================================= */
+
+.cancion {
+  position: relative;
+  transition:
+    opacity .2s ease,
+    filter .2s ease,
+    border-color .2s ease,
+    background .2s ease;
+}
+
+.cancion[data-estado="cola"] {
+  border-color: rgba(213,178,104,.62);
+  background:
+    linear-gradient(135deg, rgba(213,178,104,.11), rgba(255,255,255,.02)),
+    rgba(255,255,255,.025);
+}
+
+.cancion[data-estado="tocada"] {
+  opacity: .52;
+  filter: grayscale(.75);
+}
+
+.cancion__estado {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.cancion__estado--cola {
+  color: #17120a;
+  background: var(--dorado-claro);
+}
+
+.cancion__estado--tocada {
+  color: rgba(255,255,255,.8);
+  background: rgba(255,255,255,.12);
+}
+
+.cancion__pedir {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 12px;
+  color: var(--blanco);
+  background: rgba(213,178,104,.09);
+  border: 1px solid rgba(213,178,104,.48);
+  border-radius: 12px;
+  font: inherit;
+  font-size: .76rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.cancion__pedir[disabled] {
+  cursor: default;
+  opacity: .66;
+}
+
+.show-en-vivo {
+  width: min(calc(100% - 40px), 1120px);
+  margin: 30px auto 64px;
+  padding: clamp(24px, 4vw, 40px);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(213,178,104,.1), transparent 42%),
+    rgba(255,255,255,.018);
+  border: 1px solid rgba(213,178,104,.18);
+  border-radius: 26px;
+}
+
+.show-en-vivo__encabezado {
+  max-width: 700px;
+  margin: 0 auto 25px;
+  text-align: center;
+}
+
+.show-en-vivo__encabezado h2 {
+  margin: 5px 0 9px;
+  color: var(--blanco);
+  font-size: clamp(1.65rem, 5vw, 2.6rem);
+}
+
+.show-en-vivo__encabezado p:last-child {
+  color: var(--gris);
+  line-height: 1.65;
+}
+
+.show-en-vivo__columnas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.show-en-vivo__bloque {
+  padding: 22px;
+  background: rgba(0,0,0,.24);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 18px;
+}
+
+.show-en-vivo__bloque h3 {
+  margin: 0 0 16px;
+  color: var(--dorado-claro);
+  font-size: .82rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.cola-publica,
+.tocadas-publicas,
+.admin-cola {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cola-publica {
+  counter-reset: cola;
+}
+
+.cola-publica li,
+.tocadas-publicas li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 11px;
+  align-items: center;
+  padding: 12px 0;
+  color: var(--blanco-suave);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.cola-publica li::before {
+  counter-increment: cola;
+  content: counter(cola);
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: #17120a;
+  background: var(--dorado-claro);
+  border-radius: 50%;
+  font-size: .72rem;
+  font-weight: 850;
+}
+
+.tocadas-publicas li::before {
+  content: "✓";
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: rgba(255,255,255,.72);
+  background: rgba(255,255,255,.09);
+  border-radius: 50%;
+}
+
+.show-en-vivo__vacio {
+  margin: 0;
+  color: var(--gris-2);
+  font-size: .8rem;
+}
+
+.admin-panel--manager {
+  width: min(calc(100% - 24px), 760px);
+  max-height: min(92vh, 900px);
+  overflow-y: auto;
+}
+
+.admin-panel__cabecera,
+.admin-seccion__titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.firebase-estado {
+  padding: 6px 10px;
+  color: var(--gris);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 999px;
+  font-size: .67rem;
+  white-space: nowrap;
+}
+
+.firebase-estado.is-online {
+  color: #bfe8c9;
+  border-color: rgba(89,191,111,.35);
+}
+
+.firebase-estado.is-error {
+  color: #ffb2b2;
+  border-color: rgba(255,86,86,.38);
+}
+
+.admin-seccion {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.admin-seccion h3 {
+  margin: 0 0 13px;
+  color: var(--blanco);
+  font-size: .92rem;
+}
+
+.admin-configuracion {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-switch {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 14px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+}
+
+.admin-switch input {
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  accent-color: var(--dorado);
+}
+
+.admin-switch span {
+  display: grid;
+  gap: 3px;
+}
+
+.admin-switch strong {
+  color: var(--blanco);
+  font-size: .82rem;
+}
+
+.admin-switch small {
+  color: var(--gris);
+  font-size: .7rem;
+  line-height: 1.45;
+}
+
+.admin-resultados {
+  display: grid;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.admin-cancion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 11px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 13px;
+}
+
+.admin-cancion__info {
+  min-width: 0;
+}
+
+.admin-cancion__info strong,
+.admin-cancion__info small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-cancion__info strong {
+  color: var(--blanco);
+  font-size: .79rem;
+}
+
+.admin-cancion__info small {
+  margin-top: 3px;
+  color: var(--gris);
+  font-size: .68rem;
+}
+
+.admin-cancion__accion {
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: .67rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-cancion__accion--cola {
+  color: #17120a;
+  background: var(--dorado-claro);
+  border: 0;
+}
+
+.admin-cancion__accion--tocada {
+  color: var(--blanco);
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.14);
+}
+
+.admin-cola {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-cola li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+}
+
+.admin-cola__numero {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  color: #17120a;
+  background: var(--dorado-claro);
+  border-radius: 50%;
+  font-size: .68rem;
+  font-weight: 850;
+}
+
+.admin-cola__nombre {
+  min-width: 0;
+  color: var(--blanco-suave);
+  font-size: .76rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-cola__boton {
+  min-height: 32px;
+  padding: 0 9px;
+  color: var(--blanco);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 8px;
+  font: inherit;
+  font-size: .63rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.admin-panel__boton--peligro {
+  color: #ffd2d2;
+  background: rgba(188,44,44,.13);
+  border: 1px solid rgba(255,91,91,.3);
+}
+
+.admin-panel__nota {
+  margin: 13px 0 0;
+  color: var(--gris-2);
+  font-size: .67rem;
+  text-align: center;
+}
+
+.pedido-modal[hidden] {
+  display: none !important;
+}
+
+.pedido-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.pedido-modal__fondo {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.82);
+  backdrop-filter: blur(8px);
+}
+
+.pedido-panel {
+  position: relative;
+  width: min(100%, 430px);
+  padding: 28px;
+  background: #101010;
+  border: 1px solid rgba(213,178,104,.26);
+  border-radius: 22px;
+  box-shadow: 0 26px 80px rgba(0,0,0,.55);
+}
+
+.pedido-panel h2 {
+  margin: 5px 0 15px;
+  color: var(--blanco);
+}
+
+.pedido-panel__cerrar {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  color: var(--blanco);
+  background: transparent;
+  border: 0;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.pedido-panel__cancion {
+  margin: 0;
+  color: var(--dorado-claro);
+  font-weight: 750;
+}
+
+.pedido-panel__nota {
+  margin: 12px 0 20px;
+  color: var(--gris);
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 760px) {
+  .show-en-vivo__columnas {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-cancion {
+    grid-template-columns: minmax(0, 1fr) 1fr 1fr;
+  }
+
+  .admin-cancion__info {
+    grid-column: 1 / -1;
+  }
+
+  .admin-acciones {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-cola li {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .admin-cola__boton--quitar {
+    grid-column: 2 / -1;
+  }
+}
+
+
+/* =========================================================
+   V5.1 — HERRAMIENTAS Y COMPARTIR
+   ========================================================= */
+
+.admin-herramientas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-panel__boton--secundario {
+  color: var(--blanco-suave);
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+.admin-panel__boton--whatsapp {
+  color: #eaffef;
+  background: rgba(37, 211, 102, .12);
+  border: 1px solid rgba(37, 211, 102, .38);
+}
+
+@media (max-width: 600px) {
+  .admin-herramientas {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   V5.2 — CONTACTOS GLOBALES Y FILTROS
+   ========================================================= */
+
+.pedido-panel__label {
+  display: block;
+  margin: 14px 0 7px;
+  color: var(--blanco-suave);
+  font-size: .76rem;
+  font-weight: 750;
+}
+
+.pedido-consentimiento {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 9px;
+  align-items: start;
+  margin: 14px 0 0;
+  color: var(--gris);
+  font-size: .7rem;
+  line-height: 1.5;
+}
+
+.pedido-consentimiento input {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  accent-color: var(--dorado);
+}
+
+.admin-filtros-contactos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.admin-filtro-contactos {
+  min-height: 36px;
+  padding: 0 12px;
+  color: var(--gris);
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 999px;
+  font: inherit;
+  font-size: .68rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.admin-filtro-contactos.is-active {
+  color: #17120a;
+  background: var(--dorado-claro);
+  border-color: var(--dorado-claro);
+}
+
+.admin-contactos {
+  display: grid;
+  gap: 9px;
+  max-height: 330px;
+  overflow-y: auto;
+}
+
+.admin-contacto {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 13px;
+}
+
+.admin-contacto__info {
+  min-width: 0;
+}
+
+.admin-contacto__info strong,
+.admin-contacto__info span,
+.admin-contacto__info small {
+  display: block;
+}
+
+.admin-contacto__info strong {
+  color: var(--blanco);
+  font-size: .78rem;
+}
+
+.admin-contacto__info span {
+  margin-top: 3px;
+  color: var(--dorado-claro);
+  font-size: .72rem;
+}
+
+.admin-contacto__info small {
+  margin-top: 4px;
+  color: var(--gris-2);
+  font-size: .64rem;
+}
+
+.admin-contacto__pedidos {
+  min-width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: #17120a;
+  background: var(--dorado-claro);
+  border-radius: 50%;
+  font-size: .68rem;
+  font-weight: 850;
+}
+
+.admin-herramientas--contactos {
+  margin-top: 14px;
+}
+
+
+/* =========================================================
+   V5.3 — PRIORIDAD “TOCADA” Y FINALIZAR SHOW
+   ========================================================= */
+
+.admin-panel__boton--finalizar {
+  color: #17120a;
+  background: var(--dorado-claro);
+  border: 1px solid var(--dorado-claro);
+}
+
+.admin-cancion__accion--tocada {
+  color: #17120a;
+  background: var(--dorado-claro);
+  border-color: var(--dorado-claro);
+}
+
+.admin-cancion__accion--cola {
+  color: var(--blanco);
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.14);
+}
+
+
+/* =========================================================
+   V5.4 — ANOTACIONES AUTOMÁTICAS POR NOMBRE DE CANCIÓN
+   ========================================================= */
+
+.admin-cancion__accion--notas {
+  color: var(--dorado-claro);
+  background: rgba(213,178,104,.08);
+  border: 1px solid rgba(213,178,104,.34);
+}
+
+.notas-modal[hidden] {
+  display: none !important;
+}
+
+.notas-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100002;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+}
+
+.notas-modal__fondo {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.92);
+  backdrop-filter: blur(8px);
+}
+
+.notas-panel {
+  position: relative;
+  width: min(100%, 920px);
+  max-height: 95vh;
+  overflow: auto;
+  padding: 20px;
+  background: #0c0c0c;
+  border: 1px solid rgba(213,178,104,.26);
+  border-radius: 20px;
+  box-shadow: 0 28px 90px rgba(0,0,0,.7);
+}
+
+.notas-panel h2 {
+  margin: 0;
+  padding-right: 44px;
+  color: var(--blanco);
+}
+
+.notas-panel__cancion {
+  margin: 6px 0 16px;
+  color: var(--dorado-claro);
+  font-size: .82rem;
+}
+
+.notas-panel__cerrar {
+  position: sticky;
+  float: right;
+  top: 0;
+  width: 42px;
+  height: 42px;
+  color: var(--blanco);
+  background: rgba(0,0,0,.7);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 50%;
+  font-size: 1.55rem;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.notas-panel__imagen {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 82vh;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 12px;
+}
+
+@media (max-width: 760px) {
+  .notas-panel {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .notas-panel__imagen {
+    max-height: 84vh;
+  }
+}
+
+
+/* =========================================================
+   PANEL MAESTRO V6.0 — FLUJO EN DOS PASOS
+   ========================================================= */
+
+.admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: -6px -4px 14px;
+  padding: 8px 4px 13px;
+  background: linear-gradient(180deg, #101010 82%, rgba(16,16,16,0));
+}
+
+.admin-topbar h2 {
+  margin: 3px 0 0;
+}
+
+.admin-topbar__acciones {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.admin-menu-boton {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-content: center;
+  gap: 5px;
+  padding: 0;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.admin-menu-boton span {
+  width: 20px;
+  height: 2px;
+  display: block;
+  background: var(--blanco);
+  border-radius: 999px;
+}
+
+.admin-menu-lateral {
+  position: sticky;
+  top: 64px;
+  z-index: 19;
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 12px;
+  background: #151515;
+  border: 1px solid rgba(213,178,104,.22);
+  border-radius: 15px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.42);
+}
+
+.admin-menu-lateral button {
+  min-height: 42px;
+  padding: 0 13px;
+  color: var(--blanco-suave);
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  font: inherit;
+  font-size: .74rem;
+  font-weight: 760;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-vista[hidden],
+.admin-menu-lateral[hidden] {
+  display: none !important;
+}
+
+.admin-perfil {
+  display: grid;
+  gap: 8px;
+  margin: 17px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.admin-perfil legend {
+  margin-bottom: 9px;
+  color: var(--blanco);
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.admin-perfil label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 13px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  color: var(--blanco-suave);
+  font-size: .77rem;
+  font-weight: 700;
+}
+
+.admin-perfil input {
+  width: 19px;
+  height: 19px;
+  accent-color: var(--dorado);
+}
+
+.admin-panel__boton--comenzar {
+  min-height: 58px;
+  margin-top: 20px;
+  color: #17120a;
+  background: var(--dorado-claro);
+  border: 1px solid var(--dorado-claro);
+}
+
+.admin-show-resumen {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+
+.admin-show-resumen > div {
+  min-width: 0;
+  padding: 11px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 11px;
+}
+
+.admin-show-resumen small,
+.admin-show-resumen strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-show-resumen small {
+  color: var(--gris-2);
+  font-size: .6rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.admin-show-resumen strong {
+  margin-top: 4px;
+  color: var(--blanco);
+  font-size: .73rem;
+}
+
+.admin-buscador-fijo {
+  position: sticky;
+  top: 75px;
+  z-index: 14;
+  padding: 8px 0;
+  background: #101010;
+}
+
+.admin-lista-completa {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.admin-lista-cancion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 14px;
+}
+
+.admin-lista-cancion[data-estado="tocada"] {
+  opacity: .53;
+  filter: grayscale(.8);
+}
+
+.admin-lista-cancion[data-estado="cola"] {
+  border-color: rgba(213,178,104,.55);
+  background: rgba(213,178,104,.07);
+}
+
+.admin-lista-cancion__info {
+  min-width: 0;
+}
+
+.admin-lista-cancion__info strong,
+.admin-lista-cancion__info small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-lista-cancion__info strong {
+  color: var(--blanco);
+  font-size: .8rem;
+}
+
+.admin-lista-cancion__info small {
+  margin-top: 4px;
+  color: var(--gris);
+  font-size: .67rem;
+}
+
+.admin-lista-cancion__boton {
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: .65rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.admin-lista-cancion__boton--tocada {
+  color: #17120a;
+  background: var(--dorado-claro);
+  border: 1px solid var(--dorado-claro);
+}
+
+.admin-lista-cancion__boton--cola,
+.admin-lista-cancion__boton--notas {
+  color: var(--blanco);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+.admin-lista-cancion__boton--notas {
+  color: var(--dorado-claro);
+  border-color: rgba(213,178,104,.35);
+}
+
+.admin-show-final {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.admin-volver-vista {
+  min-height: 38px;
+  margin-bottom: 6px;
+  padding: 0 12px;
+  color: var(--blanco-suave);
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.admin-subir {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 100003;
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-content: center;
+  gap: 0;
+  color: #17120a;
+  background: var(--dorado-claro);
+  border: 2px solid rgba(255,255,255,.7);
+  border-radius: 50%;
+  box-shadow: 0 16px 40px rgba(0,0,0,.45);
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-subir span {
+  font-size: .48rem;
+  letter-spacing: .04em;
+}
+
+@media (max-width: 760px) {
+  .admin-panel--manager {
+    width: min(calc(100% - 12px), 760px);
+    max-height: 97vh;
+    padding: 20px 14px;
+  }
+
+  .admin-show-resumen {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-lista-cancion {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-lista-cancion__info {
+    grid-column: 1 / -1;
+  }
+
+  .admin-show-final {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   V6.7 — VISOR LIMPIO DE ANOTACIONES
+   ========================================================= */
+
+.notas-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483647 !important;
+  display: block !important;
+  padding: 0 !important;
+  background: #000 !important;
+}
+
+.notas-modal[hidden] {
+  display: none !important;
+}
+
+.notas-modal__fondo {
+  display: none !important;
+}
+
+.notas-panel {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: #000 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.notas-panel h2,
+.notas-panel__cancion,
+.notas-navegacion {
+  display: none !important;
+}
+
+.notas-panel__imagen {
+  display: block !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  margin: 0 !important;
+  background: #000 !important;
+  border-radius: 0 !important;
+}
+
+.notas-panel__cerrar {
+  position: fixed !important;
+  top: max(12px, env(safe-area-inset-top)) !important;
+  right: max(12px, env(safe-area-inset-right)) !important;
+  z-index: 2147483647 !important;
+  float: none !important;
+  width: 46px !important;
+  height: 46px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: #fff !important;
+  background: rgba(0,0,0,.72) !important;
+  border: 1px solid rgba(255,255,255,.35) !important;
+  border-radius: 50% !important;
+  font-size: 1.7rem !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+body.notas-abiertas {
+  overflow: hidden !important;
+}
+
+
+/* =========================================================
+   V6.8 — BOTONES DE CONTROL JUNTO AL TÍTULO
+   ========================================================= */
+
+.admin-topbar__titulo {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.admin-topbar__controles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-topbar__controles[hidden] {
+  display: none !important;
+}
+
+.admin-topbar__boton {
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: .66rem;
+  font-weight: 850;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-topbar__boton--volver {
+  color: var(--blanco-suave);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.13);
+}
+
+.admin-topbar__boton--finalizar {
+  color: #17120a;
+  background: var(--dorado-claro);
+  border: 1px solid var(--dorado-claro);
+}
+
+@media (max-width: 760px) {
+  .admin-topbar {
+    align-items: flex-start;
+  }
+
+  .admin-topbar__titulo {
+    display: grid;
+    gap: 9px;
+  }
+
+  .admin-topbar__controles {
+    flex-wrap: wrap;
+  }
+
+  .admin-topbar__boton {
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: .62rem;
+  }
+}
+
+
+/* =========================================================
+   V6.9 — FLECHA EN “VOLVER A CONFIGURACIÓN”
+   ========================================================= */
+
+.admin-topbar__boton--volver {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+ .admin-topbar__boton--finalizar {
+  color: #ffffff;
+  background: #d32f2f;
+  border: 1px solid #b71c1c;
+  font-weight: 800;
+  transition: .2s ease;
+}
+
+.admin-topbar__boton--finalizar:hover {
+  background: #b71c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(183,28,28,.35);
+}
+
+/* =========================================================
+   V6.11 — PULIDO DE BOTONES, GÉNEROS Y NUMERACIÓN
+   ========================================================= */
+
+/* Instagram principal y cierre: más grandes, centrados y sin cortes laterales. */
+.landing__acciones .boton--instagram,
+.cierre-instagram {
+  width: min(100%, 520px);
+  min-height: 76px;
+  padding: 13px 28px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      100deg,
+      var(--instagram-1) 0%,
+      var(--instagram-2) 55%,
+      var(--instagram-3) 100%
+    );
+  background-clip: border-box;
+  box-shadow:
+    0 14px 36px rgba(186,63,118,.30),
+    inset 0 0 0 1px rgba(255,255,255,.12);
+}
+
+.landing__acciones .boton--instagram .boton__icono,
+.cierre-instagram .boton__icono {
+  flex: 0 0 auto;
+  font-size: 1.35rem;
+}
+
+.landing__acciones .boton--instagram .boton__texto-doble,
+.cierre-instagram .boton__texto-doble {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  align-items: center;
+  justify-items: center;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.landing__acciones .boton--instagram .boton__texto-doble strong,
+.cierre-instagram .boton__texto-doble strong {
+  display: block;
+  max-width: 390px;
+  font-size: clamp(.92rem, 2.7vw, 1.08rem);
+  line-height: 1.25;
+  white-space: normal;
+}
+
+.landing__acciones .boton--instagram .boton__texto-doble small,
+.cierre-instagram .boton__texto-doble small {
+  display: block;
+  font-size: .74rem;
+  opacity: .88;
+}
+
+/* Todos los géneros tienen el mismo estado normal y la misma animación. */
+.categoria,
+.categoria--rock {
+  color: var(--blanco-suave);
+  background: var(--negro-3);
+  border-color: rgba(255,255,255,.10);
+  box-shadow: none;
+}
+
+.categoria:hover,
+.categoria--rock:hover {
+  transform: translateY(-2px);
+  color: var(--blanco);
+  background: rgba(255,255,255,.055);
+  border-color: rgba(255,255,255,.24);
+}
+
+/* El género seleccionado se señala en rojo. */
+.categoria.is-active,
+.categoria[aria-pressed="true"],
+.categoria--rock.is-active,
+.categoria--rock[aria-pressed="true"] {
+  color: #fff;
+  background: #c62828;
+  border-color: #e57373;
+  box-shadow:
+    0 10px 24px rgba(198,40,40,.28),
+    inset 0 0 0 1px rgba(255,255,255,.08);
+}
+
+/* Numeración consecutiva dentro del Panel Maestro. */
+.admin-lista-cancion {
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+}
+
+.admin-lista-cancion__numero {
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: #17120a;
+  background: var(--dorado-claro);
+  border-radius: 50%;
+  font-size: .7rem;
+  font-weight: 900;
+}
+
+@media (max-width: 760px) {
+  .landing__acciones .boton--instagram,
+  .cierre-instagram {
+    width: 100%;
+    min-height: 82px;
+    padding: 13px 20px;
+    border-radius: 28px;
+  }
+
+  .landing__acciones .boton--instagram .boton__texto-doble strong,
+  .cierre-instagram .boton__texto-doble strong {
+    max-width: 270px;
+  }
+
+  .admin-lista-cancion {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .admin-lista-cancion__info {
+    grid-column: auto;
+  }
+
+  .admin-lista-cancion__boton {
+    grid-column: auto;
+  }
+
+  .admin-lista-cancion__boton--tocada {
+    grid-column: 1 / 2;
+  }
+
+  .admin-lista-cancion__boton--cola,
+  .admin-lista-cancion__boton--notas {
+    grid-column: 2 / 3;
+  }
+}
+
+
+/* =========================================================
+   V6.12 — CIERRE ROJO JUNTO AL MENÚ
+   ========================================================= */
+
+.admin-topbar__acciones {
+  flex: 0 0 auto;
+}
+
+.admin-menu-boton,
+.admin-cerrar-boton {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 12px;
+}
+
+.admin-cerrar-boton {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: #fff;
+  background: #d32f2f;
+  border: 1px solid #b71c1c;
+  font: inherit;
+  font-size: 1.7rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background .18s ease,
+    transform .18s ease,
+    box-shadow .18s ease;
+}
+
+.admin-cerrar-boton:hover {
+  background: #b71c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 7px 18px rgba(183, 28, 28, .34);
+}
+
+.admin-cerrar-boton:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 760px) {
+  .admin-topbar__acciones {
+    gap: 7px;
+  }
+
+  .admin-menu-boton,
+  .admin-cerrar-boton {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+}
+
+
+/* =========================================================
+   VERSIÓN 1.0 — ACCESO OCULTO DESDE “MÚSICA”
+   ========================================================= */
+
+.landing__admin-trigger {
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-decoration: none;
+  cursor: inherit;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+
+/* =========================================================
+   V1.1 — COLA SIEMPRE VISIBLE Y COLA PÚBLICA COMPACTA
+   ========================================================= */
+
+.admin-buscador-fijo {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-cola-fija {
+  padding: 11px;
+  background: rgba(0,0,0,.92);
+  border: 1px solid rgba(213,178,104,.34);
+  border-radius: 13px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.28);
+}
+
+.admin-cola-fija__titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.admin-cola-fija__titulo strong {
+  color: var(--dorado-claro);
+  font-size: .72rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.admin-cola-fija__titulo span {
+  min-width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  color: #17120a;
+  background: var(--dorado-claro);
+  border-radius: 50%;
+  font-size: .66rem;
+  font-weight: 900;
+}
+
+.admin-cola-fija__lista {
+  display: grid;
+  gap: 6px;
+  max-height: 132px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.admin-cola-fija__lista li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 35px;
+  padding: 6px 8px;
+  background: rgba(255,255,255,.035);
+  border-radius: 9px;
+}
+
+.admin-cola-fija__numero {
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  color: #17120a;
+  background: var(--dorado-claro);
+  border-radius: 50%;
+  font-size: .62rem;
+  font-weight: 900;
+}
+
+.admin-cola-fija__cancion {
+  min-width: 0;
+  color: var(--blanco-suave);
+  font-size: .71rem;
+  font-weight: 750;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-cola-fija__estado {
+  color: var(--dorado-claro);
+  font-size: .59rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-cola-fija__vacio {
+  margin: 0;
+  color: var(--gris-2);
+  font-size: .68rem;
+}
+
+.admin-lista-cancion[data-estado="cola"] {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.admin-lista-cancion__boton--cola:disabled {
+  color: #17120a;
+  background: var(--dorado-claro);
+  border-color: var(--dorado-claro);
+  opacity: 1;
+  cursor: default;
+}
+
+.cola-publica-compacta {
+  width: min(calc(100% - 40px), 900px);
+  margin: 26px auto 48px;
+  padding: 20px;
+  background: rgba(255,255,255,.018);
+  border: 1px solid rgba(213,178,104,.20);
+  border-radius: 20px;
+}
+
+.cola-publica-compacta__encabezado {
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.cola-publica-compacta__encabezado h2 {
+  margin: 4px 0 0;
+  color: var(--blanco);
+  font-size: clamp(1.25rem, 4vw, 1.8rem);
+}
+
+.cola-publica-compacta__lista {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cola-publica-compacta__lista li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: center;
+  min-height: 40px;
+  padding: 7px 10px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.055);
+  border-radius: 10px;
+}
+
+.cola-publica-compacta__numero {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  color: #17120a;
+  background: var(--dorado-claro);
+  border-radius: 50%;
+  font-size: .65rem;
+  font-weight: 900;
+}
+
+.cola-publica-compacta__cancion {
+  min-width: 0;
+  color: var(--blanco-suave);
+  font-size: .75rem;
+  font-weight: 760;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cola-publica-compacta__estado {
+  color: var(--dorado-claro);
+  font-size: .61rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cola-publica-compacta__vacio {
+  margin: 0;
+  color: var(--gris-2);
+  font-size: .72rem;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .admin-cola-fija__lista {
+    max-height: 110px;
+  }
+
+  .cola-publica-compacta {
+    width: min(calc(100% - 24px), 900px);
+    padding: 15px;
+  }
+
+  .cola-publica-compacta__lista li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .cola-publica-compacta__estado {
+    grid-column: 2;
+  }
+}
+
+
+/* =========================================================
+   V1.2 — TOCADA EN LA COLA Y COLA PÚBLICA SIEMPRE VISIBLE
+   ========================================================= */
+
+/* Panel Maestro: botón Tocada dentro de la cola fija. */
+.admin-cola-fija__lista li {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.admin-cola-fija__tocada {
+  min-height: 30px;
+  padding: 0 10px;
+  color: #17120a;
+  background: var(--dorado-claro);
+  border: 1px solid var(--dorado-claro);
+  border-radius: 8px;
+  font: inherit;
+  font-size: .61rem;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-cola-fija__tocada:hover {
+  filter: brightness(.94);
+}
+
+/* Página pública: la cola está al final del HTML, pero se mantiene fija
+   en la parte inferior mientras el público sube o baja por la página. */
+.cola-publica-compacta {
+  position: fixed;
+  left: 50%;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 99990;
+  width: min(calc(100% - 24px), 900px);
+  max-height: min(34vh, 260px);
+  margin: 0;
+  padding: 12px 14px;
+  overflow-y: auto;
+  transform: translateX(-50%);
+  background: rgba(10,10,10,.96);
+  border: 1px solid rgba(213,178,104,.40);
+  border-radius: 16px;
+  box-shadow: 0 16px 50px rgba(0,0,0,.55);
+  backdrop-filter: blur(10px);
+}
+
+.cola-publica-compacta:not(.cola-publica-compacta--con-canciones) {
+  display: none !important;
+}
+
+.cola-publica-compacta__encabezado {
+  position: sticky;
+  top: -12px;
+  z-index: 2;
+  margin: -12px -14px 9px;
+  padding: 10px 14px 8px;
+  background: rgba(10,10,10,.98);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.cola-publica-compacta__encabezado .explorador__eyebrow {
+  display: none;
+}
+
+.cola-publica-compacta__encabezado h2 {
+  margin: 0;
+  font-size: .78rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--dorado-claro);
+}
+
+body.cola-publica-visible {
+  padding-bottom: min(38vh, 290px);
+}
+
+@media (max-width: 600px) {
+  .cola-publica-compacta {
+    bottom: max(6px, env(safe-area-inset-bottom));
+    width: calc(100% - 12px);
+    max-height: 30vh;
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .cola-publica-compacta__encabezado {
+    top: -10px;
+    margin: -10px -10px 7px;
+    padding: 9px 10px 7px;
+  }
+
+  .cola-publica-compacta__lista li {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .cola-publica-compacta__estado {
+    grid-column: auto;
+  }
+
+  body.cola-publica-visible {
+    padding-bottom: 34vh;
+  }
+}
+
+
+/* =========================================================
+   V1.5 — QUITAR CANCIÓN DE LA COLA
+   ========================================================= */
+
+.admin-cola-fija__lista li {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.admin-cola-fija__quitar {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: #fff;
+  background: #c62828;
+  border: 1px solid #b71c1c;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background .18s ease,
+    transform .18s ease,
+    box-shadow .18s ease;
+}
+
+.admin-cola-fija__quitar:hover {
+  background: #b71c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(183,28,28,.30);
+}
+
+.admin-cola-fija__quitar:active {
+  transform: translateY(0);
+}
+
+
+/* =========================================================
+   V1.6 — MENÚ SOBRE EL BORDE DE LA COLA PÚBLICA
+   ========================================================= */
+
+.volver-arriba {
+  bottom: var(
+    --menu-publico-bottom,
+    max(16px, env(safe-area-inset-bottom))
+  ) !important;
+  transition:
+    bottom .24s ease,
+    transform .18s ease,
+    box-shadow .18s ease !important;
+}
+
+
+/* =========================================================
+   V1.7 — POSICIÓN ROBUSTA DEL BOTÓN ↑ MENÚ
+   ========================================================= */
+
+.volver-arriba {
+  transition:
+    bottom .2s ease,
+    transform .18s ease,
+    box-shadow .18s ease !important;
+}
+
+
+/* =========================================================
+   V1.8 — Botón flotante con mayor presencia
+   ========================================================= */
+
+.volver-arriba{
+  background: linear-gradient(180deg,#efd89a 0%,#d9b45d 100%) !important;
+  color:#18130b !important;
+  border:2px solid rgba(255,247,220,.75) !important;
+  box-shadow:
+      0 10px 26px rgba(0,0,0,.35),
+      0 0 0 1px rgba(255,231,170,.25) inset !important;
+}
+
+.volver-arriba:hover{
+  transform:translateY(-2px) scale(1.03);
+  box-shadow:
+      0 14px 34px rgba(0,0,0,.42),
+      0 0 0 1px rgba(255,240,200,.45) inset !important;
+}
+
+.volver-arriba:active{
+  transform:translateY(0) scale(.98);
+}
+
+
+/* ===== Cancionero 2.0.2 ===== */
+.cancion__acciones { display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.85rem; }
+.cancion__letra,
+.admin-lista-cancion__boton--letra {
+  border:1px solid rgba(64,42,30,.28);
+  background:#f6eee6;
+  color:#4a3026;
+  border-radius:999px;
+  padding:.65rem 1rem;
+  font:inherit;
+  font-weight:750;
+  cursor:pointer;
+}
+.letra-modal[hidden] { display:none !important; }
+.letra-modal { position:fixed; inset:0; z-index:10050; display:grid; place-items:center; padding:14px; }
+.letra-modal__fondo { position:absolute; inset:0; background:rgba(14,10,8,.76); backdrop-filter:blur(8px); }
+.letra-panel {
+  position:relative; width:min(920px,100%); height:min(94vh,980px); overflow:hidden;
+  display:flex; flex-direction:column; background:#fff; color:#111; border-radius:22px;
+  box-shadow:0 30px 90px rgba(0,0,0,.38);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",Arial,sans-serif;
+}
+.letra-panel__cabecera {
+  display:flex; align-items:flex-start; justify-content:space-between; gap:1rem;
+  padding:20px 22px 14px; border-bottom:1px solid #e6e6e6; background:#fff;
+}
+.letra-panel__cabecera h2 { margin:0; font-size:clamp(1.45rem,3.2vw,2.1rem); color:#111; }
+.letra-panel__cabecera p { margin:.3rem 0 0; color:#686868; font-size:1rem; }
+.letra-panel__cerrar {
+  width:44px; height:44px; flex:0 0 44px; border:0; border-radius:50%;
+  background:#111; color:#fff; font-size:1.8rem; cursor:pointer;
+}
+.letra-panel__editar {
+  align-self:flex-end; margin:10px 18px 0; padding:.68rem 1rem;
+  border:1px solid #d3d3d3; border-radius:999px; background:#f4f4f4;
+  color:#222; font:inherit; font-weight:700; user-select:none; -webkit-user-select:none; touch-action:none;
+}
+.letra-toolbar {
+  display:flex; align-items:center; gap:7px; overflow-x:auto; padding:10px 14px;
+  border-bottom:1px solid #ddd; background:#f7f7f7;
+}
+.letra-toolbar button {
+  min-width:42px; min-height:40px; padding:.45rem .65rem; border:1px solid #ccc;
+  border-radius:10px; background:#fff; color:#111; font:inherit; font-weight:700;
+  cursor:pointer; white-space:nowrap;
+}
+.letra-toolbar__guardar { background:#111 !important; color:#fff !important; }
+.letra-toolbar__separador { width:1px; height:28px; background:#ccc; flex:0 0 1px; }
+.letra-contenido {
+  flex:1; overflow-y:auto; padding:26px clamp(22px,6vw,72px) 80px;
+  background:#fff; color:#111; font-size:clamp(1.2rem,2.5vw,1.65rem);
+  line-height:1.62; letter-spacing:.003em; outline:none; white-space:normal;
+}
+.letra-contenido p { margin:0 0 .38em; min-height:1em; }
+.letra-contenido[contenteditable="true"] { box-shadow:inset 0 0 0 3px #cfb69f; }
+@media (max-width:640px) {
+  .letra-modal { padding:0; }
+  .letra-panel { height:100dvh; border-radius:0; }
+  .letra-contenido { padding:22px 20px 90px; font-size:1.25rem; }
+}
+.admin-subir {
+  left:auto !important; right:max(16px,env(safe-area-inset-right)) !important;
+  background:#4a3026 !important; color:#fff !important;
+  border:2px solid rgba(255,255,255,.7) !important;
+}
+.admin-subir span { color:#fff !important; display:block !important; }
+.volver-arriba {
+  background:#4a3026 !important; color:#fff !important;
+  border:2px solid rgba(255,255,255,.75) !important;
+}
+.volver-arriba__flecha,
+.volver-arriba__texto { color:#fff !important; opacity:1 !important; }
+
+/* =========================================================
+   CANCIONERO 2.0.3 — barra de edición ordenada
+   ========================================================= */
+.letra-modal {
+  z-index: 2147483000 !important;
+}
+
+.letra-panel {
+  position: relative;
+  z-index: 1;
+  background: #fff !important;
+  color: #111 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif !important;
+}
+
+.letra-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 10px;
+  margin: 0 0 12px;
+  border: 1px solid #d8d8d8;
+  border-radius: 14px;
+  background: rgba(255,255,255,.98);
+  box-shadow: 0 8px 24px rgba(0,0,0,.10);
+}
+
+.letra-toolbar[hidden] { display: none !important; }
+
+.letra-toolbar__grupo {
+  position: relative;
+  display: inline-flex;
+}
+
+.letra-toolbar__control,
+.letra-toolbar__guardar,
+.letra-toolbar__cancelar {
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid #c9c9c9;
+  border-radius: 10px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.letra-toolbar__control:hover,
+.letra-toolbar__control:focus-visible {
+  background: #f3f3f3;
+}
+
+.letra-toolbar__formato {
+  width: 42px;
+  padding: 0;
+  font-size: 18px;
+}
+
+.letra-toolbar__guardar {
+  background: #111 !important;
+  color: #fff !important;
+  border-color: #111 !important;
+}
+
+.letra-toolbar__cancelar {
+  background: #fff !important;
+  color: #9f1f1f !important;
+  border-color: #cf9b9b !important;
+}
+
+.letra-toolbar__espacio {
+  flex: 1 1 18px;
+}
+
+.letra-color-muestra {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin-left: 7px;
+  border: 1px solid #999;
+  border-radius: 50%;
+  background: #111;
+  vertical-align: -2px;
+}
+
+.letra-toolbar__menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  z-index: 50;
+  display: grid;
+  min-width: 180px;
+  padding: 7px;
+  border: 1px solid #d2d2d2;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(0,0,0,.18);
+}
+
+.letra-toolbar__menu[hidden] { display: none !important; }
+
+.letra-toolbar__menu button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #111;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.letra-toolbar__menu button:hover,
+.letra-toolbar__menu button:focus-visible {
+  background: #f1f1f1;
+}
+
+.letra-toolbar__menu button > span {
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgba(0,0,0,.2);
+  border-radius: 50%;
+}
+
+.letra-toolbar__menu--iconos {
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  min-width: 285px;
+}
+
+.letra-contenido {
+  background: #fff !important;
+  color: #111 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif !important;
+  font-size: clamp(19px, 2.15vw, 28px);
+  line-height: 1.55;
+}
+
+@media (max-width: 720px) {
+  .letra-toolbar {
+    gap: 6px;
+    padding: 8px;
+  }
+  .letra-toolbar__control,
+  .letra-toolbar__guardar,
+  .letra-toolbar__cancelar {
+    min-height: 40px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+  .letra-toolbar__espacio { display: none; }
+  .letra-toolbar__menu--iconos {
+    grid-template-columns: 1fr;
+    min-width: 190px;
+  }
+}
+
+
+/* v2.0.4: menús desplegables del cancionero */
+.letra-toolbar__menu.is-open {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+.letra-toolbar__desplegable {
+  position: relative !important;
+}
+@media (max-width: 720px) {
+  .letra-toolbar__menu {
+    position: fixed !important;
+    left: 12px !important;
+    right: 12px !important;
+    top: auto !important;
+    bottom: 18px !important;
+    max-height: 55vh;
+    overflow-y: auto;
+    min-width: 0 !important;
+    z-index: 2147483647 !important;
+  }
+  .letra-toolbar__menu--iconos {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+
+/* v2.0.5: menús del editor visibles también en escritorio maximizado */
+@media (min-width: 721px) {
+  .letra-toolbar__menu.is-open {
+    position: fixed !important;
+    z-index: 2147483647 !important;
+    max-height: min(52vh, 420px);
+    overflow-y: auto;
+  }
+}
+
+
+/* v2.0.6 · agregar letras y confirmaciones propias */
+.admin-agregar-letra { position: relative; display: flex; justify-content: flex-end; margin: 0 0 14px; z-index: 20; }
+.admin-agregar-letra__boton { border: 1px solid rgba(73,49,35,.25); background:#6c4935; color:#fff; border-radius:12px; padding:11px 16px; font:700 14px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif; cursor:pointer; }
+.admin-agregar-letra__menu { position:absolute; right:0; top:calc(100% + 8px); min-width:260px; padding:8px; background:#fff; border:1px solid rgba(0,0,0,.12); border-radius:14px; box-shadow:0 18px 50px rgba(0,0,0,.2); z-index:9999; }
+.admin-agregar-letra__menu button { width:100%; border:0; background:transparent; text-align:left; padding:12px; border-radius:9px; font-weight:700; cursor:pointer; }
+.admin-agregar-letra__menu button:hover { background:#f2ebe6; }
+.agregar-letra-modal,.confirmacion { position:fixed; inset:0; z-index:2147483647; display:grid; place-items:center; padding:18px; }
+.agregar-letra-modal[hidden],.confirmacion[hidden],.aviso-app[hidden] { display:none !important; }
+.agregar-letra-modal__fondo,.confirmacion__fondo { position:absolute; inset:0; background:rgba(0,0,0,.55); }
+.agregar-letra-panel { position:relative; z-index:1; width:min(760px,96vw); max-height:92vh; overflow:auto; background:#fff; color:#111; border-radius:18px; padding:24px; box-shadow:0 24px 80px rgba(0,0,0,.35); }
+.agregar-letra-panel__cerrar { position:absolute; right:14px; top:12px; width:40px; height:40px; border:0; border-radius:50%; background:#eee; font-size:26px; cursor:pointer; }
+.agregar-letra-panel__texto { width:100%; resize:vertical; border:1px solid #bbb; border-radius:12px; padding:14px; font:17px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif; }
+.agregar-letra-panel__acciones { display:flex; gap:10px; margin-top:16px; }
+.confirmacion__panel { position:relative; z-index:1; width:min(430px,94vw); background:#fff; color:#111; border-radius:18px; padding:24px; box-shadow:0 22px 70px rgba(0,0,0,.35); text-align:center; }
+.confirmacion__panel h2 { margin:0 0 10px; } .confirmacion__panel p { margin:0 0 20px; line-height:1.5; }
+.confirmacion__acciones { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+.confirmacion__acciones button { min-width:130px; border:0; border-radius:11px; padding:12px 16px; font-weight:800; cursor:pointer; }
+.confirmacion__cancelar { background:#ececec; color:#222; } .confirmacion__aceptar { background:#6c4935; color:#fff; } .confirmacion__aceptar--peligro { background:#a33131; }
+.aviso-app { position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:2147483647; padding:12px 18px; border-radius:999px; background:#1f5f3d; color:#fff; box-shadow:0 12px 35px rgba(0,0,0,.25); font-weight:800; }
+@media(max-width:720px){ .admin-agregar-letra{justify-content:stretch}.admin-agregar-letra__boton{width:100%}.admin-agregar-letra__menu{left:0;right:0;min-width:0}.agregar-letra-panel__acciones{flex-direction:column}.confirmacion__acciones{flex-direction:column}.confirmacion__acciones button{width:100%} }
+
+
+/* v2.0.7 · menú Nueva canción completamente legible */
+.admin-agregar-letra {
+  position: relative !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  margin: 0 0 14px !important;
+  z-index: 100 !important;
+  isolation: isolate;
+}
+.admin-agregar-letra__boton {
+  min-height: 46px !important;
+  border: 1px solid rgba(73,49,35,.28) !important;
+  background: #6c4935 !important;
+  color: #fff !important;
+  border-radius: 13px !important;
+  padding: 0 18px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 750 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+  box-shadow: 0 7px 18px rgba(63, 40, 28, .18) !important;
+}
+.admin-agregar-letra__menu {
+  position: absolute !important;
+  right: 0 !important;
+  left: auto !important;
+  top: calc(100% + 9px) !important;
+  width: min(340px, calc(100vw - 36px)) !important;
+  min-width: 300px !important;
+  padding: 8px !important;
+  background: #fff !important;
+  color: #17120f !important;
+  border: 1px solid rgba(54, 38, 29, .16) !important;
+  border-radius: 15px !important;
+  box-shadow: 0 20px 55px rgba(35, 22, 15, .24) !important;
+  z-index: 2147483000 !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.admin-agregar-letra__menu[hidden] { display: none !important; }
+.admin-agregar-letra__menu button {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-height: 54px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: #fff !important;
+  color: #17120f !important;
+  text-align: left !important;
+  padding: 12px 14px !important;
+  border-radius: 10px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif !important;
+  font-size: 17px !important;
+  font-weight: 650 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+  cursor: pointer !important;
+}
+.admin-agregar-letra__menu button + button {
+  border-top: 1px solid rgba(54,38,29,.09) !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+.admin-agregar-letra__menu button:hover,
+.admin-agregar-letra__menu button:focus-visible {
+  background: #f3ece7 !important;
+  color: #17120f !important;
+  outline: none !important;
+}
+.admin-agregar-letra__icono {
+  flex: 0 0 28px !important;
+  width: 28px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  font-size: 21px !important;
+  line-height: 1 !important;
+}
+@media (max-width: 720px) {
+  .admin-agregar-letra { justify-content: stretch !important; }
+  .admin-agregar-letra__boton { width: 100% !important; }
+  .admin-agregar-letra__menu {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+
+/* v2.0.8 · acceso visible para crear una canción que no existe */
+.agregar-letra-panel__nueva {
+  width: 100%;
+  margin: 10px 0 16px;
+  padding: 13px 16px;
+  border: 1px solid rgba(91, 55, 39, 0.28);
+  border-radius: 12px;
+  background: #fff8f1;
+  color: #4b2f23;
+  font: 600 16px/1.2 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+.agregar-letra-panel__nueva:hover,
+.agregar-letra-panel__nueva:focus-visible {
+  background: #f6e9dc;
+  border-color: rgba(91, 55, 39, 0.5);
+  outline: none;
+}
+
+
+/* v2.0.9 · selector explícito para canción existente o nueva */
+.agregar-letra-panel__modo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0 18px;
+  padding: 6px;
+  background: #f2eee9;
+  border-radius: 14px;
+}
+.agregar-letra-panel__modo-boton {
+  appearance: none;
+  min-height: 48px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #34271f;
+  padding: 10px 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.agregar-letra-panel__modo-boton.is-active {
+  background: #fff;
+  color: #4b2f20;
+  border-color: rgba(75,47,32,.18);
+  box-shadow: 0 4px 12px rgba(54,35,24,.10);
+}
+#agregarLetraNuevaCampos {
+  padding: 14px;
+  margin-bottom: 6px;
+  border: 1px solid rgba(75,47,32,.16);
+  border-radius: 14px;
+  background: #fffaf6;
+}
+.version-prueba {
+  position: fixed;
+  right: 8px;
+  bottom: 6px;
+  z-index: 2;
+  font: 600 10px/1 -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  color: rgba(0,0,0,.28);
+  pointer-events: none;
+}
+@media (max-width: 620px) {
+  .agregar-letra-panel__modo { grid-template-columns: 1fr; }
+}
+
+
+/* v2.0.10 · Nueva canción desde la primera pantalla del Panel Maestro */
+.admin-panel__boton--nueva-cancion {
+  width: 100%;
+  margin: 16px 0 4px;
+  background: #6c4935 !important;
+  color: #fff !important;
+  border: 0 !important;
+  box-shadow: 0 8px 22px rgba(72,46,31,.18);
+}
+.nueva-cancion-panel { width: min(820px, 96vw); }
+.nueva-cancion-listas {
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid rgba(75,47,32,.16);
+  border-radius: 14px;
+}
+.nueva-cancion-listas legend { padding: 0 8px; font-weight: 800; }
+#nuevaCancionListas { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px 14px; }
+.nueva-cancion-lista { display:flex; align-items:center; gap:9px; min-height:40px; padding:8px 10px; border-radius:10px; background:#f8f4f0; color:#2d211b; font-weight:650; }
+.nueva-cancion-lista input { width:18px; height:18px; }
+.nueva-cancion-lista--fija { opacity:.75; }
+@media (max-width:620px) { #nuevaCancionListas { grid-template-columns:1fr; } }
+
+/* La posición vertical del botón Menú se calcula en script.js para que
+   permanezca pegado al borde superior de la lista de espera mientras crece. */
+
+/* V1.6.2 · El botón Menú se une al filo superior de “Canciones a la cola”.
+   La posición se actualiza desde JavaScript al crecer la cola y al rotar o
+   redimensionar la pantalla. */
+.volver-arriba {
+  bottom: var(--menu-publico-bottom, max(16px, env(safe-area-inset-bottom))) !important;
+}
+
+
+/* V1.6.2 — acceso secreto estable en Android */
+.landing__admin-trigger,
+.footer__admin-trigger {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* =========================================================
+   ENTREGA 6.10 — toolbar del cancionero siempre visible con zoom
+   ========================================================= */
+.letra-panel__cabecera,
+.letra-panel__editar,
+.letra-toolbar {
+  flex-shrink: 0 !important;
+}
+
+.letra-toolbar {
+  position: relative !important;
+  top: auto !important;
+  z-index: 2147483600 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  align-content: flex-start !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: min(42dvh, 260px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  border-width: 0 0 1px !important;
+  border-radius: 0 !important;
+  background: #f7f7f7 !important;
+}
+
+.letra-toolbar > * {
+  flex-shrink: 0 !important;
+}
+
+.letra-contenido {
+  min-height: 0 !important;
+}
+
+@media (max-width: 720px), (max-height: 620px) {
+  .letra-panel__cabecera {
+    padding: 10px 12px 8px !important;
+  }
+
+  .letra-panel__cabecera h2 {
+    font-size: clamp(1.05rem, 5vw, 1.45rem) !important;
+  }
+
+  .letra-panel__cabecera p {
+    margin-top: 2px !important;
+    font-size: .82rem !important;
+  }
+
+  .letra-panel__cerrar {
+    width: 38px !important;
+    height: 38px !important;
+    flex-basis: 38px !important;
+  }
+
+  .letra-toolbar {
+    gap: 5px !important;
+    padding: 7px !important;
+    max-height: min(48dvh, 280px) !important;
+  }
+
+  .letra-toolbar__control,
+  .letra-toolbar__guardar,
+  .letra-toolbar__cancelar {
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 0 8px !important;
+    font-size: 12px !important;
+  }
+
+  .letra-toolbar__formato {
+    width: 36px !important;
+    padding: 0 !important;
+  }
+
+  .letra-toolbar__espacio {
+    display: none !important;
+  }
+}
+
+
+/* Entrega 6.21 — Modal de pedido y tarjeta sin WhatsApp */
+.pedido-panel__cancion{
+  margin:5px 38px 18px 0;
+  color:var(--blanco);
+  font-size:clamp(1.25rem,4vw,1.7rem);
+  font-weight:800;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.pedido-panel__label{
+  margin-top:16px;
+  text-align:center;
+}
+.pedido-panel__nota{
+  width:100%;
+  margin:12px 0 4px;
+  text-align:center;
+}
+.cancion__grita{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  margin-top:18px;
+  padding:8px 12px 4px;
+  color:#fff4cf;
+  font-size:clamp(.88rem,3vw,1.18rem);
+  font-weight:800;
+  line-height:1.2;
+  letter-spacing:.015em;
+  text-align:center;
+  text-transform:none;
+  text-shadow:0 2px 8px rgba(0,0,0,.68),0 0 10px rgba(213,178,104,.42);
+}
+.cancion.is-grita-activa .cancion__grita span{
+  display:block;
+  animation:gritaLatido 1.55s ease-in-out infinite;
+}
+.cancion.is-grita-activa{
+  z-index:20;
+  transform:scale(1.055);
+  border-color:rgba(213,178,104,.82);
+  background:linear-gradient(150deg,rgba(213,178,104,.14),rgba(255,255,255,.025)),var(--negro-2);
+  box-shadow:0 24px 65px rgba(0,0,0,.5),0 0 0 1px rgba(213,178,104,.18);
+  animation:gritaCancion .5s cubic-bezier(.2,.85,.25,1.15);
+}
+.cancion.is-grita-activa .tags{display:none;}
+.cancion.is-grita-activa .cancion__grita{display:flex;animation:gritaTexto .38s .08s both;}
+.cancion.is-grita-activa .numero{
+  display:grid;
+  place-items:center;
+  width:58px;
+  height:58px;
+  border:2px solid var(--dorado-claro);
+  border-radius:50%;
+  box-shadow:0 0 0 6px rgba(213,178,104,.08),0 0 24px rgba(213,178,104,.22);
+  animation:numeroPulso 1s ease-in-out infinite alternate;
+}
+@keyframes gritaCancion{from{transform:scale(.96)}to{transform:scale(1.055)}}
+@keyframes gritaTexto{from{opacity:0;transform:translateY(10px) scale(.92)}to{opacity:1;transform:none}}
+@keyframes gritaLatido{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.025);filter:brightness(1.1)}}
+@keyframes numeroPulso{to{transform:scale(1.08);box-shadow:0 0 0 9px rgba(213,178,104,.05),0 0 32px rgba(213,178,104,.35)}}
+@media(max-width:600px){
+  .pedido-panel__cancion{font-size:1.12rem;}
+  .cancion.is-grita-activa{transform:scale(1.025);}
+  .cancion__grita{font-size:clamp(.84rem,4vw,1.05rem);padding:7px 6px 3px;margin-top:16px;}
+}
+
+.cancion__cerrar{display:none;position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);color:#fff;cursor:pointer;z-index:30}
+.cancion.is-grita-activa .cancion__cerrar{display:block}
+.cancion.is-grita-activa{grid-template-columns:70px 1fr;align-items:start}
+.cancion.is-grita-activa .numero{transform:translateY(-10px)}
+.cancion.is-grita-activa .info{text-align:center}
+.cancion.is-grita-activa .titulo,.cancion.is-grita-activa .artista{margin-left:auto;margin-right:auto;max-width:100%}
+.cancion__grita{font-size:clamp(.78rem,2.6vw,.95rem)}
+
+/* Entrega 6.27 — centrado entre círculo y X + mensaje con mayor resplandor */
+.cancion.is-grita-activa{
+  grid-template-columns:70px minmax(0,1fr);
+  column-gap:18px;
+}
+.cancion.is-grita-activa .info{
+  width:100%;
+  min-width:0;
+  padding-right:40px;
+  text-align:center;
+}
+.cancion.is-grita-activa .titulo,
+.cancion.is-grita-activa .artista{
+  width:100%;
+  max-width:none;
+  margin-left:0;
+  margin-right:0;
+  text-align:center;
+}
+.cancion.is-grita-activa .cancion__grita{
+  width:calc(100% + 128px);
+  margin-left:-88px;
+  margin-right:-40px;
+  padding-left:12px;
+  padding-right:12px;
+  font-size:clamp(1.02rem,3.35vw,1.36rem);
+  font-weight:850;
+  letter-spacing:.018em;
+  text-shadow:
+    0 2px 9px rgba(0,0,0,.72),
+    0 0 8px rgba(255,244,207,.52),
+    0 0 18px rgba(213,178,104,.72),
+    0 0 34px rgba(213,178,104,.38);
+}
+.cancion.is-grita-activa .cancion__grita span{
+  filter:drop-shadow(0 0 9px rgba(213,178,104,.58));
+}
+@media(max-width:600px){
+  .cancion.is-grita-activa .info{padding-right:36px;}
+  .cancion.is-grita-activa .cancion__grita{
+    width:calc(100% + 124px);
+    margin-right:-36px;
+    font-size:clamp(.98rem,4.4vw,1.18rem);
+  }
+}
+
+/* Entrega 6.28 — bloque activo centrado verticalmente; X sin cambios */
+.cancion.is-grita-activa{
+  align-items:center;
+}
+.cancion.is-grita-activa .numero{
+  transform:none;
+  align-self:center;
+}
+.cancion.is-grita-activa .info{
+  align-self:center;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+/* Entrega 6.29 — tarjeta seleccionada conserva el formato normal */
+.cancion.is-grita-activa{
+  grid-template-columns:62px 1fr;
+  align-items:center;
+  gap:18px;
+  transform:scale(1.045);
+  padding:20px;
+}
+.cancion.is-grita-activa .numero{
+  align-self:auto;
+  transform:none;
+  width:58px;
+  height:58px;
+}
+.cancion.is-grita-activa .info{
+  width:auto;
+  min-width:0;
+  padding-right:36px;
+  display:block;
+  align-self:auto;
+  text-align:left;
+}
+.cancion.is-grita-activa .titulo,
+.cancion.is-grita-activa .artista{
+  width:auto;
+  max-width:100%;
+  margin-left:0;
+  margin-right:0;
+  text-align:left;
+}
+.cancion.is-grita-activa .tags{
+  display:none;
+}
+.cancion.is-grita-activa .cancion__grita{
+  display:flex;
+  justify-content:flex-start;
+  width:100%;
+  margin:10px 0 0;
+  padding:0;
+  color:#fff4cf;
+  font-size:clamp(.88rem,2.4vw,1.05rem);
+  font-weight:850;
+  line-height:1.25;
+  letter-spacing:.01em;
+  text-align:left;
+  text-shadow:
+    0 2px 8px rgba(0,0,0,.7),
+    0 0 10px rgba(255,244,207,.42),
+    0 0 20px rgba(213,178,104,.56);
+}
+.cancion.is-grita-activa .cancion__grita span{
+  width:100%;
+  text-align:left;
+  filter:drop-shadow(0 0 7px rgba(213,178,104,.42));
+}
+@keyframes gritaCancion{
+  from{transform:scale(1)}
+  to{transform:scale(1.045)}
+}
+@media(max-width:600px){
+  .cancion.is-grita-activa{
+    grid-template-columns:62px 1fr;
+    gap:18px;
+    transform:scale(1.025);
+  }
+  .cancion.is-grita-activa .info{
+    padding-right:32px;
+  }
+  .cancion.is-grita-activa .cancion__grita{
+    width:100%;
+    margin:10px 0 0;
+    padding:0;
+    font-size:clamp(.82rem,3.7vw,1rem);
+  }
+  @keyframes gritaCancion{
+    from{transform:scale(1)}
+    to{transform:scale(1.025)}
+  }
+}
+
+/* =========================================================
+   ENTREGA 6.30 — BORDE DORADO EN BOTÓN INSTAGRAM
+   ========================================================= */
+.landing__acciones .boton--instagram {
+  border: 1px solid rgba(213,178,104,.62);
+}
+
+.barra__enlaces > a:first-child{
+  padding:9px 14px;
+  border:1px solid rgba(213,178,104,.55);
+  border-radius:999px;
+  background:rgba(0,0,0,.25);
+  box-shadow:0 0 0 1px rgba(213,178,104,.15),0 0 18px rgba(213,178,104,.18);
+}
+
+
+/* Entrega WhatsApp — selección visible de canción */
+.cancion.is-whatsapp-activa {
+  z-index: 8;
+  transform: scale(1.055);
+  border-color: rgba(213,178,104,.92);
+  background:
+    linear-gradient(135deg, rgba(213,178,104,.14), rgba(255,255,255,.025)),
+    var(--negro-2);
+  box-shadow:
+    0 0 0 1px rgba(213,178,104,.22),
+    0 20px 52px rgba(0,0,0,.42),
+    0 0 28px rgba(213,178,104,.22);
+  animation: whatsappTarjetaEntrada .42s cubic-bezier(.2,.85,.25,1.15) both;
+}
+
+.cancion.is-whatsapp-activa .numero {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(245,211,136,.96);
+  border-radius: 50%;
+  background: rgba(213,178,104,.10);
+  box-shadow:
+    0 0 0 5px rgba(213,178,104,.10),
+    0 0 22px rgba(245,211,136,.72);
+  animation: whatsappNumeroTitila 1s ease-in-out infinite;
+}
+
+.cancion.is-whatsapp-activa .cancion__pedir:not([disabled]) {
+  border-color: rgba(245,211,136,.95);
+  background: rgba(213,178,104,.20);
+  box-shadow: 0 0 20px rgba(213,178,104,.38);
+  animation: whatsappBotonTitila 1s ease-in-out infinite;
+}
+
+@keyframes whatsappTarjetaEntrada {
+  from { transform: scale(.98); }
+  to { transform: scale(1.055); }
+}
+
+@keyframes whatsappNumeroTitila {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 5px rgba(213,178,104,.10), 0 0 18px rgba(245,211,136,.48); }
+  50% { opacity: .66; transform: scale(1.10); box-shadow: 0 0 0 8px rgba(213,178,104,.04), 0 0 34px rgba(245,211,136,.95); }
+}
+
+@keyframes whatsappBotonTitila {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .70; transform: scale(1.025); }
+}
+
+@media (max-width: 760px) {
+  .cancion.is-whatsapp-activa { transform: scale(1.025); }
+  @keyframes whatsappTarjetaEntrada {
+    from { transform: scale(.985); }
+    to { transform: scale(1.025); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cancion.is-whatsapp-activa,
+  .cancion.is-whatsapp-activa .numero,
+  .cancion.is-whatsapp-activa .cancion__pedir { animation: none !important; }
+}
+
+/* Entrega 6.34: acceso de regreso al control en vivo */
+.panel-back-button{position:fixed;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));z-index:99999;padding:10px 14px;border:1px solid rgba(255,255,255,.25);border-radius:999px;background:rgba(12,12,14,.92);color:#fff;font:inherit;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.3);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.panel-back-button[hidden]{display:none!important}
+
+
+/* =========================================================
+   6.36.85 — PULSO VERDE DISCRETO EN "CANCIONES A LA COLA"
+   Cambio aislado: solo intensidad, color y velocidad.
+   ========================================================= */
+
+@keyframes colaPublicaTitileo {
+  0%, 100% {
+    background: rgba(255,255,255,.025);
+    border-color: rgba(255,255,255,.05);
+    box-shadow: 0 0 0 rgba(111,123,75,0);
+  }
+
+  50% {
+    background: rgba(111,123,75,.035);
+    border-color: rgba(111,123,75,.32);
+    box-shadow:
+      inset 0 0 0 1px rgba(111,123,75,.055),
+      0 0 8px rgba(111,123,75,.08);
+  }
+}
+
+.cola-publica-compacta--con-canciones .cola-publica-compacta__lista li {
+  animation: colaPublicaTitileo 1.8s ease-in-out infinite;
+  will-change: background, border-color, box-shadow;
+}
+
+/* Las filas no cambian de tamaño ni posición durante el pulso. */
+.cola-publica-compacta--con-canciones .cola-publica-compacta__lista li:hover {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cola-publica-compacta--con-canciones .cola-publica-compacta__lista li {
+    animation-duration: 2.8s;
+  }
+}
+
+
+/* ===== Repertorio público Master ===== */
+.catalogo-publico #estadoShowPublico,
+.catalogo-publico #panelBackButton,
+.catalogo-publico .version-prueba,
+.catalogo-publico #adminModal,
+.catalogo-publico #pedidoModal { display: none !important; }
+.catalogo-publico .cancion__cerrar,
+.catalogo-publico .cancion__grita { display: none !important; }

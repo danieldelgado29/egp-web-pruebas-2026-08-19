@@ -1,0 +1,67 @@
+{
+  "name": "Elena Girjoaba Music · Panel",
+  "short_name": "EG Music Panel",
+  "description": "Panel de control y repertorio de Elena Girjoaba Music, disponible sin conexión.",
+  "id": "./panel.html",
+  "start_url": "./panel.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "any",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "./assets/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./assets/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Abrir panel",
+      "short_name": "Panel",
+      "url": "./panel.html",
+      "icons": [
+        {
+          "src": "./assets/app-icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Abrir repertorio",
+      "short_name": "Repertorio",
+      "url": "./index.html",
+      "icons": [
+        {
+          "src": "./assets/app-icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

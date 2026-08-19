@@ -1514,3 +1514,38 @@ body{
 .queue-list{
   padding-top:6px!important;
 }
+
+
+/* =====================================================
+   EGP MUSICOS · MOVIMIENTO SIN CRECER
+   ===================================================== */
+
+.song-card.next{
+  transform-origin:center center!important;
+  animation:egpTarjetaSigueSinEscala 2.15s ease-in-out infinite!important;
+}
+
+@keyframes egpTarjetaSigueSinEscala{
+  0%,100%{
+    transform:translateY(0)!important;
+    filter:brightness(1);
+    box-shadow:
+      0 12px 30px rgba(0,0,0,.22),
+      0 0 0 1px rgba(240,184,74,.14);
+  }
+
+  50%{
+    transform:translateY(-3px)!important;
+    filter:brightness(1.06);
+    box-shadow:
+      0 14px 34px rgba(0,0,0,.24),
+      0 0 14px rgba(240,184,74,.10),
+      0 0 0 1px rgba(240,184,74,.28);
+  }
+}
+
+.queue-list{
+  padding-top:8px!important;
+  padding-left:4px!important;
+  padding-right:4px!important;
+}

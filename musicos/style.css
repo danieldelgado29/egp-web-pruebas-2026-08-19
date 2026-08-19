@@ -1426,3 +1426,51 @@ body{
     animation:none!important;
   }
 }
+
+
+/* =====================================================
+   EGP MUSICOS · MOVIMIENTO CONTROLADO DEFINITIVO
+   ===================================================== */
+
+.song-card.next{
+  transform-origin:center center!important;
+  animation:egpNextMoveControlled 2.2s ease-in-out infinite!important;
+}
+
+.song-card.next .song-number{
+  animation:egpNextNumberControlled 2.2s ease-in-out infinite!important;
+}
+
+@keyframes egpNextMoveControlled{
+  0%,100%{
+    transform:translateY(0) scale(1);
+    filter:brightness(1);
+  }
+
+  50%{
+    transform:translateY(-2px) scale(1.004);
+    filter:brightness(1.08);
+  }
+}
+
+@keyframes egpNextNumberControlled{
+  0%,100%{
+    transform:scale(1);
+    filter:brightness(1);
+    box-shadow:0 0 0 0 rgba(240,184,74,.10);
+  }
+
+  50%{
+    transform:scale(1.035);
+    filter:brightness(1.12);
+    box-shadow:0 0 0 5px rgba(240,184,74,.12);
+  }
+}
+
+/* evita que el pequeño movimiento produzca desbordes */
+.queue-list{
+  padding-top:4px!important;
+  padding-bottom:6px!important;
+  overflow-x:hidden!important;
+}
+

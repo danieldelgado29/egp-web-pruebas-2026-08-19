@@ -1275,3 +1275,104 @@ body{
 }
 
 /* FIN EGP BOTON ROJO FIJO ESQUINA V1 */
+
+
+/* =====================================================
+   EGP MUSICOS · COMPACTO + MOVIMIENTO SUAVE 2026-08-19
+   ===================================================== */
+
+/* La tarjeta completa nunca debe crecer ni desplazarse */
+.song-card.next{
+  animation:none!important;
+  transform:none!important;
+  filter:none!important;
+}
+
+/* Solo el número mantiene una señal MUY discreta */
+.song-card.next .song-number{
+  animation:egpNextNumberSoft 2.8s ease-in-out infinite!important;
+}
+
+@keyframes egpNextNumberSoft{
+  0%,100%{
+    box-shadow:0 0 0 0 rgba(240,184,74,.08);
+    filter:brightness(1);
+  }
+  50%{
+    box-shadow:0 0 0 4px rgba(240,184,74,.10);
+    filter:brightness(1.05);
+  }
+}
+
+/* Nunca permitir desborde horizontal */
+.queue-section,
+.queue-list,
+.song-card{
+  min-width:0!important;
+  max-width:100%;
+}
+
+.queue-section,
+.queue-list{
+  overflow-x:hidden!important;
+}
+
+/* Pantallas grandes: cola centrada y compacta */
+@media (min-width:760px){
+
+  .queue-title-row,
+  .queue-list,
+  .empty-state{
+    width:min(900px,100%)!important;
+    max-width:900px!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+  }
+
+  .song-card{
+    min-height:92px!important;
+    padding:14px 16px!important;
+    gap:14px!important;
+    border-radius:18px!important;
+  }
+
+  .song-card.next{
+    min-height:118px!important;
+    padding:15px 16px!important;
+  }
+
+  .song-number{
+    width:56px!important;
+    height:56px!important;
+    font-size:24px!important;
+    border-radius:15px!important;
+  }
+
+  .song-card.next .song-number{
+    width:66px!important;
+    height:66px!important;
+    font-size:29px!important;
+  }
+
+  .song-title{
+    font-size:clamp(21px,2.2vw,30px)!important;
+  }
+
+  .song-card.next .song-title{
+    font-size:clamp(26px,2.7vw,36px)!important;
+  }
+
+  .song-artist{
+    margin-top:5px!important;
+    font-size:clamp(14px,1.6vw,19px)!important;
+  }
+}
+
+/* Respeta además la preferencia del sistema */
+@media (prefers-reduced-motion:reduce){
+  .song-card.next,
+  .song-card.next .song-number,
+  .egp-eq i{
+    animation:none!important;
+  }
+}

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Actualizar EGP Músicos</title>
+<style>
+body{
+  margin:0;
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  background:#090c11;
+  color:white;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+main{text-align:center;padding:30px}
+strong{display:block;font-size:22px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<main>
+<strong>Actualizando EGP Músicos…</strong>
+<div id="estado">Limpiando versión anterior.</div>
+</main>
+
+<script>
+(async()=>{
+  const estado=document.getElementById("estado");
+
+  try{
+    if("serviceWorker" in navigator){
+      const regs=await navigator.serviceWorker.getRegistrations();
+
+      await Promise.all(
+        regs
+          .filter(r=>r.scope.includes("/musicos/"))
+          .map(r=>r.unregister())
+      );
+    }
+
+    if("caches" in window){
+      const keys=await caches.keys();
+
+      await Promise.all(
+        keys
+          .filter(k=>k.startsWith("egp-musicos-"))
+          .map(k=>caches.delete(k))
+      );
+    }
+
+    estado.textContent="Listo. Abriendo versión nueva…";
+
+    setTimeout(()=>{
+      location.replace("./?preview=1&fresh="+Date.now());
+    },900);
+
+  }catch(e){
+    estado.textContent="Recarga esta página una vez.";
+  }
+})();
+</script>
+</body>
+</html>

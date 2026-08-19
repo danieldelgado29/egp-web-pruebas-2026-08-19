@@ -536,6 +536,26 @@ if (previewMode && "serviceWorker" in navigator) {
 if ("serviceWorker" in navigator && !previewMode) {
   window.addEventListener("load", async () => {
     try {
+      const EGP_TEST_REPO =
+        location.hostname === "danieldelgado29.github.io" &&
+        location.pathname.startsWith("/egp-web-pruebas-2026-08-19/musicos/");
+
+      if (EGP_TEST_REPO) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(reg => reg.unregister()));
+
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(
+            keys
+              .filter(key => key.startsWith("egp-musicos-"))
+              .map(key => caches.delete(key))
+          );
+        }
+
+        return;
+      }
+
       const registration = await navigator.serviceWorker.register("./service-worker.js?v=1.5.8", {
         scope: "./",
         updateViaCache: "none"

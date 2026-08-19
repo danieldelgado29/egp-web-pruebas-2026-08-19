@@ -1,5 +1,7 @@
 "use strict";
 
+const EGP_AUDIT_LOCAL = new URL(location.href).searchParams.get("audit_local") === "1";
+
 let initializeApp;
 let arrayRemove;
 let arrayUnion;
@@ -864,6 +866,12 @@ async function cargarDatos() {
 }
 
 async function iniciarFirebase(firebaseConfig) {
+  if (EGP_AUDIT_LOCAL) {
+    estado.egpFirebasePedidosAutoritativo = false;
+    actualizarEstadoFirebase("Auditoría LAN", "online");
+    egpSincronizarLanV85(true);
+    return;
+  }
   if (!firebaseConfig?.apiKey || !firebaseConfig?.projectId) {
     actualizarEstadoFirebase("Sin configuración", "error");
     return;
@@ -1380,7 +1388,7 @@ function cantidadPedidosPanelCancion(idCancion) {
 
 /* EGP PEDIDO UNICO POR PERSONA V73 */
 /* EGP PEDIDOS CONSOLIDADO V85 */
-const EGP_REQUESTS_LAN_URL = "http://10.10.10.2:8790";
+const EGP_REQUESTS_LAN_URL = EGP_AUDIT_LOCAL ? "http://10.10.10.2:8796" : "http://10.10.10.2:8790";
 
 function egpPedidosPanelActivoV85() {
   if (estado.egpFirebasePedidosAutoritativo) {
@@ -1393,6 +1401,16 @@ function egpPedidosPanelActivoV85() {
   }
 
   return estado.configRemota.pedidos_panel === true;
+}
+
+function egpPedidosModoActualV4() {
+  if (estado.egpFirebasePedidosAutoritativo) {
+    return estado.configRemota.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre";
+  }
+  if (estado.egpLanConfig?.ok) {
+    return estado.egpLanConfig.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre";
+  }
+  return estado.configRemota.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre";
 }
 
 function egpPedidosCombinadosV85() {
@@ -1457,6 +1475,10 @@ async function egpSincronizarLanV85(forzar = false) {
   const firmaAntes = JSON.stringify(
     egpPedidosCombinadosV85().map(p => String(p?.id || "")).sort()
   );
+  const firmaColaAntes = JSON.stringify({
+    cola: (estado.configRemota.cola || []).map(String),
+    tocadas: (estado.configRemota.tocadas || []).map(String)
+  });
 
   try {
     const response = await egpFetchLanV85("/api/config");
@@ -1464,6 +1486,46 @@ async function egpSincronizarLanV85(forzar = false) {
     const config = await response.json();
     if (!config?.ok) return;
     estado.egpLanConfig = config;
+    if (!estado.egpFirebasePedidosAutoritativo) {
+      estado.configRemota.pedidos_panel = config.pedidos_panel === true;
+      estado.configRemota.pedidos_modo = config.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre";
+      if (config.show_active === true && config.show_id) {
+        estado.configRemota.inicio_show = Number(config.show_id) || estado.configRemota.inicio_show;
+        estado.configRemota.show_activo = true;
+      } else if (config.show_active === false) {
+        estado.configRemota.show_activo = false;
+      }
+    }
+
+    if (EGP_AUDIT_LOCAL) {
+      try {
+        const stateResponse = await egpFetchLanV85("/api/state", {}, 1000);
+        if (stateResponse.ok) {
+          const localState = await stateResponse.json();
+          const rows = Array.isArray(localState.queue) ? [...localState.queue].sort((a,b)=>(Number(a.position)||0)-(Number(b.position)||0)) : [];
+          /* EGP V6 FIX COLA PUBLICA DESDE API STATE */
+          const firmaColaLanAntesV6 = JSON.stringify({
+            cola: (estado.configRemota.cola || []).map(String),
+            tocadas: (estado.configRemota.tocadas || []).map(String),
+            mostrar: estado.configRemota.mostrar_cola !== false
+          });
+
+          estado.configRemota.cola = rows.map(x=>String(x.id||"")).filter(Boolean);
+          estado.configRemota.tocadas = rows.filter(x=>x.played===true).map(x=>String(x.id||"")).filter(Boolean);
+          estado.configRemota.mostrar_cola = true;
+
+          const firmaColaLanDespuesV6 = JSON.stringify({
+            cola: estado.configRemota.cola.map(String),
+            tocadas: estado.configRemota.tocadas.map(String),
+            mostrar: estado.configRemota.mostrar_cola !== false
+          });
+
+          if (firmaColaLanAntesV6 !== firmaColaLanDespuesV6) {
+            sincronizarInterfazRemota();
+          }
+        }
+      } catch {}
+    }
 
     if (config.show_active === true && config.pedidos_panel === true && config.show_id) {
       const ordersResponse = await egpFetchLanV85(
@@ -1496,7 +1558,6 @@ function egpProgramarLanV85(delay = 2500) {
   }, delay);
 }
 
-egpProgramarLanV85(150);
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) egpSincronizarLanV85(true);
 });
@@ -1547,7 +1608,10 @@ function pedidoPropioYaEnviado(idCancion) {
   if (!id || !estado.configRemota.inicio_show) return false;
 
   const key = egpClavePedidoPropio(id);
-  return Boolean(egpPedidosPropiosLeidos()[key]);
+  const registro = egpPedidosPropiosLeidos()[key];
+  // Solo evita doble toque/envío accidental inmediato. El bloqueo real lo decide
+  // Firebase o el servicio LAN según el estado pendiente/aceptado.
+  return Boolean(registro && Date.now() - Number(registro.creado_en_ms || 0) < 2500);
 }
 
 function marcarPedidoPropio(idCancion, telefono = "") {
@@ -1573,6 +1637,43 @@ function marcarPedidoPropio(idCancion, telefono = "") {
   localStorage.setItem(EGP_PEDIDOS_PROPIOS_KEY, JSON.stringify(limpio));
 }
 
+
+/* EGP V6 — BLOQUEO LOCAL INMEDIATO 1 POR TURNO
+   Usa los pedidos propios ya guardados para no volver a pedir el teléfono
+   mientras exista una canción de este mismo usuario todavía no Tocada. */
+function egpPedidoActivoLocalTurnoV6() {
+  if (egpPedidosModoActualV4() !== "uno_por_turno") return null;
+
+  const showId = String(
+    estado.egpLanConfig?.show_id ||
+    estado.configRemota.inicio_show ||
+    ""
+  );
+  if (!showId) return null;
+
+  const tocadas = new Set(
+    (Array.isArray(estado.configRemota.tocadas) ? estado.configRemota.tocadas : [])
+      .map(String)
+  );
+
+  const prefijo = `${showId}|`;
+  const candidatos = Object.entries(egpPedidosPropiosLeidos())
+    .filter(([clave, registro]) =>
+      clave.startsWith(prefijo) &&
+      registro &&
+      String(registro.telefono || "")
+    )
+    .map(([clave, registro]) => ({
+      songId: clave.slice(prefijo.length),
+      telefono: String(registro.telefono || ""),
+      creado_en_ms: Number(registro.creado_en_ms || 0)
+    }))
+    .filter((registro) => registro.songId && !tocadas.has(String(registro.songId)))
+    .sort((a, b) => b.creado_en_ms - a.creado_en_ms);
+
+  return candidatos[0] || null;
+}
+
 async function personaYaPidioCancionEnShow(cancion, telefono) {
   if (!estado.db || !cancion || !telefono) return false;
 
@@ -1591,11 +1692,27 @@ async function personaYaPidioCancionEnShow(cancion, telefono) {
       const pedido = documento.data() || {};
       return (
         String(pedido.show_id || "") === showId &&
-        String(pedido.cancion_id || "") === songId
+        String(pedido.cancion_id || "") === songId &&
+        ["pendiente", "aceptado"].includes(String(pedido.estado || ""))
       );
     });
   } catch (error) {
     console.warn("No se pudo comprobar pedido duplicado:", error);
+    return false;
+  }
+}
+
+async function personaTienePedidoActivoEnShow(telefono) {
+  if (!estado.db || !telefono) return false;
+  try {
+    const snapshot = await getDocs(query(collection(estado.db, "pedidos"), where("telefono", "==", telefono)));
+    const showId = String(idShowActual());
+    return snapshot.docs.some((documento) => {
+      const pedido = documento.data() || {};
+      return String(pedido.show_id || "") === showId && ["pendiente", "aceptado"].includes(String(pedido.estado || ""));
+    });
+  } catch (error) {
+    console.warn("No se pudo comprobar el turno activo:", error);
     return false;
   }
 }
@@ -2585,6 +2702,100 @@ function limpiarSeleccionWhatsApp() {
   });
 }
 
+function egpRestaurarVentanaPedidoV6() {
+  const modal = DOM.pedidoModal;
+  if (!modal) return;
+  [
+    ".admin-panel__eyebrow",
+    "#pedidoCancion",
+    ".pedido-panel__label",
+    "#pedidoTelefono",
+    ".pedido-panel__nota",
+    "#pedidoEnviar"
+  ].forEach((selector) => {
+    const el = modal.querySelector(selector);
+    if (el) el.hidden = false;
+  });
+  if (DOM.pedidoError) {
+    DOM.pedidoError.hidden = true;
+    DOM.pedidoError.classList.remove("egp-turno-bloqueado");
+  }
+}
+
+function egpMostrarSoloBloqueoTurnoV6() {
+  const modal = DOM.pedidoModal;
+  if (!modal) return;
+
+  try { DOM.pedidoTelefono?.blur(); } catch {}
+  egpRestaurarViewportPedidoV6();
+
+  [".admin-panel__eyebrow", "#pedidoCancion"].forEach((selector) => {
+    const el = modal.querySelector(selector);
+    if (el) el.hidden = false;
+  });
+
+  [
+    ".pedido-panel__label",
+    "#pedidoTelefono",
+    ".pedido-panel__nota",
+    "#pedidoEnviar"
+  ].forEach((selector) => {
+    const el = modal.querySelector(selector);
+    if (el) el.hidden = true;
+  });
+
+  DOM.pedidoError.textContent = "Ya tienes una canción pedida. Podrás pedir otra cuando se toque.";
+  DOM.pedidoError.classList.add("egp-turno-bloqueado");
+  DOM.pedidoError.hidden = false;
+}
+
+
+/* EGP V6 AJUSTE TECLADO VISUALVIEWPORT — CORREGIDO */
+function egpAjustarPedidoAlTecladoV6() {
+  const modal = DOM.pedidoModal;
+  if (!modal || modal.hidden) return;
+
+  const vv = window.visualViewport;
+  if (!vv) return;
+
+  const alto = Math.max(1, Math.round(vv.height));
+  const ancho = Math.max(1, Math.round(vv.width));
+  const arriba = Math.max(0, Math.round(vv.offsetTop));
+  const izquierda = Math.max(0, Math.round(vv.offsetLeft));
+  const telefonoEnFoco = document.activeElement === DOM.pedidoTelefono;
+  const tecladoAbierto = telefonoEnFoco || (window.innerHeight - vv.height - vv.offsetTop) > 80;
+
+  modal.style.setProperty("--egp-vv-top", `${arriba}px`);
+  modal.style.setProperty("--egp-vv-left", `${izquierda}px`);
+  modal.style.setProperty("--egp-vv-width", `${ancho}px`);
+  modal.style.setProperty("--egp-vv-height", `${alto}px`);
+  modal.classList.toggle("egp-teclado-abierto-v6", tecladoAbierto);
+
+  if (tecladoAbierto) {
+    requestAnimationFrame(() => {
+      const panel = modal.querySelector(".pedido-panel");
+      if (panel) panel.scrollTop = 0;
+    });
+  }
+}
+
+function egpRestaurarViewportPedidoV6() {
+  const modal = DOM.pedidoModal;
+  if (!modal) return;
+
+  modal.classList.remove("egp-teclado-abierto-v6");
+  modal.style.removeProperty("--egp-vv-top");
+  modal.style.removeProperty("--egp-vv-left");
+  modal.style.removeProperty("--egp-vv-width");
+  modal.style.removeProperty("--egp-vv-height");
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", egpAjustarPedidoAlTecladoV6);
+  window.visualViewport.addEventListener("scroll", egpAjustarPedidoAlTecladoV6);
+}
+
+
 function abrirPedido(cancion, modo = "whatsapp") {
   estado.pedidoSeleccionado = cancion;
   estado.pedidoModo = modo;
@@ -2636,7 +2847,10 @@ function abrirPedido(cancion, modo = "whatsapp") {
 }
 
 function cerrarPedido() {
+  try { DOM.pedidoTelefono?.blur(); } catch {}
+  egpRestaurarViewportPedidoV6();
   DOM.pedidoModal.hidden = true;
+  document.body.classList.remove("egp-pedido-abierto-v6");
   estado.pedidoSeleccionado = null;
   limpiarSeleccionWhatsApp();
 }
@@ -2709,8 +2923,12 @@ async function egpGuardarPedidoLanV85(cancion, telefono) {
     body: JSON.stringify(pedido)
   }, 1800);
 
-  if (!r.ok) throw new Error("Pedidos LAN no disponible");
-  const data = await r.json();
+  let data = {};
+  try { data = await r.json(); } catch {}
+  if (!r.ok) {
+    if (data?.error === "active_order" || data?.error === "duplicate") return data;
+    throw new Error("Pedidos LAN no disponible");
+  }
   if (!data?.ok) throw new Error("Pedidos LAN rechazó el pedido");
   return data;
 }
@@ -2739,6 +2957,10 @@ async function enviarPedidoPanel() {
     }
 
     if (estado.egpFirebasePedidosAutoritativo && estado.db) {
+      if (egpPedidosModoActualV4() === "uno_por_turno" && await personaTienePedidoActivoEnShow(telefono)) {
+        egpMostrarSoloBloqueoTurnoV6();
+        return;
+      }
       if (await personaYaPidioCancionEnShow(cancion, telefono)) {
         marcarPedidoPropio(cancion.id, telefono);
         DOM.pedidoError.textContent = "Ya pediste esta canción.";
@@ -2749,11 +2971,17 @@ async function enviarPedidoPanel() {
 
       await guardarContactoYPedido(cancion, {
         origen: "panel",
-        estado: "pendiente"
+        estado: "pendiente",
+        pedidos_modo: egpPedidosModoActualV4()
       });
     } else {
       const respuestaLan = await egpGuardarPedidoLanV85(cancion, telefono);
-      if (respuestaLan?.duplicate) {
+      if (respuestaLan?.error === "active_order") {
+        egpMostrarSoloBloqueoTurnoV6();
+        await egpSincronizarLanV85(true);
+        return;
+      }
+      if (respuestaLan?.duplicate || respuestaLan?.error === "duplicate") {
         marcarPedidoPropio(cancion.id, telefono);
         DOM.pedidoError.textContent = "Ya pediste esta canción.";
         DOM.pedidoError.hidden = false;
@@ -2887,6 +3115,7 @@ async function guardarContactoYPedido(cancion, opciones = {}) {
     creado_en_ms: ahora,
     origen: origenPedido,
     estado: estadoPedido,
+    pedidos_modo: egpPedidosModoActualV4(),
     lugar: estado.configRemota.lugar || "",
     perfil_clientes: estado.configRemota.perfil_clientes || "medio"
   });
@@ -3534,6 +3763,9 @@ function registrarEventos() {
 
 async function iniciar() {
   capturarDOM();
+  // V5: iniciar la sincronización LAN solo después de que el DOM exista.
+  // Antes podía leer pedidos_panel=true demasiado pronto y no volver a renderizar los botones.
+  egpProgramarLanV85(150);
   const panelMode=new URLSearchParams(location.search).get("panel")==="1";
   if(panelMode){
     sessionStorage.setItem("egm-panel-auth","1");
@@ -3565,98 +3797,4 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", iniciar, { once: true });
 } else {
   iniciar();
-}
-
-
-function egpPedidosModoActualV4() {
-  if (estado.egpFirebasePedidosAutoritativo) {
-    return estado.configRemota.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre";
-  }
-  if (estado.egpLanConfig?.ok) {
-    return estado.egpLanConfig.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre";
-  }
-  return estado.configRemota.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre";
-}
-
-
-function egpPedidoActivoLocalTurnoV6() {
-  if (egpPedidosModoActualV4() !== "uno_por_turno") return null;
-
-  const showId = String(
-    estado.egpLanConfig?.show_id ||
-    estado.configRemota.inicio_show ||
-    ""
-  );
-  if (!showId) return null;
-
-  const tocadas = new Set(
-    (Array.isArray(estado.configRemota.tocadas) ? estado.configRemota.tocadas : [])
-      .map(String)
-  );
-
-  const prefijo = `${showId}|`;
-  const candidatos = Object.entries(egpPedidosPropiosLeidos())
-    .filter(([clave, registro]) =>
-      clave.startsWith(prefijo) &&
-      registro &&
-      String(registro.telefono || "")
-    )
-    .map(([clave, registro]) => ({
-      songId: clave.slice(prefijo.length),
-      telefono: String(registro.telefono || ""),
-      creado_en_ms: Number(registro.creado_en_ms || 0)
-    }))
-    .filter((registro) => registro.songId && !tocadas.has(String(registro.songId)))
-    .sort((a, b) => b.creado_en_ms - a.creado_en_ms);
-
-  return candidatos[0] || null;
-}
-
-
-function egpRestaurarVentanaPedidoV6() {
-  const modal = DOM.pedidoModal;
-  if (!modal) return;
-  [
-    ".admin-panel__eyebrow",
-    "#pedidoCancion",
-    ".pedido-panel__label",
-    "#pedidoTelefono",
-    ".pedido-panel__nota",
-    "#pedidoEnviar"
-  ].forEach((selector) => {
-    const el = modal.querySelector(selector);
-    if (el) el.hidden = false;
-  });
-  if (DOM.pedidoError) {
-    DOM.pedidoError.hidden = true;
-    DOM.pedidoError.classList.remove("egp-turno-bloqueado");
-  }
-}
-
-
-function egpMostrarSoloBloqueoTurnoV6() {
-  const modal = DOM.pedidoModal;
-  if (!modal) return;
-
-  try { DOM.pedidoTelefono?.blur(); } catch {}
-  egpRestaurarViewportPedidoV6();
-
-  [".admin-panel__eyebrow", "#pedidoCancion"].forEach((selector) => {
-    const el = modal.querySelector(selector);
-    if (el) el.hidden = false;
-  });
-
-  [
-    ".pedido-panel__label",
-    "#pedidoTelefono",
-    ".pedido-panel__nota",
-    "#pedidoEnviar"
-  ].forEach((selector) => {
-    const el = modal.querySelector(selector);
-    if (el) el.hidden = true;
-  });
-
-  DOM.pedidoError.textContent = "Ya tienes una canción pedida. Podrás pedir otra cuando se toque.";
-  DOM.pedidoError.classList.add("egp-turno-bloqueado");
-  DOM.pedidoError.hidden = false;
 }

@@ -133,9 +133,7 @@
       var ownLaunch = new URL(location.href).searchParams.get("musicos_pwa") === "1";
       // Android puede abrir /musicos/ dentro de la PWA del panel porque comparten origen.
       // Solo consideramos instalada EGP MUSICOS cuando arranca desde su start_url propio.
-      const egpPreview = new URLSearchParams(window.location.search).get("preview") === "1";
-
-      if (egpPreview || (standalone && (!android || ownLaunch))) {
+      if (standalone && (!android || ownLaunch)) {
         document.getElementById("installView").hidden = true;
         document.getElementById("appView").hidden = false;
       }

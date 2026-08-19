@@ -6037,3 +6037,123 @@ body.cola-publica-visible {
   justify-content:flex-end!important;
   white-space:nowrap!important;
 }
+
+#pedidoError.egp-turno-bloqueado {
+  min-height: 48px;
+  margin: 14px 0 0 !important;
+  padding: 12px 14px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,155,155,.32);
+  border-radius: 12px;
+  background: rgba(255,155,155,.07);
+  text-align: center;
+  line-height: 1.4;
+}
+
+
+/* EGP V6 TARJETA SOBRE TECLADO — CORREGIDO
+   Estas reglas vencen el height:100%!important anterior. */
+.pedido-modal.egp-teclado-abierto-v6 {
+  inset: auto !important;
+  top: var(--egp-vv-top, 0px) !important;
+  left: var(--egp-vv-left, 0px) !important;
+  width: var(--egp-vv-width, 100vw) !important;
+  height: var(--egp-vv-height, 100dvh) !important;
+  min-height: 0 !important;
+  padding: 6px 10px !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+}
+
+.pedido-modal.egp-teclado-abierto-v6 .pedido-modal__fondo {
+  position: absolute !important;
+  inset: 0 !important;
+}
+
+.pedido-modal.egp-teclado-abierto-v6 .pedido-panel {
+  width: min(430px, 100%) !important;
+  max-height: calc(var(--egp-vv-height, 100dvh) - 12px) !important;
+  margin: 0 !important;
+  padding: 12px 14px !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+.pedido-modal.egp-teclado-abierto-v6 .admin-panel__eyebrow {
+  margin-top: 0 !important;
+  margin-bottom: 5px !important;
+  margin-right: 34px !important;
+}
+
+.pedido-modal.egp-teclado-abierto-v6 .pedido-panel__cancion {
+  margin: 0 34px 7px 0 !important;
+  line-height: 1.25 !important;
+}
+
+.pedido-modal.egp-teclado-abierto-v6 .pedido-panel__label {
+  margin: 7px 0 5px !important;
+}
+
+.pedido-modal.egp-teclado-abierto-v6 #pedidoTelefono {
+  min-height: 42px !important;
+}
+
+.pedido-modal.egp-teclado-abierto-v6 .pedido-panel__nota {
+  margin: 7px 0 9px !important;
+  line-height: 1.28 !important;
+}
+
+.pedido-modal.egp-teclado-abierto-v6 #pedidoError:not([hidden]) {
+  margin: 7px 0 !important;
+}
+
+@media (max-width: 600px) {
+  .pedido-modal.egp-teclado-abierto-v6 .pedido-panel {
+    border-radius: 16px !important;
+  }
+}
+
+/* EGP V6 — FONDO NEGRO TOTAL EN PEDIR CANCION */
+.pedido-modal__fondo {
+  background: #000 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+
+/* EGP V6 — NEGRO TOTAL DETRAS DEL MODAL */
+body.egp-pedido-abierto-v6::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 99990;
+  pointer-events: none;
+}
+
+body.egp-pedido-abierto-v6 .pedido-modal {
+  z-index: 99999 !important;
+}
+
+/* EGP V6 — OCULTAR COMPLETAMENTE LA PAGINA DETRAS DE PEDIR CANCION */
+html:has(body.egp-pedido-abierto-v6),
+body.egp-pedido-abierto-v6 {
+  background: #000 !important;
+}
+
+body.egp-pedido-abierto-v6 > *:not(#pedidoModal) {
+  visibility: hidden !important;
+}
+
+body.egp-pedido-abierto-v6 > #pedidoModal,
+body.egp-pedido-abierto-v6 > #pedidoModal * {
+  visibility: visible !important;
+}
+
+body.egp-pedido-abierto-v6 #pedidoModal,
+body.egp-pedido-abierto-v6 .pedido-modal__fondo {
+  background: #000 !important;
+}

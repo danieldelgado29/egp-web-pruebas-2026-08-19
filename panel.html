@@ -33,7 +33,7 @@
     })();
   </script>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="panel.css?v=1787171922">
+  <link rel="stylesheet" href="panel.css?v=20260819-180423">
   <style>
     /* 6.34.1: acceso crítico visible incluso si Safari conserva CSS antiguo */
     #panelLogin{position:fixed!important;inset:0!important;z-index:2147483647!important;display:flex!important;align-items:center!important;justify-content:center!important;background:#050505!important;padding:24px!important;color:#fff!important;opacity:1!important;visibility:visible!important}
@@ -207,199 +207,9 @@
         <button type="button" data-module="songbook-daniel"><b>Ｄ</b><span>Cancionero Daniel</span></button>
         <button type="button" data-module="export-contacts"><b>⇩</b><span>Exportar contactos</span></button>
         <button type="button" data-module="upload-photos"><b>▧</b><span>Subir fotos</span></button>
-        <button type="button" data-module="gallery"><b>▦</b><span>Galería · Fotos y videos</span></button>
         <button id="openAuxMonitorsBtn" type="button"><b>🎧</b><span>Auxiliares / Monitores</span></button>
         <button type="button" data-module="security"><b>🔒</b><span>Seguridad</span></button>
       </nav>
-    </div>
-  </dialog>
-
-
-  <dialog id="galleryDialog" class="modal">
-    <div class="module-card compact-card">
-      <button class="modal-x" type="button" data-dialog-close aria-label="Cerrar">×</button>
-
-      <p class="eyebrow">MULTIMEDIA</p>
-      <h3>Galería</h3>
-
-      <p class="module-note">
-        Sube fotos y videos de los shows.
-      </p>
-
-      <div
-        id="galleryDropZone"
-        class="egp-gallery-drop"
-        tabindex="0"
-        role="button"
-        aria-label="Arrastra fotos o videos aquí"
-      >
-        <strong>ARRASTRA FOTOS O VIDEOS AQUÍ</strong>
-        <span>También puedes usar los botones</span>
-      </div>
-
-      <div class="photo-upload-actions">
-        <button
-          id="galleryUploadPhotoBtn"
-          class="secondary-btn"
-          type="button"
-        >
-          SUBIR FOTO
-        </button>
-
-        <button
-          id="galleryUploadVideoBtn"
-          class="secondary-btn"
-          type="button"
-        >
-          SUBIR VIDEO
-        </button>
-      </div>
-
-      <input
-        id="galleryPhotoInput"
-        type="file"
-        accept="image/*"
-        multiple
-        hidden
-      >
-
-      <input
-        id="galleryVideoInput"
-        type="file"
-        accept="video/*"
-        multiple
-        hidden
-      >
-
-      <div id="galleryProgressWrap" class="egp-gallery-progress" hidden>
-        <progress
-          id="galleryUploadProgress"
-          max="100"
-          value="0"
-        ></progress>
-
-        <strong id="galleryProgressText">0%</strong>
-      </div>
-
-      <p
-        id="galleryUploadStatus"
-        class="module-note"
-      >
-        Puedes subir uno o varios archivos.
-      </p>
-
-      <button
-        id="galleryOpenLastBtn"
-        class="secondary-btn"
-        type="button"
-        hidden
-      >
-        VER ÚLTIMO ARCHIVO
-      </button>
-
-      <div class="egp-gallery-tabs" role="tablist" aria-label="Tipo de archivo">
-
-        <button
-          id="galleryPhotosTab"
-          class="is-active"
-          type="button"
-          data-gallery-tab="image"
-        >
-          FOTOS
-          <span id="galleryPhotoCount">0</span>
-        </button>
-
-        <button
-          id="galleryVideosTab"
-          type="button"
-          data-gallery-tab="video"
-        >
-          VIDEOS
-          <span id="galleryVideoCount">0</span>
-        </button>
-
-      </div>
-
-      <div
-        id="galleryItems"
-        class="egp-gallery-items egp-gallery-grid"
-        aria-live="polite"
-      ></div>
-    </div>
-  </dialog>
-
-
-  <dialog id="galleryViewerDialog" class="modal egp-gallery-viewer-dialog">
-    <div id="galleryViewerCard" class="egp-gallery-viewer-card">
-
-      <button
-        id="galleryViewerCloseBtn"
-        class="modal-x"
-        type="button"
-        aria-label="Cerrar"
-      >×</button>
-
-      <div
-        id="galleryViewerRotation"
-        class="egp-gallery-viewer-rotation"
-      ></div>
-
-      <div
-        id="galleryViewerStage"
-        class="egp-gallery-viewer-stage"
-      >
-        <img
-          id="galleryViewerImage"
-          alt="Foto de galería"
-          hidden
-        >
-
-        <video
-          id="galleryViewerVideo"
-          playsinline
-          preload="metadata"
-          hidden
-        ></video>
-      </div>
-
-      <div
-        id="galleryVideoControls"
-        class="egp-gallery-video-controls"
-        hidden
-      >
-        <button
-          id="galleryVideoPlayBtn"
-          type="button"
-          aria-label="Reproducir o pausar"
-        >▶</button>
-
-        <span id="galleryVideoCurrent">0:00</span>
-
-        <input
-          id="galleryVideoProgress"
-          type="range"
-          min="0"
-          max="1000"
-          step="1"
-          value="0"
-          aria-label="Posición del video"
-        >
-
-        <span id="galleryVideoDuration">0:00</span>
-
-        <button
-          id="galleryVideoMuteBtn"
-          type="button"
-          aria-label="Silenciar"
-        >🔊</button>
-
-        <button
-          id="galleryVideoFullscreenBtn"
-          type="button"
-          aria-label="Pantalla completa"
-        >⛶</button>
-      </div>
-
     </div>
   </dialog>
 
@@ -813,7 +623,7 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="panel.js?v=1787180184"></script>
+  <script type="module" src="panel.js?v=20260819-180423"></script>
   <script>
 (function(){
   function syncQueueRepertoire(){

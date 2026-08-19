@@ -250,7 +250,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
   const DEVICE_ID=sessionStorage.getItem('egm-device-id')||(`dev-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   sessionStorage.setItem('egm-device-id',DEVICE_ID);
 
-  const LOCAL_CORE_URL='https://core.elenagirjoaba.com';
+  const EGP_AUDIT_LOCAL=new URL(location.href).searchParams.get('audit_local')==='1';
+  const LOCAL_CORE_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':'https://core.elenagirjoaba.com';
   const CORE_TEST_MODE=new URL(location.href).searchParams.get('core_test')==='1';
   let LOCAL_QUEUE_MODE=false;
   let localQueueTimer=0;
@@ -311,6 +312,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   setTimeout(()=>flushPendingImageEdits(),1500);
 
   async function initRemoteSync(){
+    if(EGP_AUDIT_LOCAL){ remoteReady=true; return null; }
     if(remoteStateRef) return remoteStateRef;
     if(remoteInitPromise) return remoteInitPromise;
     remoteInitPromise=(async()=>{
@@ -387,6 +389,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
           $('#publicQueueToggle').checked=state.config.publicQueue;
           const requestsToggle=document.getElementById('requestsToggle');
           if(requestsToggle) requestsToggle.checked=state.config.requests===true;
+          const requestsMode=document.getElementById('requestsModeSelect');
+          if(requestsMode) requestsMode.value=state.config.requestsMode==='uno_por_turno'?'uno_por_turno':'libre';
         $('#advertisingToggle').checked=state.config.advertising===true;
         }
         const wasRemoteReady=remoteReady;
@@ -437,6 +441,15 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
   async function performRemoteShowWrite(expectedGeneration=remoteShowGeneration){
+    // AUDITORÍA: nunca toca Firebase. Publica únicamente en el servicio aislado 8796.
+    if(EGP_AUDIT_LOCAL){
+      const payload=buildRemoteShowPayload();
+      if(expectedGeneration!==remoteShowGeneration)return payload;
+      await localQueueRequest('/api/show',{active:payload.show_activo===true,venue:String(payload.lugar||'')});
+      await egpPublicarConfigLan({show_activo:payload.show_activo===true,inicio_show:payload.inicio_show,pedidos_panel:payload.pedidos_panel,pedidos_modo:payload.pedidos_modo});
+      remoteReady=true;
+      return payload;
+    }
     if(!remoteStateRef) await initRemoteSync();
     if(!remoteStateRef||!window.__egmSetDoc) throw new Error('Firebase todavía no está listo');
     // Siempre construir el payload justo antes de escribir. Así una tarea antigua
@@ -581,6 +594,10 @@ document.documentElement.dataset.egmVersion="6.36.92";
       $('#venueInput').value = state.config.venue || '';
       $('#profileSelect').value = state.config.profile || 'alto';
       $('#whatsappToggle').checked = state.config.whatsapp !== false;
+      const requestsToggle=document.getElementById('requestsToggle');
+      if(requestsToggle)requestsToggle.checked=state.config.requests===true;
+      const requestsMode=document.getElementById('requestsModeSelect');
+      if(requestsMode)requestsMode.value=state.config.requestsMode==='uno_por_turno'?'uno_por_turno':'libre';
       $('#publicQueueToggle').checked = state.config.publicQueue !== false;
       setStatus(true);
     }
@@ -819,6 +836,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
         $('#whatsappToggle').checked=state.config.whatsapp;
         const requestsToggle=document.getElementById('requestsToggle');
         if(requestsToggle)requestsToggle.checked=state.config.requests===true;
+        const requestsMode=document.getElementById('requestsModeSelect');
+        if(requestsMode)requestsMode.value=state.config.requestsMode==='uno_por_turno'?'uno_por_turno':'libre';
         $('#publicQueueToggle').checked=state.config.publicQueue;
         if(select&&select.querySelector(`option[value="${CSS.escape(repertoire)}"]`))select.value=repertoire;
         $('#liveRepertoireName').textContent=state.config.repertoireName;
@@ -859,7 +878,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       state.config=config;state.queue=[];state.played.clear();addVenueOption(venue);
       startNewShowTimer();
       saveStateLocalOnly();
-      setStatus(true);showLive();egpPublicarConfigLan({show_activo:true,inicio_show:new Date(config.startedAt).getTime(),pedidos_panel:config.requests===true});
+      setStatus(true);showLive();egpPublicarConfigLan({show_activo:true,inicio_show:new Date(config.startedAt).getTime(),pedidos_panel:config.requests===true,pedidos_modo:config.requestsMode});
       toast(`Show iniciado. Repertorio activo: ${config.repertoireName}.`);
 
       // Publicación en segundo plano. Los demás dispositivos reciben el show por onSnapshot.
@@ -1118,8 +1137,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
     addVenueOption(venue);invalidateRepertoireCache();saveStateLocalOnly();
     const ids=(repertoire==='todas'?state.songs:state.songs.filter(song=>(song.listas||[]).includes(repertoire))).map(song=>song.id);
     showLive();toast('Configuración actualizada. El show continúa.');
-    await egpPublicarConfigLan({show_activo:true,inicio_show:new Date(state.config.startedAt).getTime()});
-    try{await publishShowPatch({show_activo:true,lugar:venue,lista_activa:repertoire,listaActiva:repertoire,repertorio_nombre:repertoireName,repertorio_activo_ids:ids,repertorioActivoIds:ids,perfil_clientes:state.config.profile,pedidos_whatsapp:state.config.whatsapp,pedidos_panel:state.config.requests===true,mostrar_cola:state.config.publicQueue,uso_publicidad:state.config.advertising===true});}
+    await egpPublicarConfigLan({show_activo:true,inicio_show:new Date(state.config.startedAt).getTime(),pedidos_panel:state.config.requests===true,pedidos_modo:state.config.requestsMode});
+    try{await publishShowPatch({show_activo:true,lugar:venue,lista_activa:repertoire,listaActiva:repertoire,repertorio_nombre:repertoireName,repertorio_activo_ids:ids,repertorioActivoIds:ids,perfil_clientes:state.config.profile,pedidos_whatsapp:state.config.whatsapp,pedidos_panel:state.config.requests===true,pedidos_modo:state.config.requestsMode==='uno_por_turno'?'uno_por_turno':'libre',mostrar_cola:state.config.publicQueue,uso_publicidad:state.config.advertising===true});}
     catch(err){console.warn('Configuración del show pendiente de sincronizar',err);toast('Cambios guardados localmente; sincronización pendiente.');}
   });
 
@@ -1147,7 +1166,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
     localDesiredShowActive=false;localShowTransitionUntil=Date.now()+15000;
     state.config=null;state.queue=[];state.played.clear();
     showTimer={elapsedMs:0,running:false,startedAt:0};saveShowTimer();showTimerLoop();
-    saveStateLocalOnly();setStatus(false);showConfig();egpPublicarConfigLan({show_activo:false,inicio_show:0,pedidos_panel:false});toast('Finalizando show en todos los dispositivos…');
+    saveStateLocalOnly();setStatus(false);showConfig();egpPublicarConfigLan({show_activo:false,inicio_show:0,pedidos_panel:false,pedidos_modo:'libre'});toast('Finalizando show en todos los dispositivos…');
     try{
       await publishFinishedShow();
       localDesiredShowActive=null;localShowTransitionUntil=0;
@@ -1351,7 +1370,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       state.queue=canonicalQueueOrder(state.queue,state.played);
     }else if(kind==='unplay'){
       state.played.delete(id);
-      if(state.queue.includes(id))state.queue=insertAtEndOfPending(state.queue,id,state.played);
+      state.queue=state.queue.filter(x=>String(x)!==id);
     }
     state.queue=canonicalQueueOrder(state.queue,state.played);
     saveStateLocalOnly();renderQueue();renderSongs();
@@ -1375,8 +1394,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
           path='/api/queue/played';
           body={id,played:true};
         }else if(kind==='unplay'){
-          path='/api/queue/played';
-          body={id,played:false};
+          path='/api/queue/remove';
+          body={id};
         }
 
         const result=await localQueueRequest(path,body);
@@ -1407,7 +1426,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
           q=canonicalQueueOrder(q,p);
         }else if(kind==='unplay'){
           p.delete(id);
-          if(q.includes(id))q=insertAtEndOfPending(q,id,p);
+          q=q.filter(x=>x!==id);
         }
 
         q=canonicalQueueOrder(q,p);
@@ -2384,1071 +2403,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
     d.addEventListener('click',e=>{if(e.target===d)e.preventDefault();});
     d.addEventListener('cancel',e=>{e.preventDefault();if(trackedDialogIds.has(d.id))requestDialogClose(d);});
   });
-  /* EGP GALERIA · CLOUDINARY · DRAG + PROGRESO */
-  const EGP_GALLERY_CLOUD_NAME='wi4naurm';
-  const EGP_GALLERY_UPLOAD_PRESET='egp_galeria';
-  const EGP_GALLERY_ITEMS_KEY='egp-gallery-items-v1';
-  const EGP_GALLERY_DELETE_PENDING_KEY='egp-gallery-delete-pending-v1';
-
-  /* Límites actuales del plan Cloudinary Free */
-  const EGP_GALLERY_MAX_IMAGE=10*1024*1024;
-  const EGP_GALLERY_MAX_VIDEO=100*1024*1024;
-
-  let egpGalleryUploading=false;
-  let egpGalleryLastUrl='';
-  let egpGalleryActiveTab='image';
-
-  function egpGallerySize(bytes){
-    if(bytes<1024*1024){
-      return (bytes/1024).toFixed(1)+' KB';
-    }
-    return (bytes/(1024*1024)).toFixed(1)+' MB';
-  }
-
-  function egpGalleryStatus(text,error=false){
-    const el=$('#galleryUploadStatus');
-    if(!el)return;
-
-    el.textContent=text;
-    el.style.color=error?'#ff7b83':'';
-  }
-
-  function egpGalleryProgress(percent,show=true){
-    const wrap=$('#galleryProgressWrap');
-    const bar=$('#galleryUploadProgress');
-    const text=$('#galleryProgressText');
-
-    if(!wrap || !bar || !text)return;
-
-    wrap.hidden=!show;
-
-    const value=Math.max(0,Math.min(100,Math.round(percent)));
-
-    bar.value=value;
-    text.textContent=value+'%';
-  }
-
-  function egpGalleryBusy(value){
-    egpGalleryUploading=value;
-
-    const foto=$('#galleryUploadPhotoBtn');
-    const video=$('#galleryUploadVideoBtn');
-    const drop=$('#galleryDropZone');
-
-    if(foto)foto.disabled=value;
-    if(video)video.disabled=value;
-
-    if(drop){
-      drop.classList.toggle('is-busy',value);
-    }
-  }
-
-  function egpGalleryType(file){
-    const type=String(file?.type||'').toLowerCase();
-    const name=String(file?.name||'').toLowerCase();
-
-    if(
-      type.startsWith('image/') ||
-      /\.(jpg|jpeg|png|webp|gif|heic|heif|avif)$/i.test(name)
-    ){
-      return 'image';
-    }
-
-    if(
-      type.startsWith('video/') ||
-      /\.(mp4|mov|m4v|webm|avi|mpeg|mpg)$/i.test(name)
-    ){
-      return 'video';
-    }
-
-    return '';
-  }
-
-  function egpGalleryValidate(file){
-    const type=egpGalleryType(file);
-
-    if(!type){
-      return 'Archivo no compatible: '+file.name;
-    }
-
-    if(type==='image' && file.size>EGP_GALLERY_MAX_IMAGE){
-      return (
-        file.name+' pesa '+egpGallerySize(file.size)+
-        '. El máximo de imagen del plan actual es 10 MB.'
-      );
-    }
-
-    if(type==='video' && file.size>EGP_GALLERY_MAX_VIDEO){
-      return (
-        file.name+' pesa '+egpGallerySize(file.size)+
-        '. El plan gratuito de Cloudinary admite videos de hasta 100 MB.'
-      );
-    }
-
-    return '';
-  }
-
-  function egpGalleryLoadItems(){
-    try{
-      const value=JSON.parse(
-        localStorage.getItem(EGP_GALLERY_ITEMS_KEY)||'[]'
-      );
-      return Array.isArray(value)?value:[];
-    }catch(_){
-      return [];
-    }
-  }
-
-  function egpGallerySaveItems(items){
-    localStorage.setItem(
-      EGP_GALLERY_ITEMS_KEY,
-      JSON.stringify(items)
-    );
-  }
-
-  function egpGalleryQueueDelete(item){
-    try{
-      const pending=JSON.parse(
-        localStorage.getItem(
-          EGP_GALLERY_DELETE_PENDING_KEY
-        )||'[]'
-      );
-
-      pending.push({
-        publicId:item.publicId||'',
-        resourceType:item.type||'',
-        url:item.url||'',
-        deletedAt:Date.now()
-      });
-
-      localStorage.setItem(
-        EGP_GALLERY_DELETE_PENDING_KEY,
-        JSON.stringify(pending)
-      );
-    }catch(_){}
-  }
-
-  function egpGalleryThumb(url){
-    if(!url)return '';
-
-    return url.replace(
-      '/upload/',
-      '/upload/w_360,h_240,c_fill,q_auto,f_auto/'
-    );
-  }
-
-  function egpGalleryVideoThumb(url){
-    if(!url)return '';
-
-    try{
-      const u=new URL(url);
-
-      /*
-       * Fotograma al 10% del video.
-       * JPG explícito para máxima compatibilidad del preview.
-       */
-      u.pathname=u.pathname.replace(
-        '/video/upload/',
-        '/video/upload/so_10p,w_480,h_320,c_fill,q_auto,f_jpg/'
-      );
-
-      /*
-       * Conservamos el public ID y cambiamos únicamente
-       * la extensión entregada a JPG.
-       */
-      u.pathname=u.pathname.replace(
-        /\.[^/.]+$/i,
-        '.jpg'
-      );
-
-      return u.toString();
-
-    }catch(_){
-      return url
-        .replace(
-          '/video/upload/',
-          '/video/upload/so_10p,w_480,h_320,c_fill,q_auto,f_jpg/'
-        )
-        .replace(
-          /\.[^/.]+$/i,
-          '.jpg'
-        );
-    }
-  }
-
-  function egpGalleryRenderList(){
-    const host=$('#galleryItems');
-    const photoCount=$('#galleryPhotoCount');
-    const videoCount=$('#galleryVideoCount');
-
-    if(!host)return;
-
-    const items=egpGalleryLoadItems();
-
-    const photos=items.filter(item=>item.type==='image');
-    const videos=items.filter(item=>item.type==='video');
-
-    if(photoCount){
-      photoCount.textContent=String(photos.length);
-    }
-
-    if(videoCount){
-      videoCount.textContent=String(videos.length);
-    }
-
-    const visibles=
-      egpGalleryActiveTab==='video'
-        ? videos
-        : photos;
-
-    host.textContent='';
-
-    if(!visibles.length){
-      const empty=document.createElement('p');
-      empty.className='module-note egp-gallery-empty';
-      empty.textContent=
-        egpGalleryActiveTab==='video'
-          ? 'Todavía no hay videos.'
-          : 'Todavía no hay fotos.';
-
-      host.appendChild(empty);
-      return;
-    }
-
-    [...visibles].reverse().forEach(item=>{
-      const card=document.createElement('article');
-      card.className='egp-gallery-item';
-      card.dataset.galleryId=item.id;
-      card.dataset.galleryType=item.type;
-
-      const media=document.createElement('div');
-      media.className='egp-gallery-item-media';
-
-      if(item.type==='image'){
-        const img=document.createElement('img');
-        img.src=egpGalleryThumb(item.url);
-        img.alt=item.name||'Foto';
-        img.loading='lazy';
-
-        const rotation=Number(item.rotation||0);
-
-        img.style.transform=`rotate(${rotation}deg)`;
-
-        if(rotation===90 || rotation===270){
-          img.classList.add('is-rotated-sideways');
-        }
-
-        media.appendChild(img);
-      }else{
-        const wrap=document.createElement('div');
-        wrap.className='egp-gallery-video-preview';
-
-        const img=document.createElement('img');
-        img.src=egpGalleryVideoThumb(item.url);
-        img.alt=item.name||'Video';
-        img.loading='lazy';
-
-        const rotation=Number(item.rotation||0);
-
-        img.style.transform=`rotate(${rotation}deg)`;
-
-        if(rotation===90 || rotation===270){
-          img.classList.add('is-rotated-sideways');
-        }
-
-        const play=document.createElement('span');
-        play.className='egp-gallery-video-play';
-        play.textContent='▶';
-
-        img.addEventListener('error',()=>{
-          img.hidden=true;
-          play.classList.add('is-fallback');
-          play.textContent='▶ VIDEO';
-        });
-
-        wrap.append(img,play);
-        media.appendChild(wrap);
-      }
-
-      const info=document.createElement('div');
-      info.className='egp-gallery-item-info';
-
-      const name=document.createElement('strong');
-      name.textContent=item.name||(
-        item.type==='video'?'Video':'Foto'
-      );
-
-      const meta=document.createElement('span');
-
-      const fecha=item.createdAt
-        ? new Date(item.createdAt).toLocaleString('es-EC')
-        : '';
-
-      meta.textContent=[
-        item.type==='video'?'VIDEO':'FOTO',
-        item.bytes?egpGallerySize(item.bytes):'',
-        `GIRO ${Number(item.rotation||0)}°`,
-        fecha
-      ].filter(Boolean).join(' · ');
-
-      info.append(name,meta);
-
-      const actions=document.createElement('div');
-      actions.className='egp-gallery-item-actions';
-
-      const ver=document.createElement('button');
-      ver.type='button';
-      ver.className='secondary-btn';
-      ver.dataset.galleryAction='view';
-      ver.textContent='VER';
-
-      const girar=document.createElement('button');
-      girar.type='button';
-      girar.className='secondary-btn egp-gallery-rotate-btn';
-      girar.dataset.galleryAction='rotate';
-      girar.textContent='⟳';
-
-      const borrar=document.createElement('button');
-      borrar.type='button';
-      borrar.className='secondary-btn egp-gallery-delete-btn';
-      borrar.dataset.galleryAction='delete';
-      borrar.textContent='BORRAR';
-
-      actions.append(ver,girar,borrar);
-
-      card.append(media,info,actions);
-      host.appendChild(card);
-    });
-  }
-
-  function egpGalleryRememberLast(data,file){
-    egpGalleryLastUrl=data.secure_url||'';
-
-    const item={
-      id:
-        String(Date.now())+'-'+
-        Math.random().toString(36).slice(2,9),
-
-      url:data.secure_url||'',
-      publicId:data.public_id||'',
-      type:data.resource_type||egpGalleryType(file)||'',
-      format:data.format||'',
-      name:file?.name||'',
-      bytes:Number(data.bytes||file?.size||0),
-      width:Number(data.width||0),
-      height:Number(data.height||0),
-      duration:Number(data.duration||0),
-      rotation:0,
-      createdAt:Date.now()
-    };
-
-    try{
-      localStorage.setItem(
-        'egp-gallery-last-upload-v1',
-        JSON.stringify(item)
-      );
-
-      const items=egpGalleryLoadItems();
-      items.push(item);
-      egpGallerySaveItems(items);
-
-    }catch(_){}
-
-    const btn=$('#galleryOpenLastBtn');
-
-    if(btn && egpGalleryLastUrl){
-      btn.hidden=false;
-    }
-
-    egpGalleryRenderList();
-  }
-
-  function egpGalleryMigrateLast(){
-    try{
-      const items=egpGalleryLoadItems();
-
-      if(items.length)return;
-
-      const last=JSON.parse(
-        localStorage.getItem(
-          'egp-gallery-last-upload-v1'
-        )||'null'
-      );
-
-      if(!last?.url)return;
-
-      const item={
-        id:last.id||('anterior-'+Date.now()),
-        url:last.url,
-        publicId:last.publicId||'',
-        type:last.type||'',
-        format:last.format||'',
-        name:last.name||'Archivo anterior',
-        bytes:Number(last.bytes||0),
-        rotation:Number(last.rotation||0),
-        createdAt:Number(last.createdAt||Date.now())
-      };
-
-      egpGallerySaveItems([item]);
-
-    }catch(_){}
-  }
-
-  function egpGalleryFormatTime(seconds){
-    if(!Number.isFinite(seconds) || seconds<0)return '0:00';
-
-    const total=Math.floor(seconds);
-    const mins=Math.floor(total/60);
-    const secs=String(total%60).padStart(2,'0');
-
-    return `${mins}:${secs}`;
-  }
-
-  function egpGalleryFitViewerMedia(media,rotation){
-    const stage=$('#galleryViewerStage');
-
-    if(!stage || !media)return;
-
-    const isVideo=media.tagName==='VIDEO';
-
-    const sourceW=isVideo
-      ? media.videoWidth
-      : media.naturalWidth;
-
-    const sourceH=isVideo
-      ? media.videoHeight
-      : media.naturalHeight;
-
-    if(!sourceW || !sourceH)return;
-
-    const stageW=Math.max(1,stage.clientWidth-20);
-    const stageH=Math.max(1,stage.clientHeight-20);
-
-    const sideways=rotation===90 || rotation===270;
-
-    const visualW=sideways ? sourceH : sourceW;
-    const visualH=sideways ? sourceW : sourceH;
-
-    const scale=Math.min(
-      stageW/visualW,
-      stageH/visualH,
-      1
-    );
-
-    media.style.width=sourceW+'px';
-    media.style.height=sourceH+'px';
-    media.style.maxWidth='none';
-    media.style.maxHeight='none';
-
-    media.style.transform=
-      `translate(-50%,-50%) rotate(${rotation}deg) scale(${scale})`;
-  }
-
-  function egpGallerySyncVideoControls(){
-    const video=$('#galleryViewerVideo');
-    const play=$('#galleryVideoPlayBtn');
-    const progress=$('#galleryVideoProgress');
-    const current=$('#galleryVideoCurrent');
-    const duration=$('#galleryVideoDuration');
-    const mute=$('#galleryVideoMuteBtn');
-
-    if(!video)return;
-
-    if(play){
-      play.textContent=video.paused?'▶':'❚❚';
-    }
-
-    if(current){
-      current.textContent=
-        egpGalleryFormatTime(video.currentTime);
-    }
-
-    if(duration){
-      duration.textContent=
-        egpGalleryFormatTime(video.duration);
-    }
-
-    if(progress){
-      progress.value=
-        Number.isFinite(video.duration) && video.duration>0
-          ? Math.round((video.currentTime/video.duration)*1000)
-          : 0;
-    }
-
-    if(mute){
-      mute.textContent=
-        (video.muted || video.volume===0)
-          ? '🔇'
-          : '🔊';
-    }
-  }
-
-  function egpGalleryToggleVideo(){
-    const video=$('#galleryViewerVideo');
-
-    if(!video || video.hidden)return;
-
-    if(video.paused){
-      video.play().catch(()=>{});
-    }else{
-      video.pause();
-    }
-  }
-
-  function egpGalleryViewItem(item){
-    if(!item?.url)return;
-
-    const dialog=$('#galleryViewerDialog');
-    const img=$('#galleryViewerImage');
-    const video=$('#galleryViewerVideo');
-    const controls=$('#galleryVideoControls');
-    const label=$('#galleryViewerRotation');
-
-    if(!dialog || !img || !video)return;
-
-    const rotation=Number(item.rotation||0);
-
-    img.hidden=true;
-    video.hidden=true;
-
-    if(controls){
-      controls.hidden=true;
-    }
-
-    img.onload=null;
-    video.onloadedmetadata=null;
-
-    img.removeAttribute('src');
-
-    video.pause();
-    video.removeAttribute('src');
-    video.load();
-
-    if(label){
-      label.textContent=`Orientación ${rotation}°`;
-    }
-
-    if(!dialog.open){
-      dialog.showModal();
-    }
-
-    if(item.type==='video'){
-      video.dataset.rotation=String(rotation);
-
-      video.onloadedmetadata=()=>{
-        egpGalleryFitViewerMedia(video,rotation);
-        egpGallerySyncVideoControls();
-      };
-
-      video.src=item.url;
-      video.hidden=false;
-
-      if(controls){
-        controls.hidden=false;
-      }
-
-      video.load();
-
-      requestAnimationFrame(()=>{
-        egpGalleryFitViewerMedia(video,rotation);
-      });
-
-    }else{
-      img.dataset.rotation=String(rotation);
-
-      img.onload=()=>{
-        egpGalleryFitViewerMedia(img,rotation);
-      };
-
-      img.src=item.url;
-      img.hidden=false;
-
-      requestAnimationFrame(()=>{
-        egpGalleryFitViewerMedia(img,rotation);
-      });
-    }
-  }
-
-  function egpGalleryRotateItem(id){
-    const items=egpGalleryLoadItems();
-    const index=items.findIndex(x=>x.id===id);
-
-    if(index<0)return;
-
-    const actual=Number(items[index].rotation||0);
-
-    items[index].rotation=(actual+90)%360;
-
-    egpGallerySaveItems(items);
-    egpGalleryRenderList();
-
-    egpGalleryStatus(
-      `Orientación guardada · ${items[index].rotation}°`
-    );
-  }
-
-  async function egpGalleryDeleteItem(id){
-    const items=egpGalleryLoadItems();
-    const item=items.find(x=>x.id===id);
-
-    if(!item)return;
-
-    const ok=window.confirm(
-      '¿Borrar este archivo de la galería?'
-    );
-
-    if(!ok)return;
-
-    const nuevos=items.filter(x=>x.id!==id);
-
-    egpGallerySaveItems(nuevos);
-    egpGalleryQueueDelete(item);
-    egpGalleryRenderList();
-
-    egpGalleryStatus(
-      'Archivo quitado de la galería.'
-    );
-  }
-
-  function egpGalleryUploadXHR(file,onProgress){
-    return new Promise((resolve,reject)=>{
-      const form=new FormData();
-
-      form.append('file',file);
-      form.append(
-        'upload_preset',
-        EGP_GALLERY_UPLOAD_PRESET
-      );
-
-      const xhr=new XMLHttpRequest();
-
-      xhr.open(
-        'POST',
-        `https://api.cloudinary.com/v1_1/${EGP_GALLERY_CLOUD_NAME}/auto/upload`,
-        true
-      );
-
-      xhr.upload.addEventListener('progress',event=>{
-        if(
-          event.lengthComputable &&
-          typeof onProgress==='function'
-        ){
-          onProgress(event.loaded,event.total);
-        }
-      });
-
-      xhr.addEventListener('load',()=>{
-        let data={};
-
-        try{
-          data=JSON.parse(xhr.responseText||'{}');
-        }catch(_){}
-
-        if(
-          xhr.status>=200 &&
-          xhr.status<300 &&
-          data.secure_url
-        ){
-          resolve(data);
-          return;
-        }
-
-        reject(
-          new Error(
-            data?.error?.message ||
-            `Cloudinary respondió HTTP ${xhr.status}`
-          )
-        );
-      });
-
-      xhr.addEventListener('error',()=>{
-        reject(
-          new Error('Error de red durante la subida')
-        );
-      });
-
-      xhr.addEventListener('abort',()=>{
-        reject(
-          new Error('Subida cancelada')
-        );
-      });
-
-      xhr.send(form);
-    });
-  }
-
-  async function egpGalleryUploadFiles(fileList){
-    if(egpGalleryUploading)return;
-
-    const files=[...fileList];
-
-    if(!files.length)return;
-
-    egpGalleryBusy(true);
-    egpGalleryProgress(0,true);
-
-    let correctos=0;
-    let rechazados=0;
-
-    try{
-      for(let i=0;i<files.length;i++){
-        const file=files[i];
-        const error=egpGalleryValidate(file);
-
-        if(error){
-          rechazados++;
-
-          egpGalleryStatus(
-            error,
-            true
-          );
-
-          if(files.length===1){
-            egpGalleryProgress(0,false);
-            return;
-          }
-
-          continue;
-        }
-
-        egpGalleryStatus(
-          `Subiendo ${i+1} de ${files.length} · ${file.name}`
-        );
-
-        const data=await egpGalleryUploadXHR(
-          file,
-          (loaded,total)=>{
-            const archivoPct=total
-              ? loaded/total
-              : 0;
-
-            const totalPct=
-              ((i+archivoPct)/files.length)*100;
-
-            egpGalleryProgress(totalPct,true);
-          }
-        );
-
-        egpGalleryRememberLast(data,file);
-        correctos++;
-
-        egpGalleryProgress(
-          ((i+1)/files.length)*100,
-          true
-        );
-      }
-
-      if(correctos && !rechazados){
-        egpGalleryStatus(
-          correctos===1
-            ? 'Guardado exitosamente'
-            : `Guardado exitosamente · ${correctos} archivos`
-        );
-      }else if(correctos && rechazados){
-        egpGalleryStatus(
-          `Guardados ${correctos} · No admitidos ${rechazados}`,
-          true
-        );
-      }else if(rechazados){
-        egpGalleryStatus(
-          `${rechazados} archivo(s) no pudieron subirse.`,
-          true
-        );
-      }
-
-    }catch(err){
-      console.error(
-        'EGP Galería · error:',
-        err
-      );
-
-      egpGalleryStatus(
-        'No se pudo subir: '+
-        (err?.message||'Error desconocido'),
-        true
-      );
-
-    }finally{
-      egpGalleryBusy(false);
-    }
-  }
-
-  $$('.egp-gallery-tabs [data-gallery-tab]')
-    .forEach(btn=>btn.addEventListener('click',()=>{
-      egpGalleryActiveTab=btn.dataset.galleryTab||'image';
-
-      $$('.egp-gallery-tabs [data-gallery-tab]')
-        .forEach(tab=>{
-          tab.classList.toggle(
-            'is-active',
-            tab===btn
-          );
-        });
-
-      egpGalleryRenderList();
-    }));
-
-  function openGallery(){
-    egpGalleryMigrateLast();
-
-    try{
-      const last=JSON.parse(
-        localStorage.getItem(
-          'egp-gallery-last-upload-v1'
-        )||'null'
-      );
-
-      if(last?.url){
-        egpGalleryLastUrl=last.url;
-        $('#galleryOpenLastBtn').hidden=false;
-      }
-    }catch(_){}
-
-    egpGalleryRenderList();
-    egpGalleryProgress(0,false);
-    $('#galleryDialog').showModal();
-  }
-
-  $('#galleryItems')?.addEventListener('click',async e=>{
-    const btn=e.target.closest(
-      '[data-gallery-action]'
-    );
-
-    if(!btn)return;
-
-    const card=btn.closest(
-      '[data-gallery-id]'
-    );
-
-    const id=card?.dataset.galleryId;
-
-    if(!id)return;
-
-    const item=egpGalleryLoadItems()
-      .find(x=>x.id===id);
-
-    if(!item)return;
-
-    if(btn.dataset.galleryAction==='view'){
-      egpGalleryViewItem(item);
-      return;
-    }
-
-    if(btn.dataset.galleryAction==='rotate'){
-      egpGalleryRotateItem(id);
-      return;
-    }
-
-    if(btn.dataset.galleryAction==='delete'){
-      await egpGalleryDeleteItem(id);
-    }
-  });
-
-  $('#galleryUploadPhotoBtn')
-    ?.addEventListener('click',()=>{
-      if(!egpGalleryUploading){
-        $('#galleryPhotoInput')?.click();
-      }
-    });
-
-  $('#galleryUploadVideoBtn')
-    ?.addEventListener('click',()=>{
-      if(!egpGalleryUploading){
-        $('#galleryVideoInput')?.click();
-      }
-    });
-
-  $('#galleryPhotoInput')
-    ?.addEventListener('change',async e=>{
-      const files=[...(e.target.files||[])];
-      e.target.value='';
-
-      if(files.length){
-        await egpGalleryUploadFiles(files);
-      }
-    });
-
-  $('#galleryVideoInput')
-    ?.addEventListener('change',async e=>{
-      const files=[...(e.target.files||[])];
-      e.target.value='';
-
-      if(files.length){
-        await egpGalleryUploadFiles(files);
-      }
-    });
-
-  const egpGalleryDrop=$('#galleryDropZone');
-
-  egpGalleryDrop?.addEventListener('dragenter',e=>{
-    e.preventDefault();
-
-    if(!egpGalleryUploading){
-      egpGalleryDrop.classList.add('is-dragover');
-    }
-  });
-
-  egpGalleryDrop?.addEventListener('dragover',e=>{
-    e.preventDefault();
-
-    if(e.dataTransfer){
-      e.dataTransfer.dropEffect='copy';
-    }
-
-    if(!egpGalleryUploading){
-      egpGalleryDrop.classList.add('is-dragover');
-    }
-  });
-
-  egpGalleryDrop?.addEventListener('dragleave',e=>{
-    e.preventDefault();
-    egpGalleryDrop.classList.remove('is-dragover');
-  });
-
-  egpGalleryDrop?.addEventListener('drop',async e=>{
-    e.preventDefault();
-
-    egpGalleryDrop.classList.remove('is-dragover');
-
-    if(egpGalleryUploading)return;
-
-    const files=[...(e.dataTransfer?.files||[])];
-
-    if(files.length){
-      await egpGalleryUploadFiles(files);
-    }
-  });
-
-  egpGalleryDrop?.addEventListener('click',()=>{
-    if(!egpGalleryUploading){
-      $('#galleryPhotoInput')?.click();
-    }
-  });
-
-  egpGalleryDrop?.addEventListener('keydown',e=>{
-    if(
-      !egpGalleryUploading &&
-      (e.key==='Enter' || e.key===' ')
-    ){
-      e.preventDefault();
-      $('#galleryPhotoInput')?.click();
-    }
-  });
-
-  $('#galleryVideoPlayBtn')?.addEventListener('click',()=>{
-    egpGalleryToggleVideo();
-  });
-
-  $('#galleryViewerVideo')?.addEventListener('click',()=>{
-    egpGalleryToggleVideo();
-  });
-
-  $('#galleryViewerVideo')?.addEventListener('play',()=>{
-    egpGallerySyncVideoControls();
-  });
-
-  $('#galleryViewerVideo')?.addEventListener('pause',()=>{
-    egpGallerySyncVideoControls();
-  });
-
-  $('#galleryViewerVideo')?.addEventListener('timeupdate',()=>{
-    egpGallerySyncVideoControls();
-  });
-
-  $('#galleryViewerVideo')?.addEventListener('durationchange',()=>{
-    egpGallerySyncVideoControls();
-  });
-
-  $('#galleryViewerVideo')?.addEventListener('ended',()=>{
-    egpGallerySyncVideoControls();
-  });
-
-  $('#galleryVideoProgress')?.addEventListener('input',e=>{
-    const video=$('#galleryViewerVideo');
-
-    if(
-      !video ||
-      !Number.isFinite(video.duration) ||
-      video.duration<=0
-    )return;
-
-    video.currentTime=
-      (Number(e.target.value)/1000)*video.duration;
-
-    egpGallerySyncVideoControls();
-  });
-
-  $('#galleryVideoMuteBtn')?.addEventListener('click',()=>{
-    const video=$('#galleryViewerVideo');
-
-    if(!video)return;
-
-    video.muted=!video.muted;
-    egpGallerySyncVideoControls();
-  });
-
-  $('#galleryVideoFullscreenBtn')?.addEventListener('click',async()=>{
-    const card=$('#galleryViewerCard');
-
-    if(!card)return;
-
-    try{
-      if(document.fullscreenElement){
-        await document.exitFullscreen();
-      }else if(card.requestFullscreen){
-        await card.requestFullscreen();
-      }
-    }catch(_){}
-  });
-
-  window.addEventListener('resize',()=>{
-    const dialog=$('#galleryViewerDialog');
-
-    if(!dialog?.open)return;
-
-    const video=$('#galleryViewerVideo');
-    const img=$('#galleryViewerImage');
-
-    if(video && !video.hidden){
-      egpGalleryFitViewerMedia(
-        video,
-        Number(video.dataset.rotation||0)
-      );
-    }
-
-    if(img && !img.hidden){
-      egpGalleryFitViewerMedia(
-        img,
-        Number(img.dataset.rotation||0)
-      );
-    }
-  });
-
-  $('#galleryViewerCloseBtn')?.addEventListener('click',()=>{
-    const dialog=$('#galleryViewerDialog');
-    const video=$('#galleryViewerVideo');
-
-    if(video){
-      video.pause();
-    }
-
-    if(dialog?.open){
-      dialog.close();
-    }
-  });
-
-  $('#galleryOpenLastBtn')
-    ?.addEventListener('click',()=>{
-      if(egpGalleryLastUrl){
-        window.open(
-          egpGalleryLastUrl,
-          '_blank',
-          'noopener'
-        );
-      }
-    });
-
-
   $$('.menu-options button').forEach(btn=>btn.addEventListener('click',()=>{
     $('#toolsMenu').close();
     $('#openMenuBtn').setAttribute('aria-expanded','false');
@@ -3459,7 +2413,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
     if(btn.dataset.module==='songbook-daniel') return openSongbookList('daniel');
     if(btn.dataset.module==='export-contacts') return openExportContacts();
     if(btn.dataset.module==='upload-photos') return openPhotoManager();
-    if(btn.dataset.module==='gallery') return openGallery();
     if(btn.id==='openAuxMonitorsBtn') return;
     if(btn.dataset.module==='security') return openSecurityAuth();
     $('#noticeTitle').textContent=btn.dataset.placeholder;
@@ -4025,17 +2978,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
     $('#photoPosX').value=d.x;$('#photoPosY').value=d.y;$('#photoZoom').value=d.zoom;
     $('#gradientIntensity').value=d.intensity;$('#gradientDirection').value=d.direction;
     $('#gradientColor').value=d.color;$('#gradientOpacity').value=d.opacity;
-    const preview=$('#photoPreview');preview.classList.toggle('is-inicio',activePhotoSlot==='inicio');
-    preview.classList.toggle('is-hero',activePhotoSlot==='hero');
-    preview.classList.toggle('is-portada',activePhotoSlot==='portada');
-    preview.classList.toggle('is-info',activePhotoSlot==='info');
-    preview.classList.toggle('is-bio',activePhotoSlot==='bio');
-    $('#photoPreviewLabel').textContent=
-      activePhotoSlot==='inicio'?'Foto inicio':
-      activePhotoSlot==='hero'?'Foto Hero':
-      activePhotoSlot==='portada'?'Foto portada INICIO':
-      activePhotoSlot==='info'?'Foto página INFO':
-      'Foto Elena BIO';
+    const preview=$('#photoPreview');preview.classList.toggle('is-inicio',activePhotoSlot==='inicio');preview.classList.toggle('is-hero',activePhotoSlot==='hero');
+    $('#photoPreviewLabel').textContent=activePhotoSlot==='inicio'?'Foto inicio':'Foto Hero';
     renderPhotoPreview();
   }
   function renderPhotoPreview(){
@@ -4048,52 +2992,10 @@ document.documentElement.dataset.egmVersion="6.36.92";
   function hexRgba(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`}
   function openPhotoManager(){
     const settings=structuredClone(loadPhotoSettings()),sources=loadPhotoSources();photoDrafts={};
-    ['inicio','hero','portada','info','bio'].forEach(slot=>{const saved=settings[slot]||{};photoDrafts[slot]={...PHOTO_DEFAULTS,...saved,src:sources[slot]||saved.src||''};});
+    ['inicio','hero'].forEach(slot=>{const saved=settings[slot]||{};photoDrafts[slot]={...PHOTO_DEFAULTS,...saved,src:sources[slot]||saved.src||''};});
     activePhotoSlot='inicio';$$('[data-photo-slot]').forEach(b=>b.classList.toggle('is-active',b.dataset.photoSlot===activePhotoSlot));
     syncPhotoControls();$('#photoSourceInput').value='';$('#photoSourceStatus').textContent=currentPhotoDraft().fileName||'Ninguna imagen seleccionada';$('#photoManagerDialog').showModal();rememberDialogState($('#photoManagerDialog'));
   }
-
-  /* EGP · FOTO PORTADA DE LA NUEVA PAGINA INICIO */
-  (function(){
-    if($('[data-photo-slot="portada"]')) return;
-
-    const heroBtn =
-      $('[data-photo-slot="hero"]') ||
-      $('[data-photo-slot]');
-
-    if(!heroBtn) return;
-
-    const portadaBtn = heroBtn.cloneNode(true);
-
-    portadaBtn.dataset.photoSlot='portada';
-    portadaBtn.textContent='Foto portada INICIO';
-
-    const infoBtn = heroBtn.cloneNode(true);
-    infoBtn.dataset.photoSlot='info';
-    infoBtn.textContent='Foto página INFO';
-
-    const bioBtn = heroBtn.cloneNode(true);
-    bioBtn.dataset.photoSlot='bio';
-    bioBtn.textContent='Foto Elena BIO';
-
-
-
-    heroBtn.insertAdjacentElement(
-      'afterend',
-      portadaBtn
-    );
-
-    portadaBtn.insertAdjacentElement(
-      'afterend',
-      infoBtn
-    );
-
-    infoBtn.insertAdjacentElement(
-      'afterend',
-      bioBtn
-    );
-  })();
-
   $$('[data-photo-slot]').forEach(b=>b.addEventListener('click',()=>{activePhotoSlot=b.dataset.photoSlot;$$('[data-photo-slot]').forEach(x=>x.classList.toggle('is-active',x===b));syncPhotoControls();$('#photoSourceInput').value='';$('#photoSourceStatus').textContent=currentPhotoDraft().fileName||'Ninguna imagen seleccionada';}));
   const photoSourceInput=$('#photoSourceInput');
   const photoSourceStatus=$('#photoSourceStatus');
@@ -4856,12 +3758,9 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
 
   /* EGP CONFIG LAN CONSOLIDADA V85 */
-  const EGP_REQUESTS_LAN_URL='http://10.10.10.2:8790';
-  const EGP_DEV_LOCALHOST=(location.hostname==='localhost'||location.hostname==='127.0.0.1');
+  const EGP_REQUESTS_LAN_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':'http://10.10.10.2:8790';
 
   async function egpPublicarConfigLan(data={}){
-    if(EGP_DEV_LOCALHOST)return;
-    if(EGP_DEV_LOCALHOST)return;
     try{
       const cfg=state.config||{};
       const active=('show_activo' in data)?data.show_activo===true:Boolean(state.config);
@@ -4871,13 +3770,14 @@ document.documentElement.dataset.egmVersion="6.36.92";
         latestRemoteState?.inicio_show ||
         0
       );
-      const enabled=active && cfg.requests===true;
+      const enabled=('pedidos_panel' in data)?(active&&data.pedidos_panel===true):(active&&cfg.requests===true);
+      const mode=('pedidos_modo' in data)?(data.pedidos_modo==='uno_por_turno'?'uno_por_turno':'libre'):(cfg.requestsMode==='uno_por_turno'?'uno_por_turno':'libre');
 
       await fetch(`${EGP_REQUESTS_LAN_URL}/api/config`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         cache:'no-store',
-        body:JSON.stringify({show_active:active,show_id:showId,pedidos_panel:enabled})
+        body:JSON.stringify({show_active:active,show_id:showId,pedidos_panel:enabled,pedidos_modo:mode})
       });
     }catch(err){
       console.warn('Fallback LAN de Pedidos no disponible:',err);
@@ -5204,7 +4104,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   /* EGP PEDIDOS LAN PANEL V77 */
   async function egpPedidosLanPanelV85(){
-    if(EGP_DEV_LOCALHOST)return;
     if(document.hidden)return;
     try{
       const configResponse=await fetch(`${EGP_REQUESTS_LAN_URL}/api/config`,{cache:'no-store'});
@@ -5242,7 +4141,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   let egpPedidosLanTimerV85=0;
   function egpProgramarPedidosLanPanelV85(delay=2500){
-    if(EGP_DEV_LOCALHOST)return;
     clearTimeout(egpPedidosLanTimerV85);
     egpPedidosLanTimerV85=setTimeout(async()=>{
       await egpPedidosLanPanelV85();

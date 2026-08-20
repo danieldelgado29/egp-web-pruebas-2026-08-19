@@ -4455,35 +4455,101 @@ document.documentElement.dataset.egmVersion="6.36.92";
       document.getElementById(`auxMono${i+1}`)?.value.trim()||`Aux ${i+1}`
     );
 
-    const save=()=>{
+    const save=async()=>{
       const btn=document.querySelector('#auxMonitorsForm .aux-save-btn');
+
       if(btn){
         btn.disabled=true;
-        btn.classList.remove('is-saved');
-        btn.classList.add('is-saving');
         btn.textContent='Guardando…';
+
+        try{
+          btn.animate(
+            [
+              {transform:'scale(1)',opacity:1},
+              {transform:'scale(.985)',opacity:.82},
+              {transform:'scale(1)',opacity:1}
+            ],
+            {duration:700,iterations:Infinity}
+          ).cancel();
+        }catch(_){}
       }
 
-      setTimeout(()=>{
-        localStorage.setItem(AUX_NAMES_KEY,JSON.stringify({stereo,mono}));
+      localStorage.setItem(
+        AUX_NAMES_KEY,
+        JSON.stringify({stereo,mono})
+      );
+
+      const monitoreo_perfiles={
+        stereo:[
+          {id:'stereo-1-2',nombre:stereo[0],aux:'1-2'},
+          {id:'stereo-3-4',nombre:stereo[1],aux:'3-4'},
+          {id:'stereo-5-6',nombre:stereo[2],aux:'5-6'},
+          {id:'stereo-7-8',nombre:stereo[3],aux:'7-8'}
+        ],
+        mono:mono.map((nombre,i)=>({
+          id:`mono-${i+1}`,
+          nombre,
+          aux:String(i+1)
+        }))
+      };
+
+      try{
+        await publishShowPatch({monitoreo_perfiles});
+
         fillAuxMonitorForm();
 
         if(btn){
-          btn.classList.remove('is-saving');
-          btn.classList.add('is-saved');
-          btn.textContent='✓ Guardado';
-        }
+          btn.textContent='✓ Sincronizado';
 
-        toast('Guardado exitosamente');
+          btn.animate(
+            [
+              {transform:'scale(1)'},
+              {transform:'scale(1.035)'},
+              {transform:'scale(.99)'},
+              {transform:'scale(1.02)'},
+              {transform:'scale(1)'}
+            ],
+            {
+              duration:700,
+              easing:'ease-out'
+            }
+          );
 
-        setTimeout(()=>{
-          if(btn){
-            btn.classList.remove('is-saved');
+          setTimeout(()=>{
             btn.textContent='Guardar';
             btn.disabled=false;
-          }
-        },1200);
-      },450);
+          },1600);
+        }
+
+        toast('Nombres actualizados en EGP Músicos');
+
+      }catch(err){
+        console.error(
+          'No se pudieron sincronizar nombres AUX',
+          err
+        );
+
+        if(btn){
+          btn.textContent='⚠ Reintentar';
+          btn.disabled=false;
+
+          btn.animate(
+            [
+              {transform:'translateX(0)'},
+              {transform:'translateX(-5px)'},
+              {transform:'translateX(5px)'},
+              {transform:'translateX(-3px)'},
+              {transform:'translateX(3px)'},
+              {transform:'translateX(0)'}
+            ],
+            {duration:420}
+          );
+        }
+
+        toast(
+          'No se pudo sincronizar con EGP Músicos. Intenta nuevamente.'
+        );
+      }
     };
 
     if(typeof askConfirm==='function'){
@@ -4497,7 +4563,4 @@ document.documentElement.dataset.egmVersion="6.36.92";
       save();
     }
   });
-
-
-
 })();

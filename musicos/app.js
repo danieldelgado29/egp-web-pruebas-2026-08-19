@@ -526,11 +526,46 @@ function render(data) {
 }
 
 if (previewMode && "serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations()
-    .then(regs => regs
-      .filter(r => r.scope.includes("/musicos/"))
-      .forEach(r => r.unregister()))
-    .catch(() => {});
+  (async()=>{
+    try{
+      const TEST_PATH="/egp-web-pruebas-2026-08-19/";
+      const regs=await navigator.serviceWorker.getRegistrations();
+
+      const testRegs=regs.filter(reg=>{
+        try{
+          return new URL(reg.scope).pathname.startsWith(TEST_PATH);
+        }catch(_){
+          return false;
+        }
+      });
+
+      await Promise.all(testRegs.map(reg=>reg.unregister()));
+
+      const controllerPath=(()=>{
+        try{
+          return navigator.serviceWorker.controller
+            ? new URL(navigator.serviceWorker.controller.scriptURL).pathname
+            : "";
+        }catch(_){
+          return "";
+        }
+      })();
+
+      if(
+        controllerPath.startsWith(TEST_PATH) &&
+        sessionStorage.getItem("egp-musicos-preview-clean-v2")!=="1"
+      ){
+        sessionStorage.setItem("egp-musicos-preview-clean-v2","1");
+
+        const url=new URL(location.href);
+        url.searchParams.set("fresh",Date.now());
+        location.replace(url.toString());
+      }
+
+    }catch(err){
+      console.warn("Limpieza preview Músicos:",err);
+    }
+  })();
 }
 
 if ("serviceWorker" in navigator && !previewMode) {

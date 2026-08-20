@@ -4494,7 +4494,30 @@ document.documentElement.dataset.egmVersion="6.36.92";
       };
 
       try{
-        await publishShowPatch({monitoreo_perfiles});
+        if(!remoteStateRef) await initRemoteSync();
+
+        if(!remoteStateRef || !window.__egmSetDoc){
+          throw new Error('Firebase todavía no está listo');
+        }
+
+        const auxRevision=Date.now();
+
+        await Promise.race([
+          window.__egmSetDoc(
+            remoteStateRef,
+            {
+              monitoreo_perfiles,
+              monitoreo_perfiles_updated_at:auxRevision
+            },
+            {merge:true}
+          ),
+          new Promise((_,reject)=>
+            setTimeout(
+              ()=>reject(new Error('Firebase tardó demasiado')),
+              8000
+            )
+          )
+        ]);
 
         fillAuxMonitorForm();
 

@@ -1549,3 +1549,61 @@ body{
   padding-left:4px!important;
   padding-right:4px!important;
 }
+
+
+/* =====================================================
+   EGP MUSICOS · CRECIMIENTO SIN RECORTE FINAL
+   ===================================================== */
+
+/* Espacio interior para que la animación no choque
+   contra el fondo/scroll de la cola */
+.queue-list{
+  padding-top:14px!important;
+  padding-bottom:16px!important;
+  padding-left:14px!important;
+  padding-right:14px!important;
+}
+
+/* La tarjeta conserva espacio propio alrededor */
+.song-card{
+  margin-left:5px!important;
+  margin-right:5px!important;
+}
+
+/* SIGUE vuelve a crecer, pero ahora dentro de su espacio */
+.song-card.next{
+  transform-origin:center center!important;
+  animation:egpTarjetaSigueConEspacio 2.15s ease-in-out infinite!important;
+}
+
+@keyframes egpTarjetaSigueConEspacio{
+  0%,100%{
+    transform:translateY(0) scale(1);
+    filter:brightness(1);
+    box-shadow:
+      0 12px 30px rgba(0,0,0,.22),
+      0 0 0 1px rgba(240,184,74,.14);
+  }
+
+  50%{
+    transform:translateY(-3px) scale(1.006);
+    filter:brightness(1.07);
+    box-shadow:
+      0 14px 34px rgba(0,0,0,.24),
+      0 0 14px rgba(240,184,74,.16),
+      0 0 0 2px rgba(240,184,74,.30);
+  }
+}
+
+/* En pantallas pequeñas dejamos también aire suficiente */
+@media(max-width:759px){
+  .queue-list{
+    padding-left:10px!important;
+    padding-right:10px!important;
+  }
+
+  .song-card{
+    margin-left:3px!important;
+    margin-right:3px!important;
+  }
+}

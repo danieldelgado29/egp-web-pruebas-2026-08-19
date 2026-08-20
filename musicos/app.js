@@ -24,6 +24,20 @@ let monitorMode = "";
 let monitorProfile = "";
 let monitorAux = "";
 let monitorStateData = null;
+let monitorConfigData = null;
+let unsubscribeMonitorConfig = null;
+
+try {
+  const cachedMonitorConfig =
+    JSON.parse(localStorage.getItem("egp-monitor-config-v1") || "null");
+
+  if (
+    cachedMonitorConfig &&
+    typeof cachedMonitorConfig === "object"
+  ) {
+    monitorConfigData = cachedMonitorConfig;
+  }
+} catch (_) {}
 
 /*
   Estos son los valores actuales.
@@ -67,7 +81,10 @@ function monitorProfilesForMode(mode) {
       .map(item => ({ ...item }));
 
   const remote =
-    monitorStateData?.monitoreo_perfiles?.[mode];
+    (
+      monitorConfigData?.monitoreo_perfiles ||
+      monitorStateData?.monitoreo_perfiles
+    )?.[mode];
 
   if (!Array.isArray(remote) || !remote.length) {
     return base;
@@ -401,6 +418,40 @@ async function startApp() {
         emptyState.textContent = "Sin conexión · esperando último estado guardado";
       }
     });
+
+    unsubscribeMonitorConfig?.();
+
+    unsubscribeMonitorConfig = onSnapshot(
+      doc(db, "imageEdits", "egp-system-monitoreo-v1"),
+
+      snapshot => {
+        monitorConfigData =
+          snapshot.exists()
+            ? snapshot.data()
+            : null;
+
+        try {
+          if (monitorConfigData) {
+            localStorage.setItem(
+              "egp-monitor-config-v1",
+              JSON.stringify(monitorConfigData)
+            );
+          }
+        } catch (_) {}
+
+        if (monitorMode && !monitorProfile) {
+          renderMonitorProfiles();
+        }
+      },
+
+      error => {
+        console.warn(
+          "Configuración de monitores offline:",
+          error
+        );
+      }
+    );
+
   } catch (error) {
     console.warn("EGP MÚSICOS en modo offline:", error);
     connectionDot.classList.remove("online");

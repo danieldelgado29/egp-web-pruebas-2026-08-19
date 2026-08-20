@@ -4494,20 +4494,25 @@ document.documentElement.dataset.egmVersion="6.36.92";
       };
 
       try{
-        if(!remoteStateRef) await initRemoteSync();
+        await initRemoteSync();
 
-        if(!remoteStateRef || !window.__egmSetDoc){
+        if(!remoteDb || !remoteDoc || !remoteSetDoc){
           throw new Error('Firebase todavía no está listo');
         }
 
-        const auxRevision=Date.now();
+        const auxRef=remoteDoc(
+          remoteDb,
+          'imageEdits',
+          'egp-system-monitoreo-v1'
+        );
 
         await Promise.race([
-          window.__egmSetDoc(
-            remoteStateRef,
+          remoteSetDoc(
+            auxRef,
             {
+              kind:'egp_monitor_config_v1',
               monitoreo_perfiles,
-              monitoreo_perfiles_updated_at:auxRevision
+              updated_at:Date.now()
             },
             {merge:true}
           ),

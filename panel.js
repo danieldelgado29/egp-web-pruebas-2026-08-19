@@ -4494,35 +4494,101 @@ document.documentElement.dataset.egmVersion="6.36.92";
       };
 
       try{
-        await initRemoteSync();
-
-        if(!remoteDb || !remoteDoc || !remoteSetDoc){
-          throw new Error('Firebase todavía no está listo');
-        }
-
-        const auxRef=remoteDoc(
-          remoteDb,
-          'imageEdits',
-          'egp-system-monitoreo-v1'
+        const cfgResponse=await fetch(
+          'configuracion.json',
+          {cache:'no-store'}
         );
 
-        await Promise.race([
-          remoteSetDoc(
-            auxRef,
-            {
-              kind:'egp_monitor_config_v1',
-              monitoreo_perfiles,
-              updated_at:Date.now()
+        if(!cfgResponse.ok){
+          throw new Error('No se pudo leer configuracion.json');
+        }
+
+        const cfg=await cfgResponse.json();
+
+        if(!cfg?.firebase?.projectId || !cfg?.firebase?.apiKey){
+          throw new Error('Configuración Firebase incompleta');
+        }
+
+        const stringValue=value=>({
+          stringValue:String(value ?? '')
+        });
+
+        const profileValue=item=>({
+          mapValue:{
+            fields:{
+              id:stringValue(item.id),
+              nombre:stringValue(item.nombre),
+              aux:stringValue(item.aux)
+            }
+          }
+        });
+
+        const firestoreBody={
+          fields:{
+            kind:{
+              stringValue:'egp_monitor_config_v1'
             },
-            {merge:true}
+            updated_at:{
+              integerValue:String(Date.now())
+            },
+            monitoreo_perfiles:{
+              mapValue:{
+                fields:{
+                  stereo:{
+                    arrayValue:{
+                      values:
+                        monitoreo_perfiles.stereo.map(profileValue)
+                    }
+                  },
+                  mono:{
+                    arrayValue:{
+                      values:
+                        monitoreo_perfiles.mono.map(profileValue)
+                    }
+                  }
+                }
+              }
+            }
+          }
+        };
+
+        const auxUrl=
+          'https://firestore.googleapis.com/v1/projects/' +
+          encodeURIComponent(cfg.firebase.projectId) +
+          '/databases/(default)/documents/imageEdits/' +
+          'egp-system-monitoreo-v1?key=' +
+          encodeURIComponent(cfg.firebase.apiKey);
+
+        const auxResponse=await Promise.race([
+          fetch(
+            auxUrl,
+            {
+              method:'PATCH',
+              headers:{
+                'Content-Type':'application/json'
+              },
+              body:JSON.stringify(firestoreBody),
+              cache:'no-store'
+            }
           ),
           new Promise((_,reject)=>
             setTimeout(
-              ()=>reject(new Error('Firebase tardó demasiado')),
+              ()=>reject(new Error('Firebase REST tardó demasiado')),
               8000
             )
           )
         ]);
+
+        if(!auxResponse.ok){
+          const detail=await auxResponse.text();
+
+          throw new Error(
+            'Firebase REST ' +
+            auxResponse.status +
+            ': ' +
+            detail.slice(0,300)
+          );
+        }
 
         fillAuxMonitorForm();
 

@@ -123,7 +123,52 @@ function htmlEscape(s){
 }
 function setStatus(s){ statusEl.textContent=s; }
 
+const TITLE_ALIASES = {
+  "Are You Gonna Go My Way":"Are You Gonna Go My Way",
+  "Crazy Little Thing Called Love":"Crazy little thing",
+  "murguero":"El murguero",
+  "Gimme! Gimme! Gimme! (A Man After Midnight)":"Gimme!",
+  "Have You Ever Seen The Rain":"Have you ever seen",
+  "I Don't Want To Miss A Thing":"I Don't Want to Miss",
+  "I Hate Myself For Loving You":"I hate Myself",
+  "I Love Rock 'N' Roll":"I love Rock & Roll",
+  "Jammin'":"Jamming",
+  "La Muralla Verde":"La muralla",
+  "Mambo Number 5":"Mambo Nr. 5",
+  "Man! I Feel Like A Woman!":"Man! I feel like a w.",
+  "Menntirosa":"Mentirosa",
+  "De Música Ligera":"Música Ligera",
+  "Nowherefast":"Nowhere fast",
+  "One Way Or Another":"One way",
+  "Si Una Vez":"Si una vez dije que te amaba",
+  "These Boots Are Made For Walkin'":"These Boots Are Made for Walkin'",
+  "Wicked Game":"Wicked Games",
+  "You Shook Me All Night Long":"You shook Me"
+};
+
 function bestMatch(entry, songs){
+  const forced = TITLE_ALIASES[entry.title];
+
+  if(forced){
+    const wanted=norm(forced);
+
+    const hits=songs.filter(song=>{
+      const current=norm(song.titulo);
+      return current===wanted ||
+             current.includes(wanted) ||
+             wanted.includes(current);
+    });
+
+    if(hits.length===1){
+      return {
+        song:hits[0],
+        method:"alias revisado",
+        score:1,
+        safe:true
+      };
+    }
+  }
+
   const ev = variants(entry.title);
   const exact = songs.filter(song => {
     const sv = variants(song.titulo);

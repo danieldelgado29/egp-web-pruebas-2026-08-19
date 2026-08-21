@@ -4311,23 +4311,31 @@ document.documentElement.dataset.egmVersion="6.36.92";
   login.hidden=trusted;
   loginForm.addEventListener('submit',e=>{e.preventDefault();const security=JSON.parse(localStorage.getItem('egm-security-settings')||'{}');if(loginPassword.value===(security.password||'2907')){rememberPanelAuth();login.hidden=true;loginError.hidden=true;loginPassword.value='';if(latestRemoteState)applyRemotePanelState(latestRemoteState);else if(state.config)showLive();else showConfig();}else loginError.hidden=false;});
   loadData().then(async()=>{
-    if(trusted&&state.config)showLive(); else if(trusted)showConfig();
+    if(trusted)showConfig();
+
+    let sharedStateResolved=false;
+
     try{
       await initRemoteSync();
+
       if(remoteGetDoc&&remoteStateRef){
         const snap=await remoteGetDoc(remoteStateRef);
+
         if(snap.exists()){
           latestRemoteState=snap.data()||{};
+          sharedStateResolved=true;
           applyRemotePanelState(latestRemoteState);
         }
       }
     }catch(err){
-      console.warn('Panel iniciado con la última copia local; la sincronización se reintentará al recuperar conexión.',err);
+      console.warn('No se pudo leer todavía el estado compartido del show.',err);
     }
-    await egpPublicarConfigLan({
-      show_activo:Boolean(state.config),
-      inicio_show:state.config?.startedAt?new Date(state.config.startedAt).getTime():0
-    });
+
+    if(trusted&&!sharedStateResolved){
+      if(state.config)showLive();
+      else showConfig();
+    }
+
     egpPedidosLanPanelV85();
   });
 })();

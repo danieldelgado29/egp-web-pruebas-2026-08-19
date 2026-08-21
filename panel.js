@@ -611,7 +611,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   async function localQueueRequest(path,body){
     const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),2500);
+    const timeoutMs=body===undefined?2500:8000;
+    const timer=setTimeout(()=>controller.abort(),timeoutMs);
     try{
       const response=await fetch(LOCAL_CORE_URL+path,{
         method:body===undefined?'GET':'POST',

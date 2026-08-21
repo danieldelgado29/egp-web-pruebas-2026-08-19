@@ -614,13 +614,18 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const timeoutMs=body===undefined?2500:8000;
     const timer=setTimeout(()=>controller.abort(),timeoutMs);
     try{
-      const response=await fetch(LOCAL_CORE_URL+path,{
+      const options={
         method:body===undefined?'GET':'POST',
-        headers:{'Content-Type':'application/json'},
-        body:body===undefined?undefined:JSON.stringify(body),
         cache:'no-store',
         signal:controller.signal
-      });
+      };
+
+      if(body!==undefined){
+        options.headers={'Content-Type':'application/json'};
+        options.body=JSON.stringify(body);
+      }
+
+      const response=await fetch(LOCAL_CORE_URL+path,options);
       const data=await response.json();
       if(!response.ok||data?.ok===false)throw new Error(data?.error||'Local Core no respondió');
       return data;

@@ -1411,8 +1411,19 @@ document.documentElement.dataset.egmVersion="6.36.92";
           body={id};
         }
 
-        const result=await localQueueRequest(path,body);
-        applyLocalQueueSnapshot(result,{force:true});
+        let result;
+        try{
+          result=await localQueueRequest(path,body);
+        }catch(err){
+          throw new Error('LAN REQUEST | '+(err?.name||'Error')+' | '+(err?.message||String(err)));
+        }
+
+        try{
+          applyLocalQueueSnapshot(result,{force:true});
+        }catch(err){
+          throw new Error('LAN APPLY | '+(err?.name||'Error')+' | '+(err?.message||String(err)));
+        }
+
         return result;
       }
 
@@ -1462,7 +1473,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       console.warn('No se pudo guardar el cambio de cola',err);
       state.queue=originalQueue;state.played=originalPlayed;
       saveStateLocalOnly();renderQueue();renderSongs();
-      toast(err?.message==='OFFLINE'?'Sin conexión: no se cambió la cola remota.':'No se pudo guardar el cambio; se restauró la cola.');
+      toast(err?.message==='OFFLINE'?'Sin conexión: no se cambió la cola remota.':String(err?.message||'Error desconocido'));
       throw err;
     }
   }

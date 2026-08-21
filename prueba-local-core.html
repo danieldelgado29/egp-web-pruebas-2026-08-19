@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prueba Local Core</title>
+<style>
+body{font-family:system-ui;background:#111;color:#fff;padding:30px}
+button{font-size:20px;padding:18px 24px}
+pre{white-space:pre-wrap;background:#222;padding:20px;margin-top:20px}
+</style>
+</head>
+<body>
+<h1>Prueba GitHub → Local Core</h1>
+<button id="probar">PROBAR ESCRITURA LAN</button>
+<pre id="salida">Esperando prueba...</pre>
+
+<script>
+const CORE="https://core.elenagirjoaba.com";
+const ID="egp-test-lan";
+
+const salida=document.getElementById("salida");
+const boton=document.getElementById("probar");
+
+async function request(path,body){
+  const r=await fetch(CORE+path,{
+    method:body===undefined?"GET":"POST",
+    headers:{"Content-Type":"application/json"},
+    body:body===undefined?undefined:JSON.stringify(body),
+    cache:"no-store"
+  });
+
+  const text=await r.text();
+
+  if(r.ok===false){
+    throw new Error("HTTP "+r.status+" "+text);
+  }
+
+  return JSON.parse(text);
+}
+
+boton.onclick=async()=>{
+  boton.disabled=true;
+  salida.textContent="Probando...\n";
+
+  try{
+    const health=await request("/api/health");
+    salida.textContent+="GET HEALTH: OK\n";
+
+    const add=await request("/api/queue/add",{
+      id:ID,
+      title:"EGP TEST LAN",
+      number:"TEST"
+    });
+
+    salida.textContent+="POST ADD: OK\n";
+
+    const state=await request("/api/state");
+    const encontrado=(state.queue||[]).some(x=>String(x.id)===ID);
+
+    salida.textContent+="EN COLA: "+(encontrado?"SI":"NO")+"\n";
+
+    await request("/api/queue/remove",{id:ID});
+    salida.textContent+="LIMPIEZA: OK\n";
+
+    if(encontrado){
+      salida.textContent+="\nRESULTADO: ✅ GITHUB PUEDE ESCRIBIR DIRECTO AL LOCAL CORE";
+    }else{
+      salida.textContent+="\nRESULTADO: ❌ EL POST RESPONDIO PERO NO ENTRO A LA COLA";
+    }
+  }catch(e){
+    salida.textContent+="\nRESULTADO: ❌ "+e.name+" | "+e.message;
+  }finally{
+    boton.disabled=false;
+  }
+};
+</script>
+</body>
+</html>

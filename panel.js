@@ -256,6 +256,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
   let LOCAL_QUEUE_MODE=false;
   let localQueueTimer=0;
   let localQueueBusy=false;
+  let localQueueMutationChain=Promise.resolve();
+  let localQueueMutationPending=0;
 
 
   // 6.36.35 — Persistencia offline-first para imágenes y anotaciones.
@@ -674,7 +676,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
   async function refreshLocalQueue(){
-    if(localQueueBusy||queueDragState.active||queueDragState.saving)return;
+    if(localQueueBusy||localQueueMutationPending>0||queueDragState.active||queueDragState.saving)return;
 
     localQueueBusy=true;
 
@@ -1371,7 +1373,24 @@ document.documentElement.dataset.egmVersion="6.36.92";
     return [...pending,target,...done];
   }
 
-  async function persistQueueStateMutation(songId,kind){
+  function persistQueueStateMutation(songId,kind){
+    const id=String(songId||'');
+    if(!id)return Promise.resolve();
+
+    localQueueMutationPending++;
+
+    const run=()=>persistQueueStateMutationNow(id,kind);
+    const task=localQueueMutationChain.then(run,run);
+
+    localQueueMutationChain=task.catch(()=>{});
+
+    return task.finally(()=>{
+      localQueueMutationPending=Math.max(0,localQueueMutationPending-1);
+      if(localQueueMutationPending===0)setTimeout(refreshLocalQueue,0);
+    });
+  }
+
+  async function persistQueueStateMutationNow(songId,kind){
     const id=String(songId||'');
     if(!id)return;
     const originalQueue=[...state.queue],originalPlayed=new Set(state.played);

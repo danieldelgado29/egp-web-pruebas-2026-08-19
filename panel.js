@@ -623,7 +623,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
       };
 
       if(body!==undefined){
-        options.headers={'Content-Type':'application/json'};
         options.body=JSON.stringify(body);
       }
 

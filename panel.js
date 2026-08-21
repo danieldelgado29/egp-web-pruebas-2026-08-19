@@ -673,23 +673,35 @@ document.documentElement.dataset.egmVersion="6.36.92";
     localQueueBusy=true;
 
     try{
-      const snap=await localQueueRequest('/api/state');
+      let snap=null;
+
+      try{
+        snap=await localQueueRequest('/api/state');
+      }catch(err){
+        const wasLocal=LOCAL_QUEUE_MODE;
+        LOCAL_QUEUE_MODE=false;
+
+        if(wasLocal&&latestRemoteState){
+          const q=Array.isArray(latestRemoteState.cola)?latestRemoteState.cola.map(String):[];
+          const p=Array.isArray(latestRemoteState.tocadas)?[...new Set(latestRemoteState.tocadas.map(String))]:[];
+
+          state.played=new Set(p);
+          applyRemoteQueueSnapshot(q);
+          state.queue=canonicalQueueOrder(q,p);
+          saveStateLocalOnly();
+          renderQueue();
+          renderSongs();
+        }
+
+        return;
+      }
+
       LOCAL_QUEUE_MODE=true;
-      applyLocalQueueSnapshot(snap);
-    }catch(err){
-      const wasLocal=LOCAL_QUEUE_MODE;
-      LOCAL_QUEUE_MODE=false;
 
-      if(wasLocal&&latestRemoteState){
-        const q=Array.isArray(latestRemoteState.cola)?latestRemoteState.cola.map(String):[];
-        const p=Array.isArray(latestRemoteState.tocadas)?[...new Set(latestRemoteState.tocadas.map(String))]:[];
-
-        state.played=new Set(p);
-        applyRemoteQueueSnapshot(q);
-        state.queue=canonicalQueueOrder(q,p);
-        saveStateLocalOnly();
-        renderQueue();
-        renderSongs();
+      try{
+        applyLocalQueueSnapshot(snap);
+      }catch(err){
+        console.warn('Local Core conectado; error aplicando estado local:',err);
       }
     }finally{
       localQueueBusy=false;

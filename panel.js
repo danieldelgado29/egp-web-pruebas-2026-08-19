@@ -668,7 +668,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
   async function refreshLocalQueue(){
-    if(!CORE_TEST_MODE||localQueueBusy||queueDragState.active||queueDragState.saving)return;
+    if(localQueueBusy||queueDragState.active||queueDragState.saving)return;
 
     localQueueBusy=true;
 
@@ -697,12 +697,12 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
   function startLocalQueueSync(){
-    if(!CORE_TEST_MODE||localQueueTimer)return;
+    if(localQueueTimer)return;
     refreshLocalQueue();
     localQueueTimer=setInterval(refreshLocalQueue,550);
   }
 
-  if(CORE_TEST_MODE)setTimeout(startLocalQueueSync,500);
+  setTimeout(startLocalQueueSync,500);
   function saveState(immediate=false){ saveStateLocalOnly(); return syncRemoteState(immediate); }
 
   function buildRepertoires(){

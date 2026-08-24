@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <script src="../egp-photo-responsive.js?v=responsive-photos-20260824"></script>
+  <script src="../egp-photo-responsive.js?v=info-fotos-1787598598"></script>
   <meta charset="utf-8">
 
   <meta
@@ -11,7 +11,7 @@
 
   <title>Elena Girjoaba Music</title>
 
-  <link rel="stylesheet" href="style.css?v=1787160375">
+  <link rel="stylesheet" href="style.css?v=1787590373">
 </head>
 
 <body>
@@ -141,11 +141,11 @@ window.addEventListener('pageshow', function(event) {
 
       <div class="hero-buttons">
 
-        <a class="btn btn-gold" href="../">
+        <a class="btn btn-gold egp-top-music-pulse" href="../">
           MÚSICA A LA CARTA
         </a>
 
-        <a class="btn btn-dark" href="#galeria">
+        <a class="btn btn-dark" href="#galeria" id="egpGoGallery">
           FOTOS Y VIDEOS
         </a>
 
@@ -493,10 +493,9 @@ window.addEventListener('pageshow', function(event) {
       </a>
 
       <a
-        href="https://instagram.com/elenagirjoabamusic"
-        target="_blank"
-        rel="noopener noreferrer"
+        href="instagram://user?username=elenagirjoabamusic"
         class="explore-card instagram-card"
+        id="egpInstagramCard"
       >
         <span>04</span>
         <h3>INSTAGRAM</h3>
@@ -573,7 +572,7 @@ document
 <script id="egpFotoInfoDinamica">
 (function(){
 
-  function cargarFotoInfo(){
+  async function cargarFotoInfo(){
 
     let sources={};
     let settings={};
@@ -592,8 +591,55 @@ document
 
     if(!foto) return;
 
-    const src=sources.info||'';
-    const d=settings.info||{};
+    const target=
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'')
+          ? 'mobile'
+          : 'desktop';
+
+    const variantKey='info__'+target;
+
+    let src=
+      sources[variantKey]||
+      sources.info||
+      '';
+
+    let d=
+      settings[variantKey]||
+      settings.info||
+      {};
+
+    /*
+     * EGP — 1 INFO desde Core compartido.
+     * localStorage permanece como respaldo.
+     */
+    try{
+      const coreHost=
+        location.hostname==='127.0.0.1' ||
+        location.hostname==='localhost'
+          ? '127.0.0.1'
+          : location.hostname;
+
+      const response=await fetch(
+        'http://'+coreHost+':8898/api/photos',
+        {cache:'no-store'}
+      );
+
+      if(response.ok){
+        const remote=await response.json();
+        const photo=remote?.photos?.[variantKey];
+
+        if(photo && typeof photo==='object'){
+          if(photo.src) src=photo.src;
+          d={...d,...photo};
+        }
+      }
+    }catch(err){
+      console.warn(
+        'Core fotos INFO no disponible; usando almacenamiento local',
+        err
+      );
+    }
 
     /*
       Si no existe foto personalizada,
@@ -639,7 +685,7 @@ document
 <script id="egpFotoBioDinamica">
 (function(){
 
-  function cargarFotoBio(){
+  async function cargarFotoBio(){
 
     let sources={};
     let settings={};
@@ -658,8 +704,55 @@ document
 
     if(!foto) return;
 
-    const src=sources.bio||'';
-    const d=settings.bio||{};
+    const target=
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'')
+          ? 'mobile'
+          : 'desktop';
+
+    const variantKey='bio__'+target;
+
+    let src=
+      sources[variantKey]||
+      sources.bio||
+      '';
+
+    let d=
+      settings[variantKey]||
+      settings.bio||
+      {};
+
+    /*
+     * EGP — BIO desde Core compartido.
+     * localStorage permanece como respaldo.
+     */
+    try{
+      const coreHost=
+        location.hostname==='127.0.0.1' ||
+        location.hostname==='localhost'
+          ? '127.0.0.1'
+          : location.hostname;
+
+      const response=await fetch(
+        'http://'+coreHost+':8898/api/photos',
+        {cache:'no-store'}
+      );
+
+      if(response.ok){
+        const remote=await response.json();
+        const photo=remote?.photos?.[variantKey];
+
+        if(photo && typeof photo==='object'){
+          if(photo.src) src=photo.src;
+          d={...d,...photo};
+        }
+      }
+    }catch(err){
+      console.warn(
+        'Core fotos BIO no disponible; usando almacenamiento local',
+        err
+      );
+    }
 
     /* Sin foto personalizada conserva la actual */
 
@@ -735,6 +828,31 @@ document
   });
 
   actualizarFlecha();
+})();
+</script>
+
+
+<script>
+/* EGP · ATENCION FOTOS Y VIDEOS DESDE HERO */
+(function(){
+  const arriba=document.getElementById('egpGoGallery');
+  const tarjeta=document.getElementById('egpGalleryLink');
+
+  if(!arriba || !tarjeta) return;
+
+  arriba.addEventListener('click',function(){
+    tarjeta.classList.remove('egp-gallery-attention');
+
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        tarjeta.classList.add('egp-gallery-attention');
+      });
+    });
+  });
+
+  tarjeta.addEventListener('click',function(){
+    tarjeta.classList.remove('egp-gallery-attention');
+  });
 })();
 </script>
 

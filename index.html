@@ -91,7 +91,7 @@
     aria-labelledby="landingTitulo"
   >
     <div class="landing__fondo" aria-hidden="true">
-      <picture class="landing__media">
+      <picture class="landing__media" id="egpCarta1Picture">
         <source media="(max-width: 760px)" srcset="assets/foto-banda-mobile.jpg">
         <img
           class="landing__imagen"
@@ -205,7 +205,7 @@
        ========================================================= -->
   <div id="app" class="app" hidden>
     <header class="hero" id="inicio">
-      <picture class="hero__media" aria-hidden="true">
+      <picture class="hero__media" id="egpCarta2Picture" aria-hidden="true">
         <source media="(max-width: 760px)" srcset="assets/hero-mobile.jpg">
         <img
           class="hero__imagen"
@@ -959,5 +959,133 @@
     </div>
   </noscript>
   <script src="./pwa.js?v=PRUEBA-SIN-SW-20260819-182530"></script>
+
+<script>
+/* EGP · FOTOS DINAMICAS — 1 CARTA / 2 CARTA */
+(function(){
+
+  async function cargarFotosCarta(){
+
+    let sources={};
+    let settings={};
+
+    try{
+      sources=JSON.parse(
+        localStorage.getItem('egm-photo-originals')||'{}'
+      );
+
+      settings=JSON.parse(
+        localStorage.getItem('egm-photo-settings')||'{}'
+      );
+    }catch(_){}
+
+    const mobile =
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'');
+
+    function key(base){
+      const variant=base+'__'+(mobile?'mobile':'desktop');
+      return sources[variant]!==undefined ? variant : base;
+    }
+
+    let remotePhotos={};
+
+    /*
+     * EGP — CARTAS desde Core compartido.
+     * localStorage permanece como respaldo.
+     */
+    try{
+      const coreHost=
+        location.hostname==='127.0.0.1' ||
+        location.hostname==='localhost'
+          ? '127.0.0.1'
+          : location.hostname;
+
+      const response=await fetch(
+        'http://'+coreHost+':8898/api/photos',
+        {cache:'no-store'}
+      );
+
+      if(response.ok){
+        const remote=await response.json();
+        remotePhotos=remote?.photos||{};
+      }
+    }catch(err){
+      console.warn(
+        'Core fotos CARTA no disponible; usando almacenamiento local',
+        err
+      );
+    }
+
+    function aplicar(pictureId,base){
+
+      const picture=document.getElementById(pictureId);
+      if(!picture) return;
+
+      const img=picture.querySelector('img');
+      const source=picture.querySelector('source');
+
+      const variantKey=
+        base+'__'+(mobile?'mobile':'desktop');
+
+      const localKey=key(base);
+
+      const remote=
+        remotePhotos[variantKey]||{};
+
+      const src=
+        remote.src||
+        sources[localKey]||
+        sources[base]||
+        '';
+
+      const d={
+        ...(settings[localKey]||settings[base]||{}),
+        ...remote
+      };
+
+      if(src){
+        if(img) img.src=src;
+        if(source) source.srcset=src;
+      }
+
+      if(img){
+        img.style.objectPosition=
+          (d.x ?? 50)+'% '+(d.y ?? 50)+'%';
+
+        if(d.zoom!==undefined){
+          img.style.transform=
+            'scale('+(Number(d.zoom)/100)+')';
+
+          img.style.transformOrigin=
+            (d.x ?? 50)+'% '+(d.y ?? 50)+'%';
+        }
+      }
+    }
+
+    aplicar('egpCarta1Picture','carta1');
+    aplicar('egpCarta2Picture','carta2');
+  }
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    cargarFotosCarta
+  );
+
+  window.addEventListener(
+    'storage',
+    function(e){
+      if(
+        e.key==='egm-photo-originals' ||
+        e.key==='egm-photo-settings'
+      ){
+        cargarFotosCarta();
+      }
+    }
+  );
+
+})();
+</script>
+
 </body>
 </html>

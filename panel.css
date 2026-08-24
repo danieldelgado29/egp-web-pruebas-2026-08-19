@@ -3101,3 +3101,118 @@ body.egp-ios.live-mode .song-action{
 }
 
 /* FIN EGP FOTO DESTINO RESPONSIVE V1 */
+
+
+/* EGP — Biblioteca del administrador de fotos */
+.photo-library{
+  margin:0 0 16px;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:var(--surface2);
+}
+
+.photo-library[hidden]{
+  display:none!important;
+}
+
+.photo-library-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.photo-library-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+.photo-library-item{
+  min-width:0;
+  padding:0;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#111318;
+  color:var(--text);
+  cursor:pointer;
+  text-align:left;
+}
+
+.photo-library-item img{
+  display:block;
+  width:100%;
+  aspect-ratio:16/10;
+  object-fit:cover;
+  background:#000;
+}
+
+.photo-library-item span{
+  display:block;
+  padding:10px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.photo-library-item:hover,
+.photo-library-item:focus-visible{
+  border-color:var(--accent);
+  outline:none;
+}
+
+@media(max-width:650px){
+  .photo-library-grid{
+    grid-template-columns:1fr;
+  }
+
+  .photo-file-picker-actions{
+    flex-wrap:wrap;
+  }
+}
+
+/* EGP — Biblioteca fotos · miniaturas compactas */
+.photo-library-grid{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:8px!important;
+}
+
+.photo-library-item{
+  padding:0!important;
+  min-width:0!important;
+}
+
+.photo-library-item img{
+  display:block!important;
+  width:100%!important;
+  height:72px!important;
+  aspect-ratio:auto!important;
+  object-fit:cover!important;
+}
+
+.photo-library-item span{
+  padding:6px!important;
+  font-size:10px!important;
+  line-height:1.2!important;
+}
+
+@media(max-width:650px){
+  .photo-library-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+
+  .photo-library-item img{
+    height:64px!important;
+  }
+}
+
+/* EGP — Toast siempre por encima de dialogs/modales */
+.toast,
+#toast,
+.egp-toast{
+  z-index:2147483647!important;
+  position:fixed!important;
+}

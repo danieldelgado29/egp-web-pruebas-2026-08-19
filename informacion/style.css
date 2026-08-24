@@ -1421,3 +1421,47 @@ a{
   display:none!important;
 }
 /* FIN EGP · VIVE LA EXPERIENCIA SIN NUMERACION */
+
+/* EGP · PULSO SUAVE — BOTON SUPERIOR MUSICA A LA CARTA */
+@keyframes egpTopMusicPulse{
+  0%,100%{
+    box-shadow:
+      0 0 3px rgba(230,181,74,.10);
+    filter:brightness(1);
+  }
+
+  50%{
+    box-shadow:
+      0 0 22px rgba(230,181,74,.72),
+      0 0 42px rgba(230,181,74,.32);
+    filter:brightness(1.28);
+  }
+}
+
+.btn.btn-gold.egp-top-music-pulse{
+  animation:
+    egpTopMusicPulse 2.4s ease-in-out infinite!important;
+}
+/* FIN EGP · PULSO SUAVE — BOTON SUPERIOR MUSICA A LA CARTA */
+
+/* EGP · TITILEO FOTOS Y VIDEOS — HASTA PULSAR TARJETA */
+@keyframes egpGalleryAttention{
+  0%,100%{
+    box-shadow:
+      0 0 2px rgba(230,181,74,.08);
+    filter:brightness(1);
+  }
+
+  50%{
+    box-shadow:
+      0 0 22px rgba(230,181,74,.72),
+      0 0 42px rgba(230,181,74,.30);
+    filter:brightness(1.22);
+  }
+}
+
+.explore-card.egp-gallery-attention{
+  animation:
+    egpGalleryAttention 1.8s ease-in-out infinite!important;
+}
+/* FIN EGP · TITILEO FOTOS Y VIDEOS — HASTA PULSAR TARJETA */

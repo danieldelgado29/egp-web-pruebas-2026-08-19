@@ -33,7 +33,7 @@
     })();
   </script>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="panel.css?v=20260819-180423">
+  <link rel="stylesheet" href="panel.css?v=toast-1787601165">
   <style>
     /* 6.34.1: acceso crítico visible incluso si Safari conserva CSS antiguo */
     #panelLogin{position:fixed!important;inset:0!important;z-index:2147483647!important;display:flex!important;align-items:center!important;justify-content:center!important;background:#050505!important;padding:24px!important;color:#fff!important;opacity:1!important;visibility:visible!important}
@@ -47,7 +47,7 @@
   </style>
 </head>
 <body data-build="6.36.76">
-  
+
   <section id="panelLogin" class="panel-login" aria-label="Acceso al panel">
     <form id="panelLoginForm" class="panel-login__card" autocomplete="off">
       <strong class="panel-login__brand">EGM</strong>
@@ -748,13 +748,80 @@
 
         <small id="egpPhotoTargetStatus"></small>
       </div>
-      <div class="photo-tabs"><button type="button" data-photo-slot="inicio" class="is-active">Foto inicio</button><button type="button" data-photo-slot="hero">Foto Hero</button></div>
+      <div class="photo-tabs"><button type="button" class="photo-slot is-active" data-photo-slot="portada">
+          INICIO
+        </button>
+
+        <button type="button" class="photo-slot" data-photo-slot="info">
+          1 INFO
+        </button>
+
+        <button type="button" class="photo-slot" data-photo-slot="bio">
+          BIO
+        </button>
+
+        <button type="button" class="photo-slot" data-photo-slot="carta1">
+          1 CARTA
+        </button>
+
+        <button type="button" class="photo-slot" data-photo-slot="carta2">
+          2 CARTA
+        </button></div>
       <div class="photo-file-picker photo-file-picker-actions">
         <button id="choosePhotoSourceBtn" class="secondary-btn" type="button">Seleccionar imagen</button>
+        <button id="choosePhotoLibraryBtn" class="secondary-btn" type="button">Elegir de biblioteca</button>
         <input id="photoSourceInput" type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif" hidden>
         <span id="photoSourceStatus" class="photo-source-status">Ninguna imagen seleccionada</span>
       </div>
-      <div id="photoPreview" class="photo-preview is-inicio" tabindex="0" aria-label="Vista previa de la imagen. Arrastra para cambiar el encuadre."><div class="photo-preview-image"></div><div class="photo-preview-gradient"></div><div class="photo-preview-badge"><strong id="photoPreviewLabel">Foto inicio</strong><span>Arrastra para encuadrar</span></div></div>
+
+      <div id="photoLibrary" class="photo-library" hidden>
+        <div class="photo-library-head">
+          <strong>BIBLIOTECA DE FOTOS</strong>
+          <button id="closePhotoLibraryBtn" class="secondary-btn" type="button">Cerrar</button>
+        </div>
+
+        <div class="photo-library-grid">
+
+          <button
+            type="button"
+            class="photo-library-item"
+            data-photo-library="assets/biblioteca-fotos-originales/hero-original-desktop.jpg"
+          >
+            <img src="assets/biblioteca-fotos-originales/hero-original-desktop.jpg" alt="">
+            <span>Hero original · Computadora</span>
+          </button>
+
+          <button
+            type="button"
+            class="photo-library-item"
+            data-photo-library="assets/biblioteca-fotos-originales/hero-original-mobile.jpg"
+          >
+            <img src="assets/biblioteca-fotos-originales/hero-original-mobile.jpg" alt="">
+            <span>Hero original · Móvil</span>
+          </button>
+
+          <button
+            type="button"
+            class="photo-library-item"
+            data-photo-library="assets/biblioteca-fotos-originales/foto-banda-original-desktop.jpg"
+          >
+            <img src="assets/biblioteca-fotos-originales/foto-banda-original-desktop.jpg" alt="">
+            <span>Foto banda original · Computadora</span>
+          </button>
+
+          <button
+            type="button"
+            class="photo-library-item"
+            data-photo-library="assets/biblioteca-fotos-originales/foto-banda-original-mobile.jpg"
+          >
+            <img src="assets/biblioteca-fotos-originales/foto-banda-original-mobile.jpg" alt="">
+            <span>Foto banda original · Móvil</span>
+          </button>
+
+        </div>
+      </div>
+
+<div id="photoPreview" class="photo-preview is-inicio" tabindex="0" aria-label="Vista previa de la imagen. Arrastra para cambiar el encuadre."><div class="photo-preview-image"></div><div class="photo-preview-gradient"></div><div class="photo-preview-badge"><strong id="photoPreviewLabel">Foto inicio</strong><span>Arrastra para encuadrar</span></div></div>
       <div class="photo-controls">
         <label>Posición X <input id="photoPosX" type="range" min="0" max="100" value="50"><output>50%</output></label>
         <label>Posición Y <input id="photoPosY" type="range" min="0" max="100" value="50"><output>50%</output></label>
@@ -848,7 +915,7 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="panel.js?v=aux-sync-20260819-193602"></script>
+  <script type="module" src="panel.js?v=core-foto-activa-1787602922"></script>
   <script>
 (function(){
   function syncQueueRepertoire(){

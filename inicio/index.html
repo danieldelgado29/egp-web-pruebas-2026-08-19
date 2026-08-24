@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <script src="../egp-photo-responsive.js?v=responsive-photos-20260824"></script>
+  <script src="../egp-photo-responsive.js?v=inicio-fotos-1787598482"></script>
   <meta charset="utf-8">
   <meta name="viewport"
         content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -50,7 +50,7 @@
   }
 
 
-  function cargarPortada(){
+  async function cargarPortada(){
 
     let sources = {};
     let settings = {};
@@ -82,11 +82,55 @@
     if(!hero) return;
 
 
-    const src =
-      sources.portada || '';
+    /*
+     * EGP — Fotos compartidas.
+     * Primero conserva localStorage como respaldo.
+     * Después intenta leer la variante correcta desde Local Core.
+     */
+    const target =
+      window.matchMedia('(max-width:700px)').matches
+        ? 'mobile'
+        : 'desktop';
 
-    const d =
-      settings.portada || {};
+    const variantKey='portada__'+target;
+
+    let src =
+      sources[variantKey] ||
+      sources.portada ||
+      '';
+
+    let d =
+      settings[variantKey] ||
+      settings.portada ||
+      {};
+
+    try{
+      const coreHost =
+        location.hostname === '127.0.0.1' ||
+        location.hostname === 'localhost'
+          ? '127.0.0.1'
+          : location.hostname;
+
+      const response=await fetch(
+        'http://'+coreHost+':8898/api/photos',
+        {cache:'no-store'}
+      );
+
+      if(response.ok){
+        const remote=await response.json();
+        const photo=remote?.photos?.[variantKey];
+
+        if(photo && typeof photo==='object'){
+          if(photo.src) src=photo.src;
+          d={...d,...photo};
+        }
+      }
+    }catch(err){
+      console.warn(
+        'Core de fotos no disponible; usando almacenamiento local',
+        err
+      );
+    }
 
 
     /*

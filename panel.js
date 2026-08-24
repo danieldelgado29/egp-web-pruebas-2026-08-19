@@ -253,6 +253,16 @@ document.documentElement.dataset.egmVersion="6.36.92";
   const EGP_AUDIT_LOCAL=new URL(location.href).searchParams.get('audit_local')==='1';
   const LOCAL_CORE_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':'https://core.elenagirjoaba.com';
   const CORE_TEST_MODE=new URL(location.href).searchParams.get('core_test')==='1';
+
+  const EGP_PHOTOS_CORE_TEST=
+    new URL(location.href).searchParams.get('photos_core_test')==='1';
+
+  const EGP_PHOTOS_CORE_URL=
+    location.hostname === '127.0.0.1' ||
+    location.hostname === 'localhost'
+      ? 'http://127.0.0.1:8898'
+      : 'http://' + location.hostname + ':8898';
+
   let LOCAL_QUEUE_MODE=false;
   let localQueueTimer=0;
   let localQueueBusy=false;
@@ -4015,7 +4025,45 @@ document.documentElement.dataset.egmVersion="6.36.92";
     },'Eliminar');
   });
 
-  function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2800);}
+  function toast(msg){
+    const el=$('#toast');
+    if(!el)return;
+
+    /*
+     * Un <dialog> abierto pertenece al top layer.
+     * El toast debe estar DENTRO del dialog para verse delante.
+     */
+    const dialog=document.querySelector('dialog[open]');
+
+    if(dialog && !dialog.contains(el)){
+      if(!toast.home){
+        toast.home={
+          parent:el.parentNode,
+          next:el.nextSibling
+        };
+      }
+      dialog.appendChild(el);
+    }
+
+    el.textContent=msg;
+    el.classList.add('show');
+
+    clearTimeout(toast.t);
+
+    toast.t=setTimeout(()=>{
+      el.classList.remove('show');
+
+      setTimeout(()=>{
+        if(toast.home && toast.home.parent){
+          if(toast.home.next && toast.home.next.parentNode===toast.home.parent){
+            toast.home.parent.insertBefore(el,toast.home.next);
+          }else{
+            toast.home.parent.appendChild(el);
+          }
+        }
+      },200);
+    },2800);
+  }
   function norm(v=''){return String(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
   function slug(v=''){return norm(v).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
   function esc(v=''){return String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -4090,7 +4138,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   });
 
   // Entrega 6.17 — Subir fotos y editor real de encuadre
-  let activePhotoSlot='inicio',photoDrafts={},dragState=null;
+  let activePhotoSlot='portada',photoDrafts={},dragState=null;
   const PHOTO_DEFAULTS={x:50,y:50,zoom:100,intensity:55,direction:'to bottom',color:'#000000',opacity:70};
 
   // ========================================================
@@ -4215,6 +4263,75 @@ document.documentElement.dataset.egmVersion="6.36.92";
     egpPhotoSyncTargetUI
   );
 
+
+  async function egpLoadPhotosFromCoreTest(){
+    if(!EGP_PHOTOS_CORE_TEST) return null;
+
+    const response=await fetch(
+      EGP_PHOTOS_CORE_URL+'/api/photos',
+      {cache:'no-store'}
+    );
+
+    if(!response.ok){
+      throw new Error('Core de fotos no respondió');
+    }
+
+    const data=await response.json();
+
+    if(!data?.ok || !data.photos || typeof data.photos!=='object'){
+      throw new Error('Respuesta inválida del Core de fotos');
+    }
+
+    return data.photos;
+  }
+
+  async function egpSavePhotosToCoreTest(){
+    if(!EGP_PHOTOS_CORE_TEST) return false;
+
+    /*
+     * Enviar SOLO la variante que el usuario está editando.
+     * Ejemplo: info__mobile.
+     * No reenviar las demás imágenes Base64.
+     */
+    const key=photoStorageKey(activePhotoSlot);
+    const sources=loadPhotoSources();
+    const settings=loadPhotoSettings();
+    const saved=settings[key]||{};
+    const src=sources[key]||saved.src||'';
+
+    if(!src){
+      throw new Error('La foto activa no tiene imagen para enviar');
+    }
+
+    const photos={};
+
+    photos[key]={
+      ...saved,
+      src,
+      fileName:saved.fileName||''
+    };
+
+    const response=await fetch(
+      EGP_PHOTOS_CORE_URL+'/api/photos',
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({photos})
+      }
+    );
+
+    const data=await response.json();
+
+    if(!response.ok || data?.ok===false){
+      throw new Error(
+        data?.error||'No se pudo guardar la foto en Core'
+      );
+    }
+
+    return true;
+  }
+
+
   function loadPhotoSettings(){
     try{
       return egpPhotoPrepareVariants(
@@ -4249,8 +4366,15 @@ document.documentElement.dataset.egmVersion="6.36.92";
     $('#photoPosX').value=d.x;$('#photoPosY').value=d.y;$('#photoZoom').value=d.zoom;
     $('#gradientIntensity').value=d.intensity;$('#gradientDirection').value=d.direction;
     $('#gradientColor').value=d.color;$('#gradientOpacity').value=d.opacity;
-    const preview=$('#photoPreview');preview.classList.toggle('is-inicio',activePhotoSlot==='inicio');preview.classList.toggle('is-hero',activePhotoSlot==='hero');
-    $('#photoPreviewLabel').textContent=activePhotoSlot==='inicio'?'Foto inicio':'Foto Hero';
+    const preview=$('#photoPreview');
+    const photoLabels={
+      portada:'INICIO',
+      info:'1 INFO',
+      bio:'BIO',
+      carta1:'1 CARTA',
+      carta2:'2 CARTA'
+    };
+    $('#photoPreviewLabel').textContent=photoLabels[activePhotoSlot]||activePhotoSlot;
     renderPhotoPreview();
   }
   function renderPhotoPreview(){
@@ -4261,17 +4385,112 @@ document.documentElement.dataset.egmVersion="6.36.92";
     $$('.photo-controls input[type=range]').forEach(el=>el.parentElement.querySelector('output').textContent=el.value+'%');
   }
   function hexRgba(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`}
-  function openPhotoManager(){
+  async function openPhotoManager(){
     egpPhotoSyncTargetUI();/* EGP TARGET */
-    const settings=structuredClone(loadPhotoSettings()),sources=loadPhotoSources();photoDrafts={};
-    ['inicio','hero'].forEach(slot=>{const saved=settings[slot]||{};photoDrafts[slot]={...PHOTO_DEFAULTS,...saved,src:sources[slot]||saved.src||''};});
-    activePhotoSlot='inicio';$$('[data-photo-slot]').forEach(b=>b.classList.toggle('is-active',b.dataset.photoSlot===activePhotoSlot));
-    syncPhotoControls();$('#photoSourceInput').value='';$('#photoSourceStatus').textContent=currentPhotoDraft().fileName||'Ninguna imagen seleccionada';$('#photoManagerDialog').showModal();rememberDialogState($('#photoManagerDialog'));
+
+    const settings=structuredClone(loadPhotoSettings());
+    const sources=loadPhotoSources();
+    photoDrafts={};
+
+    ['portada','info','bio','carta1','carta2'].forEach(slot=>{
+      const saved=settings[slot]||{};
+      photoDrafts[slot]={
+        ...PHOTO_DEFAULTS,
+        ...saved,
+        src:sources[slot]||saved.src||''
+      };
+    });
+
+    if(EGP_PHOTOS_CORE_TEST){
+      try{
+        const remote=await egpLoadPhotosFromCoreTest();
+
+        Object.entries(remote||{}).forEach(([key,value])=>{
+          if(!value || typeof value!=='object') return;
+
+          photoDrafts[key]={
+            ...PHOTO_DEFAULTS,
+            ...value
+          };
+        });
+      }catch(err){
+        console.warn('No se pudieron cargar fotos compartidas',err);
+      }
+    }
+
+    activePhotoSlot='portada';
+    $$('[data-photo-slot]').forEach(
+      b=>b.classList.toggle('is-active',b.dataset.photoSlot===activePhotoSlot)
+    );
+
+    syncPhotoControls();
+    $('#photoSourceInput').value='';
+    $('#photoSourceStatus').textContent=
+      currentPhotoDraft().fileName||'Ninguna imagen seleccionada';
+
+    $('#photoManagerDialog').showModal();
+    rememberDialogState($('#photoManagerDialog'));
   }
   $$('[data-photo-slot]').forEach(b=>b.addEventListener('click',()=>{activePhotoSlot=b.dataset.photoSlot;$$('[data-photo-slot]').forEach(x=>x.classList.toggle('is-active',x===b));syncPhotoControls();$('#photoSourceInput').value='';$('#photoSourceStatus').textContent=currentPhotoDraft().fileName||'Ninguna imagen seleccionada';}));
   const photoSourceInput=$('#photoSourceInput');
   const photoSourceStatus=$('#photoSourceStatus');
   $('#choosePhotoSourceBtn').addEventListener('click',()=>{photoSourceInput.value='';photoSourceInput.click();});
+
+  const photoLibrary=$('#photoLibrary');
+  const choosePhotoLibraryBtn=$('#choosePhotoLibraryBtn');
+  const closePhotoLibraryBtn=$('#closePhotoLibraryBtn');
+
+  if(choosePhotoLibraryBtn){
+    choosePhotoLibraryBtn.addEventListener('click',()=>{
+      if(photoLibrary) photoLibrary.hidden=false;
+    });
+  }
+
+  if(closePhotoLibraryBtn){
+    closePhotoLibraryBtn.addEventListener('click',()=>{
+      if(photoLibrary) photoLibrary.hidden=true;
+    });
+  }
+
+  $$('.photo-library-item').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const src=btn.dataset.photoLibrary;
+      if(!src) return;
+
+      try{
+        const response=await fetch(src,{cache:'no-store'});
+
+        if(!response.ok){
+          throw new Error('No se pudo abrir la foto de biblioteca');
+        }
+
+        const blob=await response.blob();
+
+        const file=new File(
+          [blob],
+          src.split('/').pop() || 'foto.jpg',
+          {type:blob.type || 'image/jpeg'}
+        );
+
+        const prepared=await preparePhotoForPanel(file);
+
+        currentPhotoDraft().src=prepared;
+        currentPhotoDraft().fileName=file.name;
+
+        photoSourceStatus.textContent=file.name;
+
+        renderPhotoPreview();
+
+        if(photoLibrary) photoLibrary.hidden=true;
+
+        toast('Foto de biblioteca lista para guardar');
+
+      }catch(err){
+        toast(err?.message || 'No se pudo cargar la foto');
+      }
+    });
+  });
+
   async function preparePhotoForPanel(file){
     if(!file||!String(file.type||'').startsWith('image/'))throw new Error('Selecciona un archivo de imagen');
     if(file.size>25*1024*1024)throw new Error('La imagen supera 25 MB');
@@ -4305,10 +4524,42 @@ document.documentElement.dataset.egmVersion="6.36.92";
   preview.addEventListener('pointermove',e=>{if(!dragState||dragState.id!==e.pointerId)return;const rect=preview.getBoundingClientRect(),d=currentPhotoDraft();d.x=Math.max(0,Math.min(100,dragState.x+((e.clientX-dragState.startX)/rect.width)*100));d.y=Math.max(0,Math.min(100,dragState.y+((e.clientY-dragState.startY)/rect.height)*100));$('#photoPosX').value=Math.round(d.x);$('#photoPosY').value=Math.round(d.y);renderPhotoPreview();});
   const endDrag=e=>{if(dragState&&(!e||dragState.id===e.pointerId))dragState=null;};preview.addEventListener('pointerup',endDrag);preview.addEventListener('pointercancel',endDrag);
   $('#savePhotoSettingsBtn').addEventListener('click',()=>askConfirm('Guardar fotografías','Se conservarán las imágenes originales y se guardarán por separado únicamente los parámetros de encuadre.',()=>{
-    const sources={},settings={};
-    Object.entries(photoDrafts).forEach(([slot,d])=>{sources[slot]=d.src||'';const {src,fileName,...params}=d;settings[slot]={...params,fileName:fileName||''};});
-    try{localStorage.setItem('egm-photo-originals',JSON.stringify(sources));localStorage.setItem('egm-photo-settings',JSON.stringify(settings));rememberDialogState($('#photoManagerDialog'));toast('Guardado exitosamente');}
-    catch(_){toast('La imagen es demasiado grande. Usa una imagen más liviana.');}
+    /*
+     * Conservar TODO lo que ya existe.
+     * Solo actualizar las variantes editadas en esta sesión.
+     * Así COMPUTADORA y MÓVIL nunca se borran entre sí.
+     */
+    const sources=loadPhotoSources();
+    const settings=loadPhotoSettings();
+
+    Object.entries(photoDrafts).forEach(([slot,d])=>{
+      sources[slot]=d.src||'';
+      const {src,fileName,...params}=d;
+      settings[slot]={...params,fileName:fileName||''};
+    });
+
+    try{
+      localStorage.setItem('egm-photo-originals',JSON.stringify(sources));
+      localStorage.setItem('egm-photo-settings',JSON.stringify(settings));
+
+      if(EGP_PHOTOS_CORE_TEST){
+        egpSavePhotosToCoreTest()
+          .then(()=>{
+            rememberDialogState($('#photoManagerDialog'));
+            toast('Guardado exitosamente · Core compartido');
+          })
+          .catch(err=>{
+            console.error(err);
+            toast('Guardado local · Core de fotos falló');
+          });
+      }else{
+        rememberDialogState($('#photoManagerDialog'));
+        toast('Guardado exitosamente');
+      }
+    }
+    catch(_){
+      toast('La imagen es demasiado grande. Usa una imagen más liviana.');
+    }
   },'Guardar'));
 
 

@@ -870,7 +870,12 @@ document.documentElement.dataset.egmVersion="6.36.92";
         });
         saveStateLocalOnly();
         // Tras autenticar, un show remoto activo lleva directamente a Control en vivo.
-        if(panelAuthValid()&&$('#panelLogin').hidden&&!document.querySelector('#imageEditorDialog[open],#songbookEditorDialog[open]'))showLive();
+        if(
+          panelAuthValid() &&
+          $('#panelLogin').hidden &&
+          !configOpenedFromLive &&
+          !document.querySelector('#imageEditorDialog[open],#songbookEditorDialog[open]')
+        ) showLive();
       }else if(data.show_activo===false){
         state.config=null;state.queue=[];state.played.clear();
         setStatus(false);

@@ -105,8 +105,7 @@
       {};
 
     const firebasePublicTest =
-      new URLSearchParams(location.search)
-        .get('photos_firebase_test') === '1';
+      location.hostname.endsWith('github.io');
 
     /*
      * En la prueba pública Firebase es la fuente compartida.
@@ -221,9 +220,6 @@
 
 <script type="module" class="egpFirebaseFotosPublicas">
 (async function(){
-
-  const params=new URLSearchParams(location.search);
-  if(params.get('photos_firebase_test')!=='1') return;
 
   try{
     const mobile=

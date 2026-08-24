@@ -1876,15 +1876,74 @@ function renderizarEstadoPublico() {
   requestAnimationFrame(actualizarPosicionMenuPublico);
 }
 
-function mostrarApp() {
+async function mostrarApp() {
+
+  const entradaDirecta=
+    location.hash === "#carta2";
+
+  let loader=null;
+
+  /*
+   * Si estamos RECARGANDO Carta 2, no mostrar Carta 1
+   * mientras Firebase termina.
+   * Mostramos una pantalla neutra y breve.
+   */
+  if(entradaDirecta){
+    DOM.landing.hidden=true;
+
+    loader=document.createElement("div");
+    loader.id="egpCarta2Loader";
+    loader.textContent="ELENA GIRJOABA MUSIC";
+
+    Object.assign(loader.style,{
+      position:"fixed",
+      inset:"0",
+      zIndex:"999999",
+      display:"grid",
+      placeItems:"center",
+      background:"#070707",
+      color:"#ead399",
+      font:"700 14px/1.2 Montserrat, sans-serif",
+      letterSpacing:".20em"
+    });
+
+    document.body.appendChild(loader);
+  }
+
+  let fotoActualLista=false;
+
+  try{
+    if(window.__EGP_CARTA2_READY__){
+      fotoActualLista=await Promise.race([
+        window.__EGP_CARTA2_READY__,
+        new Promise(resolve=>{
+          setTimeout(()=>resolve(false),5000);
+        })
+      ]);
+    }
+  }catch(_){}
+
+  /*
+   * SOLO si Firebase falla o tarda demasiado,
+   * usar la última foto almacenada como respaldo.
+   */
+  if(!fotoActualLista){
+    try{
+      window.egpAplicarFotoCache?.(
+        "egpCarta2Picture",
+        "carta2"
+      );
+    }catch(_){}
+  }
+
+  if(loader){
+    loader.remove();
+  }
+
   DOM.landing.hidden = true;
   DOM.app.hidden = false;
   document.body.classList.add("app-abierta");
 
-  /*
-   * CARTA 2 queda representada en la URL.
-   * Así refresh conserva la pantalla correcta.
-   */
   if(location.hash !== "#carta2"){
     history.replaceState(
       null,
@@ -1894,7 +1953,12 @@ function mostrarApp() {
   }
 
   fijarMenu();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  window.scrollTo(0,0);
+
+  requestAnimationFrame(()=>{
+    window.scrollTo(0,0);
+  });
 }
 
 function fijarMenu() {
@@ -3820,12 +3884,12 @@ async function iniciar() {
    * antes de continuar el arranque normal.
    */
   if(!panelMode && location.hash === "#carta2"){
-    mostrarApp();
+    await mostrarApp();
 
-    window.scrollTo(0, 0);
+    window.scrollTo(0,0);
 
-    requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
+    requestAnimationFrame(()=>{
+      window.scrollTo(0,0);
     });
   }
 

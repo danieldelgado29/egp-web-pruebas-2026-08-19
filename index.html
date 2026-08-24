@@ -75,7 +75,7 @@
     });
   </script>
 
-  <script type="module" src="script.js?v=carta2-estable-1787613042"></script>
+  <script type="module" src="script.js?v=carta2-ready-1787614860"></script>
 </head>
 
 <body>
@@ -85,6 +85,16 @@
  * EGP — CACHE INMEDIATA CARTA 1 / CARTA 2
  * Misma fuente usada por Inicio.
  */
+/*
+ * CARTA 2 READY
+ * La pantalla no se abre hasta tener la foto actual de Firebase.
+ */
+window.__EGP_CARTA2_READY_RESOLVE__=null;
+
+window.__EGP_CARTA2_READY__=new Promise(resolve=>{
+  window.__EGP_CARTA2_READY_RESOLVE__=resolve;
+});
+
 window.egpAplicarFotoCache=function(pictureId,base){
   try{
     const mobile=
@@ -276,12 +286,7 @@ window.egpAplicarFotoCache=function(pictureId,base){
         >
       </picture>
 
-      <script>
-        window.egpAplicarFotoCache?.(
-          'egpCarta2Picture',
-          'carta2'
-        );
-      </script>
+      <!-- Carta 2 espera la foto actual de Firebase antes de mostrarse -->
 
       <div class="hero__overlay" aria-hidden="true"></div>
 
@@ -1294,13 +1299,22 @@ window.egpAplicarFotoCache=function(pictureId,base){
       doc(db,'imageEdits','site-photo-'+key)
     );
 
-    if(!snap.exists()) return;
+    if(!snap.exists()){
+      window.__EGP_CARTA2_READY_RESOLVE__?.(false);
+      return;
+    }
 
     const d=snap.data()||{};
-    if(!d.src) return;
+    if(!d.src){
+      window.__EGP_CARTA2_READY_RESOLVE__?.(false);
+      return;
+    }
 
     const el=document.querySelector('#egpCarta2Picture img');
-    if(!el) return;
+    if(!el){
+      window.__EGP_CARTA2_READY_RESOLVE__?.(false);
+      return;
+    }
 
 
     el.src=d.src;
@@ -1330,10 +1344,17 @@ window.egpAplicarFotoCache=function(pictureId,base){
       );
     }catch(_){}
 
+    /*
+     * La foto ACTUAL ya está colocada.
+     * Ahora Carta 2 puede mostrarse.
+     */
+    window.__EGP_CARTA2_READY_RESOLVE__?.(true);
+
     console.log('EGP FOTO FIREBASE:',key,d.updatedAt||'');
 
   }catch(err){
     console.error('EGP FOTO FIREBASE ERROR',err);
+    window.__EGP_CARTA2_READY_RESOLVE__?.(false);
   }
 
 })();

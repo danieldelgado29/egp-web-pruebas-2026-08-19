@@ -22,9 +22,66 @@ if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
-window.addEventListener('pageshow', function() {
+window.addEventListener('pageshow', function(event) {
+  const nav = performance.getEntriesByType('navigation')[0];
+  const esRecarga = nav && nav.type === 'reload';
 
-  /* Si llegamos expresamente a una sección, respetarla. */
+  /*
+   * Regreso explícito desde Galería:
+   * restaurar la posición exacta guardada.
+   */
+  const params = new URLSearchParams(location.search);
+
+  if (params.get('egpReturn') === 'gallery') {
+    const volverGaleria = function(){
+      const destino = document.getElementById('galeria');
+      if(destino){
+        destino.scrollIntoView({
+          block:'start',
+          behavior:'auto'
+        });
+      }
+    };
+
+    volverGaleria();
+    requestAnimationFrame(volverGaleria);
+    setTimeout(volverGaleria, 100);
+    setTimeout(volverGaleria, 350);
+    setTimeout(volverGaleria, 800);
+
+    return;
+  }
+
+  /*
+   * Volver con ATRÁS/adelante:
+   * conservar exactamente la posición anterior.
+   */
+  if (event.persisted || (nav && nav.type === 'back_forward')) {
+    return;
+  }
+
+  if (esRecarga) {
+    if (location.hash) {
+      history.replaceState(
+        null,
+        '',
+        location.pathname + location.search
+      );
+    }
+
+    window.scrollTo(0,0);
+
+    requestAnimationFrame(function(){
+      window.scrollTo(0,0);
+    });
+
+    setTimeout(function(){
+      window.scrollTo(0,0);
+    },100);
+
+    return;
+  }
+
   if (location.hash) {
     const destino = document.querySelector(location.hash);
 
@@ -37,14 +94,10 @@ window.addEventListener('pageshow', function() {
     return;
   }
 
-  /* Sin destino: comenzar arriba. */
   window.scrollTo(0,0);
-
-  requestAnimationFrame(function(){
-    window.scrollTo(0,0);
-  });
 });
 </script>
+
 
 <header class="topbar">
 
@@ -408,6 +461,7 @@ window.addEventListener('pageshow', function() {
       <a
         href="../galeria/"
         class="explore-card"
+        id="egpGalleryLink"
       >
         <span>01</span>
         <h3>FOTOS Y VIDEOS</h3>
@@ -646,6 +700,43 @@ document
 
 
 
+
+
+<button
+  id="egpScrollTop"
+  class="egp-scroll-top"
+  type="button"
+  aria-label="Subir al inicio"
+>↑</button>
+
+<script>
+(function(){
+  const btn = document.getElementById('egpScrollTop');
+  if(!btn) return;
+
+  function actualizarFlecha(){
+    btn.classList.toggle(
+      'is-visible',
+      window.scrollY > 350
+    );
+  }
+
+  window.addEventListener(
+    'scroll',
+    actualizarFlecha,
+    {passive:true}
+  );
+
+  btn.addEventListener('click', function(){
+    window.scrollTo({
+      top:0,
+      behavior:'smooth'
+    });
+  });
+
+  actualizarFlecha();
+})();
+</script>
 
 </body>
 </html>

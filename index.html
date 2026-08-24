@@ -79,6 +79,59 @@
 </head>
 
 <body>
+
+<script>
+/*
+ * EGP — CACHE INMEDIATA CARTA 1 / CARTA 2
+ * Misma fuente usada por Inicio.
+ */
+window.egpAplicarFotoCache=function(pictureId,base){
+  try{
+    const mobile=
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'');
+
+    const key=base+'__'+(mobile?'mobile':'desktop');
+
+    const cache=JSON.parse(
+      localStorage.getItem('egp-firebase-photo-cache')||'{}'
+    );
+
+    const d=cache[key];
+
+    if(!d || !d.src) return false;
+
+    const picture=document.getElementById(pictureId);
+    if(!picture) return false;
+
+    const img=picture.querySelector('img');
+    const source=picture.querySelector('source');
+
+    if(img){
+      img.src=d.src;
+      img.style.objectPosition=
+        (d.x??50)+'% '+(d.y??50)+'%';
+
+      if(d.zoom!==undefined){
+        img.style.transform=
+          'scale('+(Number(d.zoom)/100)+')';
+
+        img.style.transformOrigin=
+          (d.x??50)+'% '+(d.y??50)+'%';
+      }
+    }
+
+    if(source){
+      source.srcset=d.src;
+    }
+
+    return true;
+
+  }catch(_){
+    return false;
+  }
+};
+</script>
     <button id="panelBackButton" class="panel-back-button" type="button" aria-label="Volver al panel de control" hidden>← Panel</button>
     <a class="skip-link" href="#contenidoPrincipal">Ir al contenido principal</a>
 
@@ -102,7 +155,15 @@
           fetchpriority="high"
         >
       </picture>
+
+      <script>
+        window.egpAplicarFotoCache?.(
+          'egpCarta1Picture',
+          'carta1'
+        );
+      </script>
     </div>
+
     <div class="landing__overlay" aria-hidden="true"></div>
 
     <div class="landing__contenido">
@@ -215,6 +276,13 @@
           height="1200"
         >
       </picture>
+
+      <script>
+        window.egpAplicarFotoCache?.(
+          'egpCarta2Picture',
+          'carta2'
+        );
+      </script>
 
       <div class="hero__overlay" aria-hidden="true"></div>
 
@@ -1155,6 +1223,32 @@
       el.style.transformOrigin=(d.x??50)+'% '+(d.y??50)+'%';
     }
 
+
+    try{
+      const cache=JSON.parse(
+        localStorage.getItem('egp-firebase-photo-cache')||'{}'
+      );
+
+      cache[key]=d;
+
+      localStorage.setItem(
+        'egp-firebase-photo-cache',
+        JSON.stringify(cache)
+      );
+    }catch(_){}
+
+    try{
+      const cache=JSON.parse(
+        localStorage.getItem('egp-firebase-photo-cache')||'{}'
+      );
+
+      cache[key]=d;
+
+      localStorage.setItem(
+        'egp-firebase-photo-cache',
+        JSON.stringify(cache)
+      );
+    }catch(_){}
 
     console.log('EGP FOTO FIREBASE:',key,d.updatedAt||'');
 

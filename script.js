@@ -1,5 +1,14 @@
 "use strict";
 
+/*
+ * EGP — CARTA 2
+ * El navegador no debe restaurar una posición anterior
+ * al actualizar la página.
+ */
+if ("scrollRestoration" in history) {
+  history.scrollRestoration = "manual";
+}
+
 const EGP_AUDIT_LOCAL = new URL(location.href).searchParams.get("audit_local") === "1";
 
 let initializeApp;
@@ -3759,7 +3768,21 @@ function registrarEventos() {
     if (document.visibilityState === "visible") programarContinuacion();
   });
 
-  window.addEventListener("pageshow", programarContinuacion);
+  window.addEventListener("pageshow", () => {
+    programarContinuacion();
+
+    if (location.hash === "#carta2") {
+      window.scrollTo(0, 0);
+
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+      });
+
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 100);
+    }
+  });
   window.addEventListener("resize", actualizarPosicionMenuPublico);
   window.addEventListener("orientationchange", () => {
     window.setTimeout(actualizarPosicionMenuPublico, 150);
@@ -3798,6 +3821,12 @@ async function iniciar() {
    */
   if(!panelMode && location.hash === "#carta2"){
     mostrarApp();
+
+    window.scrollTo(0, 0);
+
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+    });
   }
 
   registrarEventos();

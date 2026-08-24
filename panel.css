@@ -2437,3 +2437,599 @@ body.egp-ios.live-mode .song-action{
   font-size:.9rem;
   white-space:nowrap;
 }
+
+/* EGP GALERIA DROP V1 */
+.egp-gallery-drop{
+  min-height:150px;
+  margin:18px 0;
+  padding:24px 18px;
+  border:2px dashed rgba(255,255,255,.28);
+  border-radius:16px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  text-align:center;
+  cursor:pointer;
+  transition:
+    border-color .18s ease,
+    background .18s ease,
+    transform .18s ease;
+}
+
+.egp-gallery-drop strong{
+  font-size:15px;
+  letter-spacing:.05em;
+}
+
+.egp-gallery-drop span{
+  opacity:.68;
+  font-size:13px;
+}
+
+.egp-gallery-drop.is-dragover{
+  border-color:#fff;
+  background:rgba(255,255,255,.08);
+  transform:scale(1.01);
+}
+
+.egp-gallery-drop.is-busy{
+  opacity:.5;
+  pointer-events:none;
+}
+
+.egp-gallery-progress{
+  margin:18px 0 10px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:12px;
+}
+
+.egp-gallery-progress[hidden]{
+  display:none!important;
+}
+
+.egp-gallery-progress progress{
+  width:100%;
+  height:14px;
+}
+
+.egp-gallery-progress strong{
+  min-width:44px;
+  text-align:right;
+}
+/* FIN EGP GALERIA DROP V1 */
+
+
+/* EGP GALERIA LISTA V1 */
+
+.egp-gallery-list-title{
+  margin-top:24px;
+  padding-top:18px;
+  border-top:1px solid rgba(255,255,255,.12);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.egp-gallery-list-title span{
+  min-width:30px;
+  height:30px;
+  padding:0 8px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  background:rgba(255,255,255,.1);
+  font-weight:800;
+}
+
+.egp-gallery-items{
+  margin-top:12px;
+  display:grid;
+  gap:12px;
+}
+
+.egp-gallery-item{
+  padding:10px;
+  display:grid;
+  grid-template-columns:92px minmax(0,1fr);
+  gap:12px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;
+  background:rgba(255,255,255,.035);
+}
+
+.egp-gallery-item-media{
+  width:92px;
+  height:72px;
+  overflow:hidden;
+  border-radius:10px;
+  background:#08090a;
+  display:grid;
+  place-items:center;
+}
+
+.egp-gallery-item-media img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.egp-gallery-video-icon{
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.06em;
+}
+
+.egp-gallery-item-info{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:5px;
+}
+
+.egp-gallery-item-info strong{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.egp-gallery-item-info span{
+  opacity:.65;
+  font-size:11px;
+}
+
+.egp-gallery-item-actions{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.egp-gallery-delete-btn{
+  border-color:rgba(255,80,90,.5)!important;
+}
+
+@media (max-width:520px){
+  .egp-gallery-item{
+    grid-template-columns:76px minmax(0,1fr);
+  }
+
+  .egp-gallery-item-media{
+    width:76px;
+    height:64px;
+  }
+}
+
+/* FIN EGP GALERIA LISTA V1 */
+
+
+/* EGP GALERIA ROTACION V1 */
+
+.egp-gallery-item-actions{
+  grid-template-columns:1fr 1fr 1fr;
+}
+
+.egp-gallery-item-media img{
+  transition:transform .2s ease;
+}
+
+.egp-gallery-item-media img.is-rotated-sideways{
+  width:72px;
+  height:92px;
+  max-width:none;
+  max-height:none;
+}
+
+.egp-gallery-rotate-btn{
+  white-space:nowrap;
+}
+
+@media (max-width:520px){
+  .egp-gallery-item-actions{
+    grid-template-columns:1fr 1fr 1fr;
+  }
+
+  .egp-gallery-item-actions .secondary-btn{
+    padding-left:6px;
+    padding-right:6px;
+    font-size:12px;
+  }
+}
+
+/* FIN EGP GALERIA ROTACION V1 */
+
+
+/* EGP GALERIA VISOR GIRO V1 */
+
+.egp-gallery-viewer-dialog{
+  padding:0;
+}
+
+.egp-gallery-viewer-card{
+  position:relative;
+  width:min(94vw,1100px);
+  height:min(86vh,780px);
+  padding:54px 18px 18px;
+  box-sizing:border-box;
+  background:#090a0c;
+  border-radius:18px;
+  overflow:hidden;
+}
+
+.egp-gallery-viewer-stage{
+  width:100%;
+  height:calc(100% - 30px);
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:#000;
+  border-radius:12px;
+}
+
+.egp-gallery-viewer-stage img,
+.egp-gallery-viewer-stage video{
+  display:block;
+  max-width:82%;
+  max-height:82%;
+  object-fit:contain;
+  transform-origin:center center;
+}
+
+.egp-gallery-viewer-stage img[hidden],
+.egp-gallery-viewer-stage video[hidden]{
+  display:none!important;
+}
+
+.egp-gallery-viewer-stage img[data-rotation="90"],
+.egp-gallery-viewer-stage img[data-rotation="270"],
+.egp-gallery-viewer-stage video[data-rotation="90"],
+.egp-gallery-viewer-stage video[data-rotation="270"]{
+  max-width:70vh;
+  max-height:78vw;
+}
+
+.egp-gallery-viewer-rotation{
+  height:30px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  font-size:12px;
+  opacity:.65;
+}
+
+/* FIN EGP GALERIA VISOR GIRO V1 */
+
+
+/* EGP GALERIA FIT ROTADO V2 */
+
+.egp-gallery-viewer-stage{
+  position:relative;
+  overflow:hidden;
+}
+
+.egp-gallery-viewer-stage img,
+.egp-gallery-viewer-stage video{
+  position:absolute;
+  left:50%;
+  top:50%;
+  margin:0;
+  object-fit:contain;
+  transform-origin:center center;
+  max-width:none!important;
+  max-height:none!important;
+}
+
+.egp-gallery-viewer-stage img[data-rotation="90"],
+.egp-gallery-viewer-stage img[data-rotation="270"],
+.egp-gallery-viewer-stage video[data-rotation="90"],
+.egp-gallery-viewer-stage video[data-rotation="270"]{
+  max-width:none!important;
+  max-height:none!important;
+}
+
+/* FIN EGP GALERIA FIT ROTADO V2 */
+
+
+/* EGP CONTROLES VIDEO FIJOS V1 */
+
+.egp-gallery-viewer-card{
+  display:flex!important;
+  flex-direction:column!important;
+}
+
+.egp-gallery-viewer-rotation{
+  flex:0 0 24px;
+  height:24px!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+
+.egp-gallery-viewer-stage{
+  flex:1 1 auto;
+  width:100%;
+  height:auto!important;
+  min-height:0;
+  position:relative;
+  overflow:hidden;
+}
+
+.egp-gallery-viewer-stage video{
+  /* SOLO gira la imagen del video */
+  position:absolute;
+  left:50%;
+  top:50%;
+}
+
+.egp-gallery-video-controls{
+  flex:0 0 auto;
+  width:100%;
+  min-height:54px;
+  box-sizing:border-box;
+  padding:10px 4px 0;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  background:#090a0c;
+}
+
+.egp-gallery-video-controls[hidden]{
+  display:none!important;
+}
+
+.egp-gallery-video-controls button{
+  flex:0 0 38px;
+  width:38px;
+  height:38px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:9px;
+  background:rgba(255,255,255,.07);
+  color:#fff;
+  cursor:pointer;
+  font-size:15px;
+}
+
+.egp-gallery-video-controls span{
+  flex:0 0 auto;
+  min-width:34px;
+  color:#fff;
+  font-size:12px;
+  font-variant-numeric:tabular-nums;
+  text-align:center;
+}
+
+#galleryVideoProgress{
+  flex:1 1 auto;
+  min-width:60px;
+  width:auto;
+  cursor:pointer;
+}
+
+@media (max-width:520px){
+
+  .egp-gallery-video-controls{
+    gap:5px;
+  }
+
+  .egp-gallery-video-controls button{
+    flex-basis:34px;
+    width:34px;
+    height:34px;
+    font-size:13px;
+  }
+
+  .egp-gallery-video-controls span{
+    min-width:30px;
+    font-size:10px;
+  }
+}
+
+/* FIN EGP CONTROLES VIDEO FIJOS V1 */
+
+
+/* EGP PREVIEW VIDEO V1 */
+
+.egp-gallery-video-preview{
+  position:relative;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+}
+
+.egp-gallery-video-preview img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  transition:transform .2s ease;
+}
+
+.egp-gallery-video-preview img.is-rotated-sideways{
+  width:72px;
+  height:92px;
+  max-width:none;
+  max-height:none;
+}
+
+.egp-gallery-video-play{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:rgba(0,0,0,.68);
+  color:#fff;
+  font-size:15px;
+  pointer-events:none;
+}
+
+.egp-gallery-video-play.is-fallback{
+  width:auto;
+  height:auto;
+  padding:7px 9px;
+  border-radius:8px;
+  font-size:10px;
+  font-weight:800;
+}
+
+/* FIN EGP PREVIEW VIDEO V1 */
+
+
+/* EGP GALERIA PESTANAS GRANDES V1 */
+
+#galleryDialog .module-card{
+  width:min(1100px,calc(100vw - 42px));
+  max-width:1100px;
+}
+
+.egp-gallery-tabs{
+  margin-top:24px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.egp-gallery-tabs button{
+  min-height:52px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:12px;
+  background:rgba(255,255,255,.04);
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.egp-gallery-tabs button.is-active{
+  background:#fff;
+  color:#111;
+}
+
+.egp-gallery-tabs span{
+  display:inline-grid;
+  place-items:center;
+  min-width:25px;
+  height:25px;
+  margin-left:7px;
+  padding:0 6px;
+  border-radius:999px;
+  background:rgba(127,127,127,.25);
+}
+
+.egp-gallery-grid{
+  margin-top:16px;
+  display:grid;
+  grid-template-columns:repeat(
+    auto-fill,
+    minmax(240px,1fr)
+  );
+  gap:16px;
+}
+
+.egp-gallery-grid .egp-gallery-item{
+  display:flex;
+  flex-direction:column;
+  padding:10px;
+  min-width:0;
+}
+
+.egp-gallery-grid .egp-gallery-item-media{
+  width:100%;
+  height:auto;
+  aspect-ratio:4/3;
+  border-radius:12px;
+}
+
+.egp-gallery-grid .egp-gallery-item-media img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+
+.egp-gallery-grid .egp-gallery-video-preview{
+  width:100%;
+  height:100%;
+}
+
+.egp-gallery-grid .egp-gallery-item-info{
+  padding:10px 4px 4px;
+  min-height:54px;
+}
+
+.egp-gallery-grid .egp-gallery-item-actions{
+  margin-top:auto;
+  grid-column:auto;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+}
+
+.egp-gallery-empty{
+  grid-column:1/-1;
+  padding:30px 10px;
+  text-align:center;
+}
+
+@media(max-width:700px){
+
+  #galleryDialog .module-card{
+    width:calc(100vw - 22px);
+  }
+
+  .egp-gallery-grid{
+    grid-template-columns:repeat(
+      2,
+      minmax(0,1fr)
+    );
+    gap:10px;
+  }
+
+  .egp-gallery-grid .egp-gallery-item-actions{
+    grid-template-columns:1fr;
+  }
+
+}
+
+@media(max-width:430px){
+
+  .egp-gallery-grid{
+    grid-template-columns:1fr;
+  }
+
+}
+
+/* FIN EGP GALERIA PESTANAS GRANDES V1 */
+
+
+/* EGP BOTONES GALERIA COMPACTOS V1 */
+.egp-gallery-grid .egp-gallery-item-actions{
+  grid-template-columns:1fr 52px 1fr;
+  gap:8px;
+}
+
+.egp-gallery-grid .egp-gallery-item-actions button{
+  min-width:0;
+  width:100%;
+  padding-left:8px;
+  padding-right:8px;
+  box-sizing:border-box;
+}
+
+.egp-gallery-grid .egp-gallery-rotate-btn{
+  padding-left:0;
+  padding-right:0;
+  font-size:20px;
+}
+/* FIN EGP BOTONES GALERIA COMPACTOS V1 */

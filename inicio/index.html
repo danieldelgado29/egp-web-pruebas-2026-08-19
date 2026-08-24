@@ -11,6 +11,47 @@
 
 <body>
 
+<script>
+/*
+ * EGP — FOTO INICIO INMEDIATA
+ * Usa la última foto Firebase comprobada para evitar mostrar
+ * hero.jpg mientras se conecta nuevamente a Firebase.
+ */
+(function(){
+  try{
+    const mobile=
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'');
+
+    const key='portada__'+(mobile?'mobile':'desktop');
+
+    const saved=JSON.parse(
+      localStorage.getItem('egp-firebase-photo-cache')||'{}'
+    )[key];
+
+    if(!saved || !saved.src) return;
+
+    document.documentElement.style.setProperty(
+      '--egp-inicio-cache',
+      'url("' + saved.src + '")'
+    );
+
+    document.documentElement.classList.add(
+      'egp-inicio-cache-ready'
+    );
+
+    window.__EGP_INICIO_CACHE__=saved;
+
+  }catch(_){}
+})();
+</script>
+
+<style>
+html.egp-inicio-cache-ready .hero{
+  background-image:var(--egp-inicio-cache)!important;
+}
+</style>
+
   <main class="hero">
 
     <div class="hero-overlay"></div>
@@ -293,6 +334,19 @@
         rgba(alpha)+' 100%)';
     }
 
+
+    try{
+      const cache=JSON.parse(
+        localStorage.getItem('egp-firebase-photo-cache')||'{}'
+      );
+
+      cache[key]=d;
+
+      localStorage.setItem(
+        'egp-firebase-photo-cache',
+        JSON.stringify(cache)
+      );
+    }catch(_){}
 
     console.log('EGP FOTO FIREBASE:',key,d.updatedAt||'');
 

@@ -228,6 +228,9 @@
 
     const key='portada__'+(mobile?'mobile':'desktop');
 
+    const egpFlashEl=document.querySelector('.hero');
+    if(egpFlashEl) egpFlashEl.style.backgroundImage='none';
+
     const [{initializeApp,getApps,getApp},{getFirestore,doc,getDoc}] =
       await Promise.all([
         import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),

@@ -868,6 +868,9 @@ document
 
     const key='info__'+(mobile?'mobile':'desktop');
 
+    const egpFlashInfo=document.querySelector('.hero-photo');
+    if(egpFlashInfo) egpFlashInfo.style.backgroundImage='none';
+
     const [{initializeApp,getApps,getApp},{getFirestore,doc,getDoc}] =
       await Promise.all([
         import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
@@ -929,6 +932,9 @@ document
         .test(navigator.userAgent||'');
 
     const key='bio__'+(mobile?'mobile':'desktop');
+
+    const egpFlashBio=document.querySelector('.bio-photo');
+    if(egpFlashBio) egpFlashBio.style.backgroundImage='none';
 
     const [{initializeApp,getApps,getApp},{getFirestore,doc,getDoc}] =
       await Promise.all([

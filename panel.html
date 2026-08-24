@@ -713,6 +713,41 @@
     <div class="module-card photo-manager-card">
       <button class="modal-x" type="button" data-dialog-close aria-label="Cerrar">×</button>
       <p class="eyebrow">IMÁGENES</p><h3>Subir fotos</h3>
+
+      <div id="egpPhotoTargetBox" class="egp-photo-target-box">
+        <strong>Destino de la foto</strong>
+
+        <div class="egp-photo-target-options">
+          <label>
+            <input
+              type="radio"
+              name="egpPhotoTarget"
+              value="auto"
+            >
+            <span>AUTOMÁTICO</span>
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="egpPhotoTarget"
+              value="desktop"
+            >
+            <span>COMPUTADORA</span>
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="egpPhotoTarget"
+              value="mobile"
+            >
+            <span>MÓVIL</span>
+          </label>
+        </div>
+
+        <small id="egpPhotoTargetStatus"></small>
+      </div>
       <div class="photo-tabs"><button type="button" data-photo-slot="inicio" class="is-active">Foto inicio</button><button type="button" data-photo-slot="hero">Foto Hero</button></div>
       <div class="photo-file-picker photo-file-picker-actions">
         <button id="choosePhotoSourceBtn" class="secondary-btn" type="button">Seleccionar imagen</button>

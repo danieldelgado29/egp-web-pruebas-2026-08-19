@@ -3033,3 +3033,71 @@ body.egp-ios.live-mode .song-action{
   font-size:20px;
 }
 /* FIN EGP BOTONES GALERIA COMPACTOS V1 */
+
+
+/* EGP FOTO DESTINO RESPONSIVE V1 */
+
+.egp-photo-target-box{
+  margin:14px 0 18px;
+  padding:14px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:14px;
+  background:rgba(255,255,255,.035);
+}
+
+.egp-photo-target-box > strong{
+  display:block;
+  margin-bottom:10px;
+  font-size:.86rem;
+  letter-spacing:.04em;
+}
+
+.egp-photo-target-options{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+}
+
+.egp-photo-target-options label{
+  position:relative;
+  cursor:pointer;
+}
+
+.egp-photo-target-options input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.egp-photo-target-options span{
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:7px 6px;
+  border:1px solid rgba(255,255,255,.20);
+  border-radius:10px;
+  text-align:center;
+  font-size:.70rem;
+  font-weight:800;
+}
+
+.egp-photo-target-options input:checked + span{
+  border-color:rgba(255,255,255,.85);
+  background:rgba(255,255,255,.13);
+}
+
+#egpPhotoTargetStatus{
+  display:block;
+  margin-top:9px;
+  opacity:.72;
+  font-size:.72rem;
+}
+
+@media(max-width:520px){
+  .egp-photo-target-options{
+    grid-template-columns:1fr;
+  }
+}
+
+/* FIN EGP FOTO DESTINO RESPONSIVE V1 */

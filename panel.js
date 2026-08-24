@@ -4077,14 +4077,166 @@ document.documentElement.dataset.egmVersion="6.36.92";
   // Entrega 6.17 — Subir fotos y editor real de encuadre
   let activePhotoSlot='inicio',photoDrafts={},dragState=null;
   const PHOTO_DEFAULTS={x:50,y:50,zoom:100,intensity:55,direction:'to bottom',color:'#000000',opacity:70};
-  function loadPhotoSettings(){try{return JSON.parse(localStorage.getItem('egm-photo-settings')||'{}')}catch(_){return {}}}
-  function loadPhotoSources(){try{return JSON.parse(localStorage.getItem('egm-photo-originals')||'{}')}catch(_){return {}}}
-  function currentPhotoDraft(){
-    if(!photoDrafts[activePhotoSlot]){
-      const saved=loadPhotoSettings()[activePhotoSlot]||{},sources=loadPhotoSources();
-      photoDrafts[activePhotoSlot]={...PHOTO_DEFAULTS,...saved,src:sources[activePhotoSlot]||saved.src||''};
+
+  // ========================================================
+  // EGP FOTOS RESPONSIVAS — DESKTOP / MOBILE
+  // ========================================================
+
+  let egpPhotoTargetMode =
+    localStorage.getItem('egm-photo-target-mode') || 'auto';
+
+  function egpPhotoDeviceIsMobile(){
+    return /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+      .test(navigator.userAgent || '');
+  }
+
+  function egpPhotoResolvedTarget(){
+    if(egpPhotoTargetMode === 'desktop') return 'desktop';
+    if(egpPhotoTargetMode === 'mobile') return 'mobile';
+
+    return egpPhotoDeviceIsMobile()
+      ? 'mobile'
+      : 'desktop';
+  }
+
+  function photoStorageKey(slot){
+    return String(slot || '') + '__' + egpPhotoResolvedTarget();
+  }
+
+  function egpPhotoClone(value){
+    try{
+      return structuredClone(value);
+    }catch(_){
+      try{
+        return JSON.parse(JSON.stringify(value));
+      }catch(__){
+        return value;
+      }
     }
-    return photoDrafts[activePhotoSlot];
+  }
+
+  function egpPhotoPrepareVariants(data){
+    const target = egpPhotoResolvedTarget();
+    const result = data && typeof data === 'object'
+      ? data
+      : {};
+
+    Object.keys(result).forEach(key => {
+      if(
+        key.endsWith('__desktop') ||
+        key.endsWith('__mobile')
+      ){
+        return;
+      }
+
+      const variant = key + '__' + target;
+
+      if(result[variant] === undefined){
+        result[variant] = egpPhotoClone(result[key]);
+      }
+    });
+
+    return result;
+  }
+
+  function egpPhotoSyncTargetUI(){
+    const resolved = egpPhotoResolvedTarget();
+
+    document
+      .querySelectorAll('input[name="egpPhotoTarget"]')
+      .forEach(input => {
+        input.checked = input.value === egpPhotoTargetMode;
+      });
+
+    const status =
+      document.getElementById('egpPhotoTargetStatus');
+
+    if(status){
+      const automatic =
+        egpPhotoTargetMode === 'auto'
+          ? 'Automático detectó: '
+          : 'Destino seleccionado: ';
+
+      status.textContent =
+        automatic +
+        (resolved === 'mobile'
+          ? 'MÓVIL'
+          : 'COMPUTADORA');
+    }
+  }
+
+  document.addEventListener('change', event => {
+    const input = event.target;
+
+    if(
+      !input ||
+      input.name !== 'egpPhotoTarget'
+    ){
+      return;
+    }
+
+    egpPhotoTargetMode = input.value;
+
+    localStorage.setItem(
+      'egm-photo-target-mode',
+      egpPhotoTargetMode
+    );
+
+    egpPhotoSyncTargetUI();
+
+    /*
+     * Recargar únicamente el administrador de fotos
+     * para mostrar la variante elegida.
+     */
+    const dialog =
+      document.getElementById('photoManagerDialog');
+
+    if(dialog && dialog.open){
+      try{
+        dialog.close();
+      }catch(_){}
+
+      setTimeout(() => {
+        try{
+          openPhotoManager();
+        }catch(_){}
+      }, 0);
+    }
+  });
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    egpPhotoSyncTargetUI
+  );
+
+  function loadPhotoSettings(){
+    try{
+      return egpPhotoPrepareVariants(
+        JSON.parse(
+          localStorage.getItem('egm-photo-settings') || '{}'
+        )
+      );
+    }catch(_){
+      return {};
+    }
+  }
+  function loadPhotoSources(){
+    try{
+      return egpPhotoPrepareVariants(
+        JSON.parse(
+          localStorage.getItem('egm-photo-originals') || '{}'
+        )
+      );
+    }catch(_){
+      return {};
+    }
+  }
+  function currentPhotoDraft(){
+    if(!photoDrafts[photoStorageKey(activePhotoSlot)]){
+      const saved=loadPhotoSettings()[photoStorageKey(activePhotoSlot)]||{},sources=loadPhotoSources();
+      photoDrafts[photoStorageKey(activePhotoSlot)]={...PHOTO_DEFAULTS,...saved,src:sources[photoStorageKey(activePhotoSlot)]||saved.src||''};
+    }
+    return photoDrafts[photoStorageKey(activePhotoSlot)];
   }
   function syncPhotoControls(){
     const d=currentPhotoDraft();
@@ -4104,6 +4256,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
   function hexRgba(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`}
   function openPhotoManager(){
+    egpPhotoSyncTargetUI();/* EGP TARGET */
     const settings=structuredClone(loadPhotoSettings()),sources=loadPhotoSources();photoDrafts={};
     ['inicio','hero'].forEach(slot=>{const saved=settings[slot]||{};photoDrafts[slot]={...PHOTO_DEFAULTS,...saved,src:sources[slot]||saved.src||''};});
     activePhotoSlot='inicio';$$('[data-photo-slot]').forEach(b=>b.classList.toggle('is-active',b.dataset.photoSlot===activePhotoSlot));
@@ -4140,7 +4293,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   });
   const photoMap={photoPosX:'x',photoPosY:'y',photoZoom:'zoom',gradientIntensity:'intensity',gradientDirection:'direction',gradientColor:'color',gradientOpacity:'opacity'};
   Object.entries(photoMap).forEach(([id,key])=>$('#'+id).addEventListener('input',e=>{currentPhotoDraft()[key]=e.target.value;renderPhotoPreview();}));
-  $('#resetPhotoFrameBtn').addEventListener('click',()=>askConfirm('Restablecer encuadre','La imagen original se conservará y solo se restablecerán los ajustes de esta foto.',()=>{const src=currentPhotoDraft().src,fileName=currentPhotoDraft().fileName;photoDrafts[activePhotoSlot]={...PHOTO_DEFAULTS,src,fileName};syncPhotoControls();},'Restablecer'));
+  $('#resetPhotoFrameBtn').addEventListener('click',()=>askConfirm('Restablecer encuadre','La imagen original se conservará y solo se restablecerán los ajustes de esta foto.',()=>{const src=currentPhotoDraft().src,fileName=currentPhotoDraft().fileName;photoDrafts[photoStorageKey(activePhotoSlot)]={...PHOTO_DEFAULTS,src,fileName};syncPhotoControls();},'Restablecer'));
   const preview=$('#photoPreview');
   preview.addEventListener('pointerdown',e=>{if(!currentPhotoDraft().src)return;preview.setPointerCapture(e.pointerId);dragState={id:e.pointerId,startX:e.clientX,startY:e.clientY,x:Number(currentPhotoDraft().x),y:Number(currentPhotoDraft().y)};});
   preview.addEventListener('pointermove',e=>{if(!dragState||dragState.id!==e.pointerId)return;const rect=preview.getBoundingClientRect(),d=currentPhotoDraft();d.x=Math.max(0,Math.min(100,dragState.x+((e.clientX-dragState.startX)/rect.width)*100));d.y=Math.max(0,Math.min(100,dragState.y+((e.clientY-dragState.startY)/rect.height)*100));$('#photoPosX').value=Math.round(d.x);$('#photoPosY').value=Math.round(d.y);renderPhotoPreview();});

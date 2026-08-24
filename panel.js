@@ -870,9 +870,19 @@ document.documentElement.dataset.egmVersion="6.36.92";
         });
         saveStateLocalOnly();
         // Tras autenticar, un show remoto activo lleva directamente a Control en vivo.
+        /*
+         * Una sincronización remota NUNCA debe sacar al usuario
+         * de Configuración mientras esa pantalla esté abierta.
+         * Solo las acciones explícitas de navegación pueden
+         * entrar a Control en vivo.
+         */
+        const configVisible =
+          $('#configView')?.classList.contains('is-active') === true;
+
         if(
           panelAuthValid() &&
           $('#panelLogin').hidden &&
+          !configVisible &&
           !configOpenedFromLive &&
           !document.querySelector('#imageEditorDialog[open],#songbookEditorDialog[open]')
         ) showLive();

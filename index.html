@@ -75,7 +75,7 @@
     });
   </script>
 
-  <script type="module" src="script.js?v=20260819-180423"></script>
+  <script type="module" src="script.js?v=carta2-1787611625"></script>
 </head>
 
 <body>
@@ -965,6 +965,15 @@
 (function(){
 
   async function cargarFotosCarta(){
+
+    /*
+     * WEB PUBLICA:
+     * Firebase es la única fuente dinámica.
+     * El lector local/Core queda reservado para LAN/desarrollo.
+     */
+    if(location.hostname.endsWith('github.io')){
+      return;
+    }
 
     let sources={};
     let settings={};

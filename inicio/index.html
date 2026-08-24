@@ -108,9 +108,14 @@
       location.hostname.endsWith('github.io');
 
     /*
-     * En la prueba pública Firebase es la fuente compartida.
-     * No intentar Local Core 8898 desde GitHub Pages.
+     * WEB PUBLICA:
+     * Firebase es la única fuente dinámica de la foto.
+     * No pintar localStorage/Core antes de Firebase.
      */
+    if(firebasePublicTest){
+      return;
+    }
+
     if(!firebasePublicTest){
       try{
         const coreHost =

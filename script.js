@@ -1871,6 +1871,19 @@ function mostrarApp() {
   DOM.landing.hidden = true;
   DOM.app.hidden = false;
   document.body.classList.add("app-abierta");
+
+  /*
+   * CARTA 2 queda representada en la URL.
+   * Así refresh conserva la pantalla correcta.
+   */
+  if(location.hash !== "#carta2"){
+    history.replaceState(
+      null,
+      "",
+      location.pathname + location.search + "#carta2"
+    );
+  }
+
   fijarMenu();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -3778,6 +3791,14 @@ async function iniciar() {
   DOM.continuar.hidden = true;
   DOM.entrar.hidden = true;
   DOM.volver.hidden = true;
+
+  /*
+   * Si la URL llega con #carta2, restaurar CARTA 2
+   * antes de continuar el arranque normal.
+   */
+  if(!panelMode && location.hash === "#carta2"){
+    mostrarApp();
+  }
 
   registrarEventos();
   programarContinuacion();

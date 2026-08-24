@@ -104,32 +104,42 @@
       settings.portada ||
       {};
 
-    try{
-      const coreHost =
-        location.hostname === '127.0.0.1' ||
-        location.hostname === 'localhost'
-          ? '127.0.0.1'
-          : location.hostname;
+    const firebasePublicTest =
+      new URLSearchParams(location.search)
+        .get('photos_firebase_test') === '1';
 
-      const response=await fetch(
-        'http://'+coreHost+':8898/api/photos',
-        {cache:'no-store'}
-      );
+    /*
+     * En la prueba pública Firebase es la fuente compartida.
+     * No intentar Local Core 8898 desde GitHub Pages.
+     */
+    if(!firebasePublicTest){
+      try{
+        const coreHost =
+          location.hostname === '127.0.0.1' ||
+          location.hostname === 'localhost'
+            ? '127.0.0.1'
+            : location.hostname;
 
-      if(response.ok){
-        const remote=await response.json();
-        const photo=remote?.photos?.[variantKey];
+        const response=await fetch(
+          'http://'+coreHost+':8898/api/photos',
+          {cache:'no-store'}
+        );
 
-        if(photo && typeof photo==='object'){
-          if(photo.src) src=photo.src;
-          d={...d,...photo};
+        if(response.ok){
+          const remote=await response.json();
+          const photo=remote?.photos?.[variantKey];
+
+          if(photo && typeof photo==='object'){
+            if(photo.src) src=photo.src;
+            d={...d,...photo};
+          }
         }
+      }catch(err){
+        console.warn(
+          'Core de fotos no disponible; usando almacenamiento local',
+          err
+        );
       }
-    }catch(err){
-      console.warn(
-        'Core de fotos no disponible; usando almacenamiento local',
-        err
-      );
     }
 
 

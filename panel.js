@@ -4185,23 +4185,14 @@ document.documentElement.dataset.egmVersion="6.36.92";
     egpPhotoSyncTargetUI();
 
     /*
-     * Recargar únicamente el administrador de fotos
-     * para mostrar la variante elegida.
+     * Cambiar de variante SIN cerrar el modal.
+     * Así evitamos que aparezca por un instante
+     * la Configuración que está debajo.
      */
-    const dialog =
-      document.getElementById('photoManagerDialog');
-
-    if(dialog && dialog.open){
-      try{
-        dialog.close();
-      }catch(_){}
-
-      setTimeout(() => {
-        try{
-          openPhotoManager();
-        }catch(_){}
-      }, 0);
-    }
+    try{
+      syncPhotoControls();
+      renderPhotoPreview();
+    }catch(_){}
   });
 
   document.addEventListener(

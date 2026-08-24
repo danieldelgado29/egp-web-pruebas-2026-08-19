@@ -1099,11 +1099,6 @@
 
     const key='carta1__'+(mobile?'mobile':'desktop');
 
-    const egpFlashCarta1=document.querySelector('#egpCarta1Picture img');
-    const egpFlashCarta1Source=document.querySelector('#egpCarta1Picture source');
-    if(egpFlashCarta1) egpFlashCarta1.style.visibility='hidden';
-    if(egpFlashCarta1Source) egpFlashCarta1Source.srcset='';
-
     const [{initializeApp,getApps,getApp},{getFirestore,doc,getDoc}] =
       await Promise.all([
         import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
@@ -1139,7 +1134,6 @@
 
 
     el.src=d.src;
-    el.style.visibility='visible';
 
     const picture=document.getElementById('egpCarta1Picture');
     const source=picture?.querySelector('source');
@@ -1172,11 +1166,6 @@
         .test(navigator.userAgent||'');
 
     const key='carta2__'+(mobile?'mobile':'desktop');
-
-    const egpFlashCarta2=document.querySelector('#egpCarta2Picture img');
-    const egpFlashCarta2Source=document.querySelector('#egpCarta2Picture source');
-    if(egpFlashCarta2) egpFlashCarta2.style.visibility='hidden';
-    if(egpFlashCarta2Source) egpFlashCarta2Source.srcset='';
 
     const [{initializeApp,getApps,getApp},{getFirestore,doc,getDoc}] =
       await Promise.all([
@@ -1213,7 +1202,6 @@
 
 
     el.src=d.src;
-    el.style.visibility='visible';
 
     const picture=document.getElementById('egpCarta2Picture');
     const source=picture?.querySelector('source');

@@ -1876,7 +1876,27 @@ function renderizarEstadoPublico() {
   requestAnimationFrame(actualizarPosicionMenuPublico);
 }
 
-function mostrarApp() {
+async function mostrarApp() {
+
+  /*
+   * ESPERAR la decodificacion que empezó mientras
+   * Carta 1 todavía estaba visible.
+   *
+   * IMPORTANTE:
+   * Carta 1 NO se oculta hasta terminar esta espera.
+   * No mostramos loader ni pantalla negra.
+   */
+  try{
+    if(window.__EGP_CARTA2_DECODE__){
+      await Promise.race([
+        window.__EGP_CARTA2_DECODE__,
+        new Promise(resolve=>{
+          setTimeout(()=>resolve(false),1500);
+        })
+      ]);
+    }
+  }catch(_){}
+
   DOM.landing.hidden = true;
   DOM.app.hidden = false;
   document.body.classList.add("app-abierta");

@@ -1097,3 +1097,139 @@ a{
 }
 
 /* FIN EGP EXPLORE 4 TARJETAS FINAL DEV */
+
+/* EGP · MENU SUPERIOR MOVIL V1 */
+@media(max-width:900px){
+
+  .top-actions{
+    display:flex!important;
+  }
+
+}
+
+@media(max-width:650px){
+
+  .topbar{
+    gap:10px;
+  }
+
+  .brand{
+    flex:0 0 auto;
+  }
+
+  .top-actions{
+    flex:1 1 auto;
+    justify-content:flex-end;
+    gap:9px;
+    min-width:0;
+  }
+
+  .top-actions a{
+    padding:7px 1px!important;
+    font-size:9px!important;
+    letter-spacing:.04em!important;
+    white-space:nowrap;
+  }
+
+}
+/* FIN EGP · MENU SUPERIOR MOVIL V1 */
+
+
+/* EGP · NAVEGACION MOVIL V2 — TRES BOTONES VISIBLES */
+@media(max-width:650px){
+
+  .topbar{
+    height:68px!important;
+    gap:6px!important;
+
+    padding-left:
+      max(10px,env(safe-area-inset-left))!important;
+
+    padding-right:
+      max(10px,env(safe-area-inset-right))!important;
+  }
+
+  .brand{
+    flex:0 0 auto!important;
+    min-width:0!important;
+  }
+
+  .brand strong{
+    font-size:12px!important;
+    letter-spacing:.07em!important;
+    white-space:nowrap!important;
+  }
+
+  .brand span{
+    margin-top:5px!important;
+    font-size:8px!important;
+    letter-spacing:.35em!important;
+  }
+
+  .top-actions{
+    display:flex!important;
+    flex:1 1 auto!important;
+
+    align-items:center!important;
+    justify-content:flex-end!important;
+
+    gap:7px!important;
+    min-width:0!important;
+  }
+
+  .top-actions a{
+    flex:0 0 auto!important;
+
+    padding:7px 0!important;
+
+    font-size:8px!important;
+    line-height:1!important;
+    letter-spacing:.015em!important;
+
+    white-space:nowrap!important;
+  }
+
+}
+/* FIN EGP · NAVEGACION MOVIL V2 */
+
+
+/* EGP · BOTONES SUPERIORES MOVIL — SUTIL */
+@media(max-width:650px){
+
+  .top-actions{
+    gap:5px!important;
+  }
+
+  .top-actions a{
+    padding:7px 6px!important;
+
+    border:
+      1px solid rgba(255,255,255,.18)!important;
+
+    border-radius:7px!important;
+
+    background:
+      rgba(255,255,255,.045)!important;
+
+    font-size:7.5px!important;
+    font-weight:700!important;
+    letter-spacing:.01em!important;
+
+    color:rgba(255,255,255,.90)!important;
+
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,.015)!important;
+  }
+
+  .top-actions a:active{
+    background:
+      rgba(214,165,72,.14)!important;
+
+    border-color:
+      rgba(239,200,109,.45)!important;
+
+    color:var(--gold2)!important;
+  }
+
+}
+/* FIN EGP · BOTONES SUPERIORES MOVIL — SUTIL */

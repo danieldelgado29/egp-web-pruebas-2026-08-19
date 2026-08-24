@@ -218,77 +218,72 @@
 </script>
 
 
-<script type="module" id="egpFotoFirebasePublicaTest">
+
+<script type="module" class="egpFirebaseFotosPublicas">
 (async function(){
 
   const params=new URLSearchParams(location.search);
-
-  if(params.get('photos_firebase_test')!=='1'){
-    return;
-  }
+  if(params.get('photos_firebase_test')!=='1') return;
 
   try{
-    const [{initializeApp},{getFirestore,doc,getDoc}] =
+    const mobile=
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'');
+
+    const key='portada__'+(mobile?'mobile':'desktop');
+
+    const [{initializeApp,getApps,getApp},{getFirestore,doc,getDoc}] =
       await Promise.all([
         import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
         import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js')
       ]);
 
     const response=await fetch(
-      '../configuracion.json?fotoFirebase=' + Date.now(),
+      '../configuracion.json?fotoFirebase='+Date.now(),
       {cache:'no-store'}
     );
 
     const cfg=await response.json();
 
-    const app=initializeApp(
-      cfg.firebase,
-      'inicio-foto-publica-test'
-    );
+    const appName='egp-fotos-publicas';
+
+    const app=getApps().some(a=>a.name===appName)
+      ? getApp(appName)
+      : initializeApp(cfg.firebase,appName);
 
     const db=getFirestore(app);
 
-    const ref=doc(
-      db,
-      'imageEdits',
-      'site-photo-portada__mobile'
+    const snap=await getDoc(
+      doc(db,'imageEdits','site-photo-'+key)
     );
-
-    const snap=await getDoc(ref);
 
     if(!snap.exists()) return;
 
     const d=snap.data()||{};
-    const hero=document.querySelector('.hero');
-    const overlay=document.querySelector('.hero-overlay');
+    if(!d.src) return;
 
-    if(!hero || !d.src) return;
+    const el=document.querySelector('.hero');
+    if(!el) return;
 
-    hero.style.backgroundImage='url("' + d.src + '")';
 
-    hero.style.backgroundPosition=
-      (d.x ?? 50) + '% ' +
-      (d.y ?? 50) + '%';
+    el.style.backgroundImage='url("'+d.src+'")';
+    el.style.backgroundPosition=(d.x??50)+'% '+(d.y??50)+'%';
 
     if(d.zoom!==undefined){
-      hero.style.backgroundSize=
-        Number(d.zoom) + '%';
+      el.style.backgroundSize=Number(d.zoom)+'%';
     }
+
+    const overlay=document.querySelector('.hero-overlay');
 
     if(overlay){
       const hex=String(d.color||'#000000').replace('#','');
       const n=parseInt(hex,16);
-
       const alpha=
-        (Number(d.intensity ?? 55)/100) *
-        (Number(d.opacity ?? 70)/100);
+        (Number(d.intensity??55)/100) *
+        (Number(d.opacity??70)/100);
 
       const rgba=a =>
-        'rgba('+
-        (n>>16)+','+
-        ((n>>8)&255)+','+
-        (n&255)+','+
-        a+')';
+        'rgba('+(n>>16)+','+((n>>8)&255)+','+(n&255)+','+a+')';
 
       overlay.style.background=
         'linear-gradient('+
@@ -297,11 +292,8 @@
         rgba(alpha)+' 100%)';
     }
 
-    console.log(
-      'EGP FOTO FIREBASE:',
-      'portada__mobile',
-      d.updatedAt||''
-    );
+
+    console.log('EGP FOTO FIREBASE:',key,d.updatedAt||'');
 
   }catch(err){
     console.error('EGP FOTO FIREBASE ERROR',err);
@@ -309,6 +301,7 @@
 
 })();
 </script>
+
 
 </body>
 </html>

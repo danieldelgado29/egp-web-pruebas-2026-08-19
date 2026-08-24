@@ -856,5 +856,136 @@ document
 })();
 </script>
 
+
+
+<script type="module" class="egpFirebaseFotosPublicas">
+(async function(){
+
+  const params=new URLSearchParams(location.search);
+  if(params.get('photos_firebase_test')!=='1') return;
+
+  try{
+    const mobile=
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'');
+
+    const key='info__'+(mobile?'mobile':'desktop');
+
+    const [{initializeApp,getApps,getApp},{getFirestore,doc,getDoc}] =
+      await Promise.all([
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js')
+      ]);
+
+    const response=await fetch(
+      '../configuracion.json?fotoFirebase='+Date.now(),
+      {cache:'no-store'}
+    );
+
+    const cfg=await response.json();
+
+    const appName='egp-fotos-publicas';
+
+    const app=getApps().some(a=>a.name===appName)
+      ? getApp(appName)
+      : initializeApp(cfg.firebase,appName);
+
+    const db=getFirestore(app);
+
+    const snap=await getDoc(
+      doc(db,'imageEdits','site-photo-'+key)
+    );
+
+    if(!snap.exists()) return;
+
+    const d=snap.data()||{};
+    if(!d.src) return;
+
+    const el=document.querySelector('.hero-photo');
+    if(!el) return;
+
+
+    el.style.backgroundImage='url("'+d.src+'")';
+    el.style.backgroundPosition=(d.x??50)+'% '+(d.y??50)+'%';
+
+    if(d.zoom!==undefined){
+      el.style.backgroundSize=Number(d.zoom)+'%';
+    }
+
+
+    console.log('EGP FOTO FIREBASE:',key,d.updatedAt||'');
+
+  }catch(err){
+    console.error('EGP FOTO FIREBASE ERROR',err);
+  }
+
+})();
+</script>
+
+
+<script type="module" class="egpFirebaseFotosPublicas">
+(async function(){
+
+  const params=new URLSearchParams(location.search);
+  if(params.get('photos_firebase_test')!=='1') return;
+
+  try{
+    const mobile=
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'');
+
+    const key='bio__'+(mobile?'mobile':'desktop');
+
+    const [{initializeApp,getApps,getApp},{getFirestore,doc,getDoc}] =
+      await Promise.all([
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js')
+      ]);
+
+    const response=await fetch(
+      '../configuracion.json?fotoFirebase='+Date.now(),
+      {cache:'no-store'}
+    );
+
+    const cfg=await response.json();
+
+    const appName='egp-fotos-publicas';
+
+    const app=getApps().some(a=>a.name===appName)
+      ? getApp(appName)
+      : initializeApp(cfg.firebase,appName);
+
+    const db=getFirestore(app);
+
+    const snap=await getDoc(
+      doc(db,'imageEdits','site-photo-'+key)
+    );
+
+    if(!snap.exists()) return;
+
+    const d=snap.data()||{};
+    if(!d.src) return;
+
+    const el=document.querySelector('.bio-photo');
+    if(!el) return;
+
+
+    el.style.backgroundImage='url("'+d.src+'")';
+    el.style.backgroundPosition=(d.x??50)+'% '+(d.y??50)+'%';
+
+    if(d.zoom!==undefined){
+      el.style.backgroundSize=Number(d.zoom)+'%';
+    }
+
+
+    console.log('EGP FOTO FIREBASE:',key,d.updatedAt||'');
+
+  }catch(err){
+    console.error('EGP FOTO FIREBASE ERROR',err);
+  }
+
+})();
+</script>
+
 </body>
 </html>

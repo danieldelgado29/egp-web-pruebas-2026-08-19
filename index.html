@@ -1087,5 +1087,148 @@
 })();
 </script>
 
+
+
+<script type="module" class="egpFirebaseFotosPublicas">
+(async function(){
+
+  const params=new URLSearchParams(location.search);
+  if(params.get('photos_firebase_test')!=='1') return;
+
+  try{
+    const mobile=
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'');
+
+    const key='carta1__'+(mobile?'mobile':'desktop');
+
+    const [{initializeApp,getApps,getApp},{getFirestore,doc,getDoc}] =
+      await Promise.all([
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js')
+      ]);
+
+    const response=await fetch(
+      './configuracion.json?fotoFirebase='+Date.now(),
+      {cache:'no-store'}
+    );
+
+    const cfg=await response.json();
+
+    const appName='egp-fotos-publicas';
+
+    const app=getApps().some(a=>a.name===appName)
+      ? getApp(appName)
+      : initializeApp(cfg.firebase,appName);
+
+    const db=getFirestore(app);
+
+    const snap=await getDoc(
+      doc(db,'imageEdits','site-photo-'+key)
+    );
+
+    if(!snap.exists()) return;
+
+    const d=snap.data()||{};
+    if(!d.src) return;
+
+    const el=document.querySelector('#egpCarta1Picture img');
+    if(!el) return;
+
+
+    el.src=d.src;
+
+    const picture=document.getElementById('egpCarta1Picture');
+    const source=picture?.querySelector('source');
+    if(source) source.srcset=d.src;
+
+    el.style.objectPosition=(d.x??50)+'% '+(d.y??50)+'%';
+
+    if(d.zoom!==undefined){
+      el.style.transform='scale('+(Number(d.zoom)/100)+')';
+      el.style.transformOrigin=(d.x??50)+'% '+(d.y??50)+'%';
+    }
+
+
+    console.log('EGP FOTO FIREBASE:',key,d.updatedAt||'');
+
+  }catch(err){
+    console.error('EGP FOTO FIREBASE ERROR',err);
+  }
+
+})();
+</script>
+
+
+<script type="module" class="egpFirebaseFotosPublicas">
+(async function(){
+
+  const params=new URLSearchParams(location.search);
+  if(params.get('photos_firebase_test')!=='1') return;
+
+  try{
+    const mobile=
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'');
+
+    const key='carta2__'+(mobile?'mobile':'desktop');
+
+    const [{initializeApp,getApps,getApp},{getFirestore,doc,getDoc}] =
+      await Promise.all([
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js')
+      ]);
+
+    const response=await fetch(
+      './configuracion.json?fotoFirebase='+Date.now(),
+      {cache:'no-store'}
+    );
+
+    const cfg=await response.json();
+
+    const appName='egp-fotos-publicas';
+
+    const app=getApps().some(a=>a.name===appName)
+      ? getApp(appName)
+      : initializeApp(cfg.firebase,appName);
+
+    const db=getFirestore(app);
+
+    const snap=await getDoc(
+      doc(db,'imageEdits','site-photo-'+key)
+    );
+
+    if(!snap.exists()) return;
+
+    const d=snap.data()||{};
+    if(!d.src) return;
+
+    const el=document.querySelector('#egpCarta2Picture img');
+    if(!el) return;
+
+
+    el.src=d.src;
+
+    const picture=document.getElementById('egpCarta2Picture');
+    const source=picture?.querySelector('source');
+    if(source) source.srcset=d.src;
+
+    el.style.objectPosition=(d.x??50)+'% '+(d.y??50)+'%';
+
+    if(d.zoom!==undefined){
+      el.style.transform='scale('+(Number(d.zoom)/100)+')';
+      el.style.transformOrigin=(d.x??50)+'% '+(d.y??50)+'%';
+    }
+
+
+    console.log('EGP FOTO FIREBASE:',key,d.updatedAt||'');
+
+  }catch(err){
+    console.error('EGP FOTO FIREBASE ERROR',err);
+  }
+
+})();
+</script>
+
 </body>
 </html>

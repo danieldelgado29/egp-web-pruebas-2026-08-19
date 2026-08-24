@@ -4294,12 +4294,21 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
     const key=photoStorageKey(activePhotoSlot);
 
-    /*
-     * PRIMERA PRUEBA:
-     * únicamente INICIO / MÓVIL.
-     */
-    if(key!=='portada__mobile'){
-      throw new Error('Prueba Firebase habilitada solo para INICIO / MÓVIL');
+    const allowedKeys=new Set([
+      'portada__desktop',
+      'portada__mobile',
+      'info__desktop',
+      'info__mobile',
+      'bio__desktop',
+      'bio__mobile',
+      'carta1__desktop',
+      'carta1__mobile',
+      'carta2__desktop',
+      'carta2__mobile'
+    ]);
+
+    if(!allowedKeys.has(key)){
+      throw new Error('Destino de foto no permitido');
     }
 
     const sources=loadPhotoSources();
@@ -4327,7 +4336,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const ref=remoteDoc(
       remoteDb,
       'imageEdits',
-      'site-photo-portada__mobile'
+      'site-photo-' + key
     );
 
     await remoteSetDoc(

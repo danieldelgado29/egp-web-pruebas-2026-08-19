@@ -257,6 +257,9 @@ document.documentElement.dataset.egmVersion="6.36.92";
   const EGP_PHOTOS_CORE_TEST=
     new URL(location.href).searchParams.get('photos_core_test')==='1';
 
+  const EGP_PHOTOS_FIREBASE_TEST=
+    new URL(location.href).searchParams.get('photos_firebase_test')==='1';
+
   const EGP_PHOTOS_CORE_URL=
     location.hostname === '127.0.0.1' ||
     location.hostname === 'localhost'
@@ -4285,6 +4288,71 @@ document.documentElement.dataset.egmVersion="6.36.92";
     return data.photos;
   }
 
+
+  async function egpSaveActivePhotoToFirebaseTest(){
+    if(!EGP_PHOTOS_FIREBASE_TEST) return false;
+
+    const key=photoStorageKey(activePhotoSlot);
+
+    /*
+     * PRIMERA PRUEBA:
+     * únicamente INICIO / MÓVIL.
+     */
+    if(key!=='portada__mobile'){
+      throw new Error('Prueba Firebase habilitada solo para INICIO / MÓVIL');
+    }
+
+    const sources=loadPhotoSources();
+    const settings=loadPhotoSettings();
+    const saved=settings[key]||{};
+    const src=sources[key]||saved.src||'';
+
+    if(!src){
+      throw new Error('INICIO / MÓVIL no tiene imagen');
+    }
+
+    /*
+     * Mantener margen bajo el límite de 1 MiB por documento Firestore.
+     */
+    if(src.length>850000){
+      throw new Error('La foto es demasiado grande para esta prueba');
+    }
+
+    await initRemoteSync();
+
+    if(!remoteDb || !remoteDoc || !remoteSetDoc){
+      throw new Error('Firebase todavía no está listo');
+    }
+
+    const ref=remoteDoc(
+      remoteDb,
+      'imageEdits',
+      'site-photo-portada__mobile'
+    );
+
+    await remoteSetDoc(
+      ref,
+      {
+        type:'site-photo',
+        key,
+        src,
+        x:saved.x ?? 50,
+        y:saved.y ?? 50,
+        zoom:saved.zoom ?? 100,
+        intensity:saved.intensity ?? 55,
+        direction:saved.direction || 'to bottom',
+        color:saved.color || '#000000',
+        opacity:saved.opacity ?? 70,
+        fileName:saved.fileName || '',
+        updatedAt:Date.now()
+      },
+      {merge:false}
+    );
+
+    return true;
+  }
+
+
   async function egpSavePhotosToCoreTest(){
     if(!EGP_PHOTOS_CORE_TEST) return false;
 
@@ -4552,6 +4620,18 @@ document.documentElement.dataset.egmVersion="6.36.92";
             console.error(err);
             toast('Guardado local · Core de fotos falló');
           });
+
+      }else if(EGP_PHOTOS_FIREBASE_TEST){
+        egpSaveActivePhotoToFirebaseTest()
+          .then(()=>{
+            rememberDialogState($('#photoManagerDialog'));
+            toast('Guardado exitosamente · Firebase compartido');
+          })
+          .catch(err=>{
+            console.error(err);
+            toast('Guardado local · Firebase falló');
+          });
+
       }else{
         rememberDialogState($('#photoManagerDialog'));
         toast('Guardado exitosamente');

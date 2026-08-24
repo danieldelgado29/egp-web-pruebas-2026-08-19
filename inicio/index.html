@@ -207,5 +207,98 @@
 })();
 </script>
 
+
+<script type="module" id="egpFotoFirebasePublicaTest">
+(async function(){
+
+  const params=new URLSearchParams(location.search);
+
+  if(params.get('photos_firebase_test')!=='1'){
+    return;
+  }
+
+  try{
+    const [{initializeApp},{getFirestore,doc,getDoc}] =
+      await Promise.all([
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js')
+      ]);
+
+    const response=await fetch(
+      '../configuracion.json?fotoFirebase=' + Date.now(),
+      {cache:'no-store'}
+    );
+
+    const cfg=await response.json();
+
+    const app=initializeApp(
+      cfg.firebase,
+      'inicio-foto-publica-test'
+    );
+
+    const db=getFirestore(app);
+
+    const ref=doc(
+      db,
+      'imageEdits',
+      'site-photo-portada__mobile'
+    );
+
+    const snap=await getDoc(ref);
+
+    if(!snap.exists()) return;
+
+    const d=snap.data()||{};
+    const hero=document.querySelector('.hero');
+    const overlay=document.querySelector('.hero-overlay');
+
+    if(!hero || !d.src) return;
+
+    hero.style.backgroundImage='url("' + d.src + '")';
+
+    hero.style.backgroundPosition=
+      (d.x ?? 50) + '% ' +
+      (d.y ?? 50) + '%';
+
+    if(d.zoom!==undefined){
+      hero.style.backgroundSize=
+        Number(d.zoom) + '%';
+    }
+
+    if(overlay){
+      const hex=String(d.color||'#000000').replace('#','');
+      const n=parseInt(hex,16);
+
+      const alpha=
+        (Number(d.intensity ?? 55)/100) *
+        (Number(d.opacity ?? 70)/100);
+
+      const rgba=a =>
+        'rgba('+
+        (n>>16)+','+
+        ((n>>8)&255)+','+
+        (n&255)+','+
+        a+')';
+
+      overlay.style.background=
+        'linear-gradient('+
+        (d.direction||'to bottom')+','+
+        rgba(0)+' 0%,'+
+        rgba(alpha)+' 100%)';
+    }
+
+    console.log(
+      'EGP FOTO FIREBASE:',
+      'portada__mobile',
+      d.updatedAt||''
+    );
+
+  }catch(err){
+    console.error('EGP FOTO FIREBASE ERROR',err);
+  }
+
+})();
+</script>
+
 </body>
 </html>

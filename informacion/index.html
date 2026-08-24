@@ -16,6 +16,36 @@
 
 <body>
 
+<script>
+/* EGP · NAVEGACION Y RECARGA INFORMACION */
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
+
+window.addEventListener('pageshow', function() {
+
+  /* Si llegamos expresamente a una sección, respetarla. */
+  if (location.hash) {
+    const destino = document.querySelector(location.hash);
+
+    if (destino) {
+      requestAnimationFrame(function(){
+        destino.scrollIntoView({block:'start'});
+      });
+    }
+
+    return;
+  }
+
+  /* Sin destino: comenzar arriba. */
+  window.scrollTo(0,0);
+
+  requestAnimationFrame(function(){
+    window.scrollTo(0,0);
+  });
+});
+</script>
+
 <header class="topbar">
 
   <a href="../inicio/" class="brand">
@@ -452,7 +482,7 @@
         contacto@elenagirjoaba.com
       </a>
 
-      <div class="contact-item">
+      <div class="contact-location">
         QUITO, ECUADOR
       </div>
 

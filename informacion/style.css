@@ -1233,3 +1233,129 @@ a{
 
 }
 /* FIN EGP · BOTONES SUPERIORES MOVIL — SUTIL */
+
+/* EGP · WHATSAPP VERDE CALIDO V1 */
+.contact-whatsapp{
+  border-color:rgba(104,155,108,.58)!important;
+  background:rgba(83,125,86,.14)!important;
+  color:#9bc59d!important;
+}
+
+@media (hover:hover){
+  .contact-whatsapp:hover{
+    border-color:rgba(122,174,125,.72)!important;
+    background:rgba(83,125,86,.20)!important;
+    box-shadow:
+      0 8px 24px rgba(0,0,0,.30),
+      0 0 18px rgba(104,155,108,.16)!important;
+  }
+}
+/* FIN EGP · WHATSAPP VERDE CALIDO V1 */
+
+/* EGP · UBICACION COMO TEXTO — NO BOTON */
+.contact-location{
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 16px;
+
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.12em;
+
+  border:0;
+  background:none;
+  box-shadow:none;
+}
+
+@media(max-width:650px){
+  .contact-location{
+    width:100%;
+    min-height:auto;
+    padding:10px 4px;
+    justify-content:center;
+  }
+}
+/* FIN EGP · UBICACION COMO TEXTO — NO BOTON */
+
+/* EGP · FORMATOS COMPACTOS EN TELEFONO V1 */
+@media(max-width:650px){
+
+  .formats-grid article{
+    min-height:0!important;
+    padding:20px 18px 22px!important;
+  }
+
+  .format-number{
+    display:block;
+    font-size:38px!important;
+    line-height:1!important;
+  }
+
+  .formats-grid h3{
+    margin:12px 0 7px!important;
+    font-size:18px!important;
+    line-height:1.15!important;
+  }
+
+  .formats-grid strong{
+    min-height:0!important;
+    margin:0 0 10px!important;
+    font-size:14px!important;
+    line-height:1.35!important;
+  }
+
+  .formats-grid p{
+    margin:0!important;
+    font-size:15px!important;
+    line-height:1.45!important;
+  }
+
+}
+/* FIN EGP · FORMATOS COMPACTOS EN TELEFONO V1 */
+
+/* EGP · VIVE LA EXPERIENCIA COMPACTO EN TELEFONO V1 */
+@media(max-width:650px){
+
+  .explore-card{
+    min-height:0!important;
+    padding:20px 18px!important;
+  }
+
+  .explore-card span{
+    font-size:12px!important;
+    line-height:1!important;
+  }
+
+  .explore-card h3{
+    margin:9px 0 6px!important;
+    line-height:1.2!important;
+  }
+
+  .explore-card p{
+    margin:0!important;
+    line-height:1.4!important;
+  }
+
+}
+/* FIN EGP · VIVE LA EXPERIENCIA COMPACTO EN TELEFONO V1 */
+
+/* EGP · NUMEROS GRANDES EN TARJETAS MOVILES */
+@media(max-width:650px){
+
+  /* Formatos: 02, 03, 04, + */
+  .format-number{
+    font-size:50px!important;
+    line-height:1!important;
+  }
+
+  /* Conoce más: 01, 02, 03... */
+  .explore-card span{
+    font-size:34px!important;
+    line-height:1!important;
+  }
+
+}
+/* FIN EGP · NUMEROS GRANDES EN TARJETAS MOVILES */

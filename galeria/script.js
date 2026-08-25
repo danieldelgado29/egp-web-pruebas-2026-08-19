@@ -375,46 +375,74 @@
   $('#fullscreenBtn').addEventListener('click',async()=>{
     const viewer=$('#viewer');
     const card=$('.viewer-card');
+    const video=$('#viewerVideo');
 
     /*
-     * En iPhone usamos pantalla completa visual.
-     * Asi conservamos la rotacion aplicada al video.
+     * iPhone / Safari:
+     * usar el reproductor fullscreen nativo de iOS.
+     * Debe llamarse directamente desde el toque del usuario.
      */
     if(
-      egpGalleryIsIOS() ||
-      typeof card.requestFullscreen!=='function'
+      currentItem?.type==='video' &&
+      typeof video.webkitEnterFullscreen==='function'
     ){
-      const active=
-        viewer.classList.toggle(
-          'egp-ios-fullscreen'
-        );
-
-      document.documentElement.classList.toggle(
-        'egp-gallery-fullscreen-lock',
-        active
-      );
-
-      document.body.classList.toggle(
-        'egp-gallery-fullscreen-lock',
-        active
-      );
-
-      requestAnimationFrame(()=>{
-        requestAnimationFrame(
-          egpGalleryRefitViewer
-        );
-      });
-
-      return;
+      try{
+        video.webkitEnterFullscreen();
+        return;
+      }catch(_){}
     }
 
+    /*
+     * Variante usada por algunas versiones de WebKit.
+     */
+    if(
+      currentItem?.type==='video' &&
+      typeof video.webkitEnterFullScreen==='function'
+    ){
+      try{
+        video.webkitEnterFullScreen();
+        return;
+      }catch(_){}
+    }
+
+    /*
+     * Navegadores con Fullscreen API normal.
+     */
     try{
       if(document.fullscreenElement){
         await document.exitFullscreen();
-      }else{
+        return;
+      }
+
+      if(typeof card.requestFullscreen==='function'){
         await card.requestFullscreen();
+        return;
       }
     }catch(_){}
+
+    /*
+     * Ultimo respaldo: fullscreen visual dentro de la pagina.
+     */
+    const active=
+      viewer.classList.toggle(
+        'egp-ios-fullscreen'
+      );
+
+    document.documentElement.classList.toggle(
+      'egp-gallery-fullscreen-lock',
+      active
+    );
+
+    document.body.classList.toggle(
+      'egp-gallery-fullscreen-lock',
+      active
+    );
+
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(
+        egpGalleryRefitViewer
+      );
+    });
   });
 
   document.addEventListener(

@@ -1604,17 +1604,6 @@ monitorBackBtn?.addEventListener("click", () => {
 
     document.body.appendChild(zona);
 
-    /* DEBUG TEMPORAL — mostrar zona táctil real */
-    if(id === "egpMonitorTouchZone"){
-      zona.style.background = "rgba(0,120,255,.25)";
-      zona.style.outline = "3px solid rgba(0,120,255,.95)";
-    }
-
-    if(id === "egpUi24rBackTouchZone"){
-      zona.style.background = "rgba(255,0,0,.25)";
-      zona.style.outline = "3px solid rgba(255,0,0,.95)";
-    }
-
     return zona;
   }
 

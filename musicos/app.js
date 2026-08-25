@@ -1702,7 +1702,7 @@ monitorBackBtn?.addEventListener("click", () => {
       centroX - ancho / 2;
 
     let top =
-      centroY - alto / 2;
+      centroY - (alto + 24) / 2;
 
 
     left =
@@ -1762,7 +1762,7 @@ monitorBackBtn?.addEventListener("click", () => {
       zonaMonitor,
       monitor,
       180,
-      84,
+      60,
       landscape &&
       !ui24rAbierta &&
       !monitor.disabled
@@ -1780,7 +1780,7 @@ monitorBackBtn?.addEventListener("click", () => {
       zonaBack,
       back,
       160,
-      84,
+      60,
       landscape &&
       ui24rAbierta
     );

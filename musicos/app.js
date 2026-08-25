@@ -1765,7 +1765,7 @@ monitorBackBtn?.addEventListener("click", () => {
     colocarZona(
       zonaMonitor,
       monitor,
-      180,
+      156,
       60,
       landscape &&
       !ui24rAbierta &&
@@ -1783,7 +1783,7 @@ monitorBackBtn?.addEventListener("click", () => {
     colocarZona(
       zonaBack,
       back,
-      160,
+      136,
       54,
       landscape &&
       ui24rAbierta

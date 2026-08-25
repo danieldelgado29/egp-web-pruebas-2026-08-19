@@ -75,7 +75,7 @@
     });
   </script>
 
-  <script type="module" src="script.js?v=carta2-preparada-1787617192"></script>
+  <script type="module" src="script.js?v=carta2-estable-1787613042"></script>
 </head>
 
 <body>
@@ -1260,7 +1260,7 @@ window.egpAplicarFotoCache=function(pictureId,base){
 
 
 <script type="module" class="egpFirebaseFotosPublicas">
-window.__EGP_CARTA2_FIREBASE_READY__=(async function(){
+(async function(){
 
   try{
     const mobile=
@@ -1308,29 +1308,6 @@ window.__EGP_CARTA2_FIREBASE_READY__=(async function(){
     const picture=document.getElementById('egpCarta2Picture');
     const source=picture?.querySelector('source');
     if(source) source.srcset=d.src;
-
-    /*
-     * CARTA 2 — esperar la decodificacion REAL
-     * de la foto obtenida desde Firebase.
-     */
-    if(typeof el.decode==='function'){
-      try{
-        await el.decode();
-      }catch(_){}
-    }else if(!(el.complete && el.naturalWidth)){
-      await new Promise(resolve=>{
-        el.addEventListener(
-          'load',
-          ()=>resolve(),
-          {once:true}
-        );
-        el.addEventListener(
-          'error',
-          ()=>resolve(),
-          {once:true}
-        );
-      });
-    }
 
     el.style.objectPosition=(d.x??50)+'% '+(d.y??50)+'%';
 

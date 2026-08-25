@@ -75,7 +75,7 @@
     });
   </script>
 
-  <script type="module" src="script.js?v=carta2-decode-1787615876"></script>
+  <script type="module" src="script.js?v=carta2-estable-1787613042"></script>
 </head>
 
 <body>
@@ -277,55 +277,10 @@ window.egpAplicarFotoCache=function(pictureId,base){
       </picture>
 
       <script>
-        /*
-         * EGP — CARTA 2
-         * Preparar y DECODIFICAR la imagen mientras #app
-         * todavía permanece oculto.
-         */
-        (function(){
-          const aplicada=window.egpAplicarFotoCache?.(
-            'egpCarta2Picture',
-            'carta2'
-          );
-
-          const img=document.querySelector(
-            '#egpCarta2Picture img'
-          );
-
-          if(!aplicada || !img){
-            window.__EGP_CARTA2_DECODE__=
-              Promise.resolve(false);
-            return;
-          }
-
-          if(typeof img.decode==='function'){
-            window.__EGP_CARTA2_DECODE__=
-              img.decode()
-                .then(()=>true)
-                .catch(()=>false);
-            return;
-          }
-
-          window.__EGP_CARTA2_DECODE__=
-            new Promise(resolve=>{
-              if(img.complete && img.naturalWidth){
-                resolve(true);
-                return;
-              }
-
-              img.addEventListener(
-                'load',
-                ()=>resolve(true),
-                {once:true}
-              );
-
-              img.addEventListener(
-                'error',
-                ()=>resolve(false),
-                {once:true}
-              );
-            });
-        })();
+        window.egpAplicarFotoCache?.(
+          'egpCarta2Picture',
+          'carta2'
+        );
       </script>
 
       <div class="hero__overlay" aria-hidden="true"></div>

@@ -129,6 +129,8 @@
 
   function fitMedia(media,rotation){
 
+    media.dataset.rotation=String(rotation);
+
     const stage=$('#viewerStage');
 
     const isVideo=media.tagName==='VIDEO';
@@ -237,6 +239,64 @@
   }
 
 
+
+  /* EGP-GALERIA-LIVE-REFRESH-V3 */
+  function egpGalleryRefreshFromSharedState(){
+
+    const freshItems=loadItems();
+    const viewer=$('#viewer');
+
+    /*
+     * Si hay una foto/video abierto, conservamos el visor.
+     * Solo actualizamos sus datos, incluido rotation.
+     */
+    if(currentItem && viewer?.open){
+
+      const fresh=freshItems.find(
+        item=>String(item.id)===String(currentItem.id)
+      );
+
+      if(fresh){
+
+        currentItem=fresh;
+
+        const rotation=
+          Number(fresh.rotation||0);
+
+        const video=$('#viewerVideo');
+        const img=$('#viewerImage');
+
+        if(video && !video.hidden){
+          fitMedia(video,rotation);
+        }
+
+        if(img && !img.hidden){
+          fitMedia(img,rotation);
+        }
+
+      }else{
+
+        $('#viewerVideo')?.pause();
+
+        if(viewer.open){
+          viewer.close();
+        }
+
+        currentItem=null;
+      }
+    }
+
+    /*
+     * Actualizamos miniaturas y contadores sin recargar.
+     */
+    render();
+  }
+
+  window.addEventListener(
+    'egp-gallery-updated',
+    egpGalleryRefreshFromSharedState
+  );
+
   $$('.tabs button').forEach(btn=>{
     btn.addEventListener('click',()=>{
 
@@ -291,8 +351,62 @@
   });
 
 
+  /* EGP FULLSCREEN IPHONE V1 */
+  function egpGalleryRefitViewer(){
+    if(!$('#viewer').open || !currentItem)return;
+
+    const rotation=Number(currentItem.rotation||0);
+
+    if(currentItem.type==='video'){
+      fitMedia($('#viewerVideo'),rotation);
+    }else{
+      fitMedia($('#viewerImage'),rotation);
+    }
+  }
+
+  function egpGalleryIsIOS(){
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (
+        navigator.platform==='MacIntel' &&
+        navigator.maxTouchPoints>1
+      );
+  }
+
   $('#fullscreenBtn').addEventListener('click',async()=>{
+    const viewer=$('#viewer');
     const card=$('.viewer-card');
+
+    /*
+     * En iPhone usamos pantalla completa visual.
+     * Asi conservamos la rotacion aplicada al video.
+     */
+    if(
+      egpGalleryIsIOS() ||
+      typeof card.requestFullscreen!=='function'
+    ){
+      const active=
+        viewer.classList.toggle(
+          'egp-ios-fullscreen'
+        );
+
+      document.documentElement.classList.toggle(
+        'egp-gallery-fullscreen-lock',
+        active
+      );
+
+      document.body.classList.toggle(
+        'egp-gallery-fullscreen-lock',
+        active
+      );
+
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(
+          egpGalleryRefitViewer
+        );
+      });
+
+      return;
+    }
 
     try{
       if(document.fullscreenElement){
@@ -302,6 +416,15 @@
       }
     }catch(_){}
   });
+
+  document.addEventListener(
+    'fullscreenchange',
+    ()=>{
+      requestAnimationFrame(
+        egpGalleryRefitViewer
+      );
+    }
+  );
 
 
   window.addEventListener('resize',()=>{

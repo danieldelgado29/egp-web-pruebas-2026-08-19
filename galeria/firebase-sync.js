@@ -1,22 +1,17 @@
 /*
- * EGP — GALERIA PUBLICA FIREBASE V2
+ * EGP — GALERIA PUBLICA FIREBASE V3
  *
- * Firebase = fuente compartida.
- * localStorage = respaldo local/offline.
- *
- * IMPORTANTE:
- * NO usa onSnapshot.
- * NO recarga continuamente.
- * Solo sincroniza al entrar/recargar la pagina.
+ * Firebase actualiza la Galeria en vivo.
+ * NO recarga la pagina.
+ * NO cierra fotos ni videos abiertos.
  */
 
 (async function(){
 
   const STORAGE_KEY='egp-gallery-items-v1';
-  const APPLIED_KEY='egp-gallery-firebase-applied-v2';
   const DOC_ID='site-gallery-public-v1';
 
-  function readLocalJSON(){
+  function localJSON(){
     try{
       const value=JSON.parse(
         localStorage.getItem(STORAGE_KEY)||'[]'
@@ -41,7 +36,7 @@
       {
         getFirestore,
         doc,
-        getDoc
+        onSnapshot
       }
     ]=await Promise.all([
       import(
@@ -58,10 +53,18 @@
     );
 
     if(!response.ok){
-      throw new Error('No se pudo leer configuracion.json');
+      throw new Error(
+        'No se pudo leer configuracion.json'
+      );
     }
 
     const cfg=await response.json();
+
+    if(!cfg.firebase){
+      throw new Error(
+        'Configuracion Firebase no encontrada'
+      );
+    }
 
     const appName='egp-galeria-publica';
 
@@ -69,7 +72,10 @@
       app=>app.name===appName
     )
       ? getApp(appName)
-      : initializeApp(cfg.firebase,appName);
+      : initializeApp(
+          cfg.firebase,
+          appName
+        );
 
     const db=getFirestore(app);
 
@@ -79,59 +85,60 @@
       DOC_ID
     );
 
-    const snap=await getDoc(ref);
+    onSnapshot(
+      ref,
+      snap=>{
 
-    if(!snap.exists()){
-      return;
-    }
+        if(!snap.exists()){
+          return;
+        }
 
-    const data=snap.data()||{};
+        const data=snap.data()||{};
 
-    if(!Array.isArray(data.items)){
-      return;
-    }
+        if(!Array.isArray(data.items)){
+          return;
+        }
 
-    const remoteJSON=JSON.stringify(data.items);
-    const localJSON=readLocalJSON();
+        const remoteJSON=
+          JSON.stringify(data.items);
 
-    if(remoteJSON===localJSON){
-      return;
-    }
+        if(remoteJSON===localJSON()){
+          return;
+        }
 
-    /*
-     * Guardamos los datos nuevos.
-     */
-    localStorage.setItem(
-      STORAGE_KEY,
-      remoteJSON
+        localStorage.setItem(
+          STORAGE_KEY,
+          remoteJSON
+        );
+
+        /*
+         * Avisamos al script original que hay datos nuevos.
+         * NO location.reload().
+         */
+        window.dispatchEvent(
+          new CustomEvent(
+            'egp-gallery-updated',
+            {
+              detail:{
+                updatedAt:data.updatedAt||Date.now()
+              }
+            }
+          )
+        );
+
+      },
+      err=>{
+        console.warn(
+          'EGP GALERIA PUBLICA: usando respaldo local',
+          err
+        );
+      }
     );
-
-    /*
-     * Una sola recarga puede ser necesaria porque script.js
-     * ya renderizo antes de que Firebase respondiera.
-     *
-     * El marcador evita cualquier bucle de recargas.
-     */
-    const version=String(
-      data.updatedAt ||
-      remoteJSON.length
-    );
-
-    const applied=sessionStorage.getItem(APPLIED_KEY);
-
-    if(applied!==version){
-      sessionStorage.setItem(
-        APPLIED_KEY,
-        version
-      );
-
-      location.reload();
-    }
 
   }catch(err){
 
     console.warn(
-      'EGP GALERIA PUBLICA: usando respaldo local',
+      'EGP GALERIA PUBLICA: Firebase no disponible; usando local',
       err
     );
 

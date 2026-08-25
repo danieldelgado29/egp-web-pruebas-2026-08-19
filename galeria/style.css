@@ -327,3 +327,105 @@ body{
 }
 
 /* FIN EGP GALERIA PUBLICA · SOLO PREVIEWS V1 */
+
+
+/* ==========================================================
+   EGP GALERIA — MINIATURAS MOVIL V1
+   ========================================================== */
+
+@media (max-width:700px){
+
+  #galleryGrid{
+    display:grid!important;
+    grid-template-columns:
+      repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+
+  #galleryGrid .gallery-item{
+    min-width:0!important;
+    width:100%!important;
+  }
+
+  #galleryGrid .media{
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    aspect-ratio:1 / 1!important;
+    overflow:hidden!important;
+  }
+
+  #galleryGrid .media img{
+    display:block!important;
+    width:100%!important;
+    height:100%!important;
+    max-width:none!important;
+    max-height:none!important;
+    object-fit:cover!important;
+    transform-origin:center center!important;
+  }
+
+  #galleryGrid .item-info{
+    padding:7px 8px!important;
+    min-width:0!important;
+  }
+
+  #galleryGrid .item-info strong{
+    display:block!important;
+    min-width:0!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:12px!important;
+    line-height:1.2!important;
+  }
+
+  #galleryGrid .item-info span{
+    font-size:10px!important;
+  }
+
+  #galleryGrid .play-badge{
+    font-size:20px!important;
+  }
+}
+
+/* FIN EGP GALERIA — MINIATURAS MOVIL V1 */
+
+
+/* ==========================================================
+   EGP GALERIA — FULLSCREEN IPHONE V1
+   ========================================================== */
+
+html.egp-gallery-fullscreen-lock,
+body.egp-gallery-fullscreen-lock{
+  overflow:hidden!important;
+}
+
+#viewer.egp-ios-fullscreen{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100vh!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+}
+
+#viewer.egp-ios-fullscreen .viewer-card{
+  width:100vw!important;
+  height:100vh!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  border-radius:0!important;
+}
+
+#viewer.egp-ios-fullscreen .viewer-stage{
+  width:100%!important;
+}
+
+/* FIN EGP GALERIA — FULLSCREEN IPHONE V1 */

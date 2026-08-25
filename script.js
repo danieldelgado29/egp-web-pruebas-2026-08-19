@@ -1876,15 +1876,44 @@ function renderizarEstadoPublico() {
   requestAnimationFrame(actualizarPosicionMenuPublico);
 }
 
-function mostrarApp() {
-  DOM.landing.hidden = true;
-  DOM.app.hidden = false;
-  document.body.classList.add("app-abierta");
+async function mostrarApp() {
 
   /*
-   * CARTA 2 queda representada en la URL.
-   * Así refresh conserva la pantalla correcta.
+   * CARTA 2:
+   * mantener Carta 1 visible mientras esperamos
+   * la foto REAL obtenida desde Firebase.
    */
+  try{
+    if(window.__EGP_CARTA2_FIREBASE_READY__){
+      await Promise.race([
+        window.__EGP_CARTA2_FIREBASE_READY__,
+        new Promise(resolve=>{
+          setTimeout(resolve,4000);
+        })
+      ]);
+    }
+  }catch(_){}
+
+  /*
+   * Preparar Carta 2 sin quitar todavía Carta 1.
+   * Dos frames permiten a Safari construirla antes
+   * del cambio visual.
+   */
+  DOM.app.hidden = false;
+  void DOM.app.offsetHeight;
+
+  await new Promise(resolve=>{
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(resolve);
+    });
+  });
+
+  /*
+   * Solo AHORA retiramos Carta 1.
+   */
+  DOM.landing.hidden = true;
+  document.body.classList.add("app-abierta");
+
   if(location.hash !== "#carta2"){
     history.replaceState(
       null,

@@ -1,7 +1,7 @@
 "use strict";
-const CACHE = "egp-musicos-v1.5.8.17-offline-real";
+const CACHE = "egp-musicos-touchdebug-20260825-01";
 const CORE = [
-  "./", "./index.html", "./style.css?v=1.5.8.17", "./app.js?v=1.5.8.16",
+  "./", "./index.html", "./style.css?v=1.5.8.17", "./app.js?v=touchdebug-20260825-01",
   "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png",
   "../canciones.json", "../configuracion.json"
 ];

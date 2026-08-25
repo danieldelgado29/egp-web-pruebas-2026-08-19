@@ -1530,56 +1530,405 @@ monitorBackBtn?.addEventListener("click", () => {
 
 
 /* =========================================================
-   EGP MUSICOS · TOUCH HORIZONTAL V2
-   Respuesta directa del boton real, sin hitbox externo
+   EGP MUSICOS · TOUCH GRANDE V3
+   Zonas tactiles amplias centradas sobre botones reales
    ========================================================= */
 
 (() => {
 
-  function horizontal(){
-    return window.innerWidth > window.innerHeight;
+  const monitor =
+    document.getElementById("monitorBtn");
+
+  const back =
+    document.getElementById("egpUi24rBack");
+
+  const overlay =
+    document.getElementById("egpUi24rOverlay");
+
+  if (!monitor || !back || !overlay) {
+    return;
   }
 
-  function bindTouchReal(button,action){
 
-    if(!button) return;
+  function crearZona(id, etiqueta) {
 
-    button.addEventListener(
-      "pointerdown",
-      event => {
+    let zona =
+      document.getElementById(id);
 
-        if(!horizontal()) return;
+    if (zona) {
+      zona.remove();
+    }
 
-        /*
-         * Ejecutamos la accion desde el propio boton real.
-         * preventDefault evita esperar al click sintetico
-         * de iOS y evita doble ejecucion.
-         */
-        event.preventDefault();
-        event.stopPropagation();
+    zona =
+      document.createElement("button");
 
-        action();
-      },
-      {passive:false}
+    zona.id = id;
+    zona.type = "button";
+    zona.setAttribute(
+      "aria-label",
+      etiqueta
+    );
+
+    /*
+     * No usamos ::before / ::after.
+     * Esta es una superficie táctil REAL,
+     * completamente transparente.
+     */
+    zona.style.cssText = `
+      position:fixed;
+      display:none;
+      width:1px;
+      height:1px;
+      left:0;
+      top:0;
+
+      border:0;
+      padding:0;
+      margin:0;
+
+      background:rgba(255,255,255,0.001);
+      color:transparent;
+
+      appearance:none;
+      -webkit-appearance:none;
+
+      touch-action:manipulation;
+      -webkit-tap-highlight-color:transparent;
+
+      user-select:none;
+      -webkit-user-select:none;
+
+      z-index:2147483647;
+      cursor:pointer;
+    `;
+
+    document.body.appendChild(zona);
+
+    return zona;
+  }
+
+
+  const zonaMonitor =
+    crearZona(
+      "egpMonitorTouchZone",
+      "Abrir monitoreo"
+    );
+
+  const zonaBack =
+    crearZona(
+      "egpUi24rBackTouchZone",
+      "Volver a la cola"
+    );
+
+
+  function horizontal() {
+    return (
+      window.innerWidth >
+      window.innerHeight
     );
   }
 
-  bindTouchReal(
-    monitorBtn,
+
+  function visible(elemento) {
+
+    if (!elemento) return false;
+
+    if (elemento.hidden) return false;
+
+    const css =
+      getComputedStyle(elemento);
+
+    if (
+      css.display === "none" ||
+      css.visibility === "hidden"
+    ) {
+      return false;
+    }
+
+    const r =
+      elemento.getBoundingClientRect();
+
+    return (
+      r.width > 1 &&
+      r.height > 1
+    );
+  }
+
+
+  function colocarZona(
+    zona,
+    boton,
+    ancho,
+    alto,
+    activa
+  ) {
+
+    if (!activa || !visible(boton)) {
+      zona.style.display = "none";
+      return;
+    }
+
+    const r =
+      boton.getBoundingClientRect();
+
+    const centroX =
+      r.left + r.width / 2;
+
+    const centroY =
+      r.top + r.height / 2;
+
+
+    /*
+     * Centramos el área grande exactamente
+     * sobre el botón visual.
+     *
+     * Si el botón está junto a un borde,
+     * desplazamos solamente la zona invisible
+     * hacia el interior de la pantalla.
+     */
+
+    let left =
+      centroX - ancho / 2;
+
+    let top =
+      centroY - alto / 2;
+
+
+    left =
+      Math.max(
+        0,
+        Math.min(
+          window.innerWidth - ancho,
+          left
+        )
+      );
+
+    top =
+      Math.max(
+        0,
+        Math.min(
+          window.innerHeight - alto,
+          top
+        )
+      );
+
+
+    zona.style.left =
+      Math.round(left) + "px";
+
+    zona.style.top =
+      Math.round(top) + "px";
+
+    zona.style.width =
+      ancho + "px";
+
+    zona.style.height =
+      alto + "px";
+
+    zona.style.display =
+      "block";
+  }
+
+
+  function actualizar() {
+
+    const landscape =
+      horizontal();
+
+    const ui24rAbierta =
+      overlay.classList.contains(
+        "is-open"
+      );
+
+
+    /*
+     * MONITOREO
+     * 180 x 84 px
+     *
+     * Solo mientras estamos viendo la cola.
+     */
+    colocarZona(
+      zonaMonitor,
+      monitor,
+      180,
+      84,
+      landscape &&
+      !ui24rAbierta &&
+      !monitor.disabled
+    );
+
+
+    /*
+     * ← COLA
+     * 160 x 84 px
+     *
+     * Solo cuando Ui24R está abierta.
+     * Queda por encima del iframe.
+     */
+    colocarZona(
+      zonaBack,
+      back,
+      160,
+      84,
+      landscape &&
+      ui24rAbierta
+    );
+  }
+
+
+  function pulsar(
+    event,
+    boton
+  ) {
+
+    if (!horizontal()) {
+      return;
+    }
+
+    if (
+      event.pointerType === "mouse" &&
+      event.button !== 0
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    /*
+     * Ejecutamos el CLICK ORIGINAL
+     * del botón.
+     *
+     * No duplicamos la lógica de
+     * abrir/cerrar Ui24R.
+     */
+    boton.click();
+
+    requestAnimationFrame(
+      actualizar
+    );
+
+    setTimeout(
+      actualizar,
+      80
+    );
+  }
+
+
+  zonaMonitor.addEventListener(
+    "pointerdown",
+    event => {
+      pulsar(
+        event,
+        monitor
+      );
+    },
+    {passive:false}
+  );
+
+
+  zonaBack.addEventListener(
+    "pointerdown",
+    event => {
+      pulsar(
+        event,
+        back
+      );
+    },
+    {passive:false}
+  );
+
+
+  window.addEventListener(
+    "resize",
+    actualizar
+  );
+
+
+  window.addEventListener(
+    "orientationchange",
     () => {
-      if(monitorAux){
-        egpAbrirMonitoreo();
-      }
+
+      setTimeout(
+        actualizar,
+        80
+      );
+
+      setTimeout(
+        actualizar,
+        250
+      );
+
     }
   );
 
-  bindTouchReal(
-    egpUi24rBack,
+
+  /*
+   * Cuando MONITOREO se muestra/oculta
+   * o Ui24R abre/cierra, recalculamos.
+   */
+
+  const observer =
+    new MutationObserver(
+      actualizar
+    );
+
+  observer.observe(
+    monitor,
+    {
+      attributes:true,
+      attributeFilter:[
+        "hidden",
+        "disabled",
+        "class",
+        "style"
+      ]
+    }
+  );
+
+  observer.observe(
+    back,
+    {
+      attributes:true,
+      attributeFilter:[
+        "hidden",
+        "class",
+        "style"
+      ]
+    }
+  );
+
+  observer.observe(
+    overlay,
+    {
+      attributes:true,
+      attributeFilter:[
+        "class",
+        "aria-hidden"
+      ]
+    }
+  );
+
+
+  document.addEventListener(
+    "click",
     () => {
-      egpCerrarMonitoreo();
+      requestAnimationFrame(
+        actualizar
+      );
+    },
+    true
+  );
+
+
+  requestAnimationFrame(
+    () => {
+      requestAnimationFrame(
+        actualizar
+      );
     }
   );
 
 })();
 
-/* FIN EGP MUSICOS · TOUCH HORIZONTAL V2 */
+/* FIN EGP MUSICOS · TOUCH GRANDE V3 */

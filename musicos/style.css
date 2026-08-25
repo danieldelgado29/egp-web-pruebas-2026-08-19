@@ -1607,34 +1607,3 @@ body{
     margin-right:3px!important;
   }
 }
-
-/* =========================================================
-   EGP TOUCH HORIZONTAL V2
-   El area tactil coincide con el boton visual
-   ========================================================= */
-
-@media (orientation:landscape){
-
-  .venue-monitor-row,
-  .venue-monitor-row .venue-actions{
-    position:relative!important;
-    z-index:1000!important;
-  }
-
-  #monitorBtn{
-    position:relative!important;
-    z-index:1001!important;
-    pointer-events:auto!important;
-    touch-action:manipulation!important;
-    -webkit-tap-highlight-color:transparent!important;
-  }
-
-  #egpUi24rBack{
-    z-index:2147483646!important;
-    pointer-events:auto!important;
-    touch-action:manipulation!important;
-    -webkit-tap-highlight-color:transparent!important;
-  }
-}
-
-/* FIN EGP TOUCH HORIZONTAL V2 */

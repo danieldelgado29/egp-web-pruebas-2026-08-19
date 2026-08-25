@@ -1685,22 +1685,24 @@ monitorBackBtn?.addEventListener("click", () => {
     const centroX =
       r.left + r.width / 2;
 
+    const centroY =
+      r.top + r.height / 2;
+
 
     /*
-     * Horizontal:
-     * centrado exactamente sobre el botón.
+     * Centramos el área grande exactamente
+     * sobre el botón visual.
      *
-     * Vertical:
-     * empieza casi en el borde superior
-     * del botón y todo el espacio adicional
-     * crece principalmente hacia abajo.
+     * Si el botón está junto a un borde,
+     * desplazamos solamente la zona invisible
+     * hacia el interior de la pantalla.
      */
 
     let left =
       centroX - ancho / 2;
 
     let top =
-      r.top - 4;
+      centroY - alto / 2;
 
 
     left =
@@ -1759,8 +1761,8 @@ monitorBackBtn?.addEventListener("click", () => {
     colocarZona(
       zonaMonitor,
       monitor,
-      220,
-      100,
+      180,
+      84,
       landscape &&
       !ui24rAbierta &&
       !monitor.disabled
@@ -1777,8 +1779,8 @@ monitorBackBtn?.addEventListener("click", () => {
     colocarZona(
       zonaBack,
       back,
-      190,
-      100,
+      160,
+      84,
       landscape &&
       ui24rAbierta
     );

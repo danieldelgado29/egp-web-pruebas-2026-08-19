@@ -1704,6 +1704,10 @@ monitorBackBtn?.addEventListener("click", () => {
     let top =
       centroY - (alto + 24) / 2;
 
+    if (zona.id === "egpUi24rBackTouchZone") {
+      top -= 3;
+    }
+
 
     left =
       Math.max(
@@ -1761,7 +1765,7 @@ monitorBackBtn?.addEventListener("click", () => {
     colocarZona(
       zonaMonitor,
       monitor,
-      180,
+      204,
       60,
       landscape &&
       !ui24rAbierta &&
@@ -1779,8 +1783,8 @@ monitorBackBtn?.addEventListener("click", () => {
     colocarZona(
       zonaBack,
       back,
-      160,
-      60,
+      184,
+      54,
       landscape &&
       ui24rAbierta
     );

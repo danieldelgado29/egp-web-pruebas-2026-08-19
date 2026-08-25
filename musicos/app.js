@@ -1760,7 +1760,7 @@ monitorBackBtn?.addEventListener("click", () => {
       zonaMonitor,
       monitor,
       220,
-      120,
+      100,
       landscape &&
       !ui24rAbierta &&
       !monitor.disabled
@@ -1778,7 +1778,7 @@ monitorBackBtn?.addEventListener("click", () => {
       zonaBack,
       back,
       190,
-      120,
+      100,
       landscape &&
       ui24rAbierta
     );

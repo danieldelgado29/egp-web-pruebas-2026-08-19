@@ -1,16 +1,22 @@
 /*
- * EGP — GALERIA PUBLICA FIREBASE V1
+ * EGP — GALERIA PUBLICA FIREBASE V2
  *
- * Firebase es la fuente compartida.
- * localStorage queda como respaldo offline.
+ * Firebase = fuente compartida.
+ * localStorage = respaldo local/offline.
+ *
+ * IMPORTANTE:
+ * NO usa onSnapshot.
+ * NO recarga continuamente.
+ * Solo sincroniza al entrar/recargar la pagina.
  */
 
 (async function(){
 
   const STORAGE_KEY='egp-gallery-items-v1';
+  const APPLIED_KEY='egp-gallery-firebase-applied-v2';
   const DOC_ID='site-gallery-public-v1';
 
-  function currentJSON(){
+  function readLocalJSON(){
     try{
       const value=JSON.parse(
         localStorage.getItem(STORAGE_KEY)||'[]'
@@ -35,7 +41,7 @@
       {
         getFirestore,
         doc,
-        onSnapshot
+        getDoc
       }
     ]=await Promise.all([
       import(
@@ -52,9 +58,7 @@
     );
 
     if(!response.ok){
-      throw new Error(
-        'No se pudo leer configuracion.json'
-      );
+      throw new Error('No se pudo leer configuracion.json');
     }
 
     const cfg=await response.json();
@@ -65,10 +69,7 @@
       app=>app.name===appName
     )
       ? getApp(appName)
-      : initializeApp(
-          cfg.firebase,
-          appName
-        );
+      : initializeApp(cfg.firebase,appName);
 
     const db=getFirestore(app);
 
@@ -78,55 +79,59 @@
       DOC_ID
     );
 
-    onSnapshot(
-      ref,
-      snap=>{
+    const snap=await getDoc(ref);
 
-        if(!snap.exists()){
-          return;
-        }
+    if(!snap.exists()){
+      return;
+    }
 
-        const data=snap.data()||{};
+    const data=snap.data()||{};
 
-        if(!Array.isArray(data.items)){
-          return;
-        }
+    if(!Array.isArray(data.items)){
+      return;
+    }
 
-        const remoteJSON=
-          JSON.stringify(data.items);
+    const remoteJSON=JSON.stringify(data.items);
+    const localJSON=readLocalJSON();
 
-        if(remoteJSON===currentJSON()){
-          return;
-        }
+    if(remoteJSON===localJSON){
+      return;
+    }
 
-        localStorage.setItem(
-          STORAGE_KEY,
-          remoteJSON
-        );
-
-        /*
-         * El script original de Galeria está encapsulado.
-         * Una sola recarga hace que renderice inmediatamente
-         * la lista nueva desde localStorage.
-         *
-         * No genera bucle:
-         * después de recargar ambos JSON ya son iguales.
-         */
-        location.reload();
-
-      },
-      err=>{
-        console.warn(
-          'EGP GALERIA PUBLICA: usando respaldo local',
-          err
-        );
-      }
+    /*
+     * Guardamos los datos nuevos.
+     */
+    localStorage.setItem(
+      STORAGE_KEY,
+      remoteJSON
     );
+
+    /*
+     * Una sola recarga puede ser necesaria porque script.js
+     * ya renderizo antes de que Firebase respondiera.
+     *
+     * El marcador evita cualquier bucle de recargas.
+     */
+    const version=String(
+      data.updatedAt ||
+      remoteJSON.length
+    );
+
+    const applied=sessionStorage.getItem(APPLIED_KEY);
+
+    if(applied!==version){
+      sessionStorage.setItem(
+        APPLIED_KEY,
+        version
+      );
+
+      location.reload();
+    }
 
   }catch(err){
 
     console.warn(
-      'EGP GALERIA PUBLICA: Firebase no disponible; usando local',
+      'EGP GALERIA PUBLICA: usando respaldo local',
       err
     );
 

@@ -266,11 +266,10 @@ window.egpAplicarFotoCache=function(pictureId,base){
        ========================================================= -->
   <div id="app" class="app" hidden>
     <header class="hero" id="inicio">
-      <picture class="hero__media" id="egpCarta2Picture" aria-hidden="true" style="visibility:hidden">
-        <source media="(max-width: 760px)" srcset="assets/hero-mobile.jpg">
+      <picture class="hero__media" id="egpCarta2Picture" aria-hidden="true">
+        <source media="(max-width: 760px)" srcset="">
         <img
           class="hero__imagen"
-          src="assets/hero.jpg"
           alt=""
           width="1800"
           height="1200"
@@ -278,15 +277,10 @@ window.egpAplicarFotoCache=function(pictureId,base){
       </picture>
 
       <script>
-        if(
-          window.egpAplicarFotoCache?.(
-            'egpCarta2Picture',
-            'carta2'
-          )
-        ){
-          document.getElementById('egpCarta2Picture')
-            ?.style.setProperty('visibility','visible');
-        }
+        window.egpAplicarFotoCache?.(
+          'egpCarta2Picture',
+          'carta2'
+        );
       </script>
 
       <div class="hero__overlay" aria-hidden="true"></div>
@@ -1315,10 +1309,6 @@ window.egpAplicarFotoCache=function(pictureId,base){
     const source=picture?.querySelector('source');
     if(source) source.srcset=d.src;
 
-    if(picture){
-      picture.style.visibility='visible';
-    }
-
     el.style.objectPosition=(d.x??50)+'% '+(d.y??50)+'%';
 
     if(d.zoom!==undefined){
@@ -1326,6 +1316,19 @@ window.egpAplicarFotoCache=function(pictureId,base){
       el.style.transformOrigin=(d.x??50)+'% '+(d.y??50)+'%';
     }
 
+
+    try{
+      const cache=JSON.parse(
+        localStorage.getItem('egp-firebase-photo-cache')||'{}'
+      );
+
+      cache[key]=d;
+
+      localStorage.setItem(
+        'egp-firebase-photo-cache',
+        JSON.stringify(cache)
+      );
+    }catch(_){}
 
     console.log('EGP FOTO FIREBASE:',key,d.updatedAt||'');
 

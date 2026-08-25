@@ -1609,43 +1609,32 @@ body{
 }
 
 /* =========================================================
-   EGP TOUCH HORIZONTAL V1
-   Amplia zona tactil sin cambiar aspecto ni posicion
+   EGP TOUCH HORIZONTAL V2
+   El area tactil coincide con el boton visual
    ========================================================= */
 
 @media (orientation:landscape){
 
-  #monitorBtn,
-  #egpUi24rBack{
+  .venue-monitor-row,
+  .venue-monitor-row .venue-actions{
+    position:relative!important;
+    z-index:1000!important;
+  }
+
+  #monitorBtn{
+    position:relative!important;
+    z-index:1001!important;
+    pointer-events:auto!important;
     touch-action:manipulation!important;
     -webkit-tap-highlight-color:transparent!important;
-    -webkit-user-select:none!important;
-    user-select:none!important;
-  }
-
-  /* Sigue exactamente en la unidad FOCO + MONITOREO */
-  .venue-monitor-row #monitorBtn{
-    position:relative!important;
-    z-index:10!important;
-    overflow:visible!important;
   }
 
   #egpUi24rBack{
-    overflow:visible!important;
-  }
-
-  /* Área invisible adicional alrededor del botón */
-  .venue-monitor-row #monitorBtn::before,
-  #egpUi24rBack::before{
-    content:"";
-    position:absolute;
-    top:-10px;
-    right:-10px;
-    bottom:-10px;
-    left:-10px;
-    background:transparent;
-    pointer-events:auto;
+    z-index:2147483646!important;
+    pointer-events:auto!important;
+    touch-action:manipulation!important;
+    -webkit-tap-highlight-color:transparent!important;
   }
 }
 
-/* FIN EGP TOUCH HORIZONTAL V1 */
+/* FIN EGP TOUCH HORIZONTAL V2 */

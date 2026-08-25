@@ -1527,3 +1527,59 @@ monitorBackBtn?.addEventListener("click", () => {
     }
   });
 })();
+
+
+/* =========================================================
+   EGP MUSICOS · TOUCH HORIZONTAL V2
+   Respuesta directa del boton real, sin hitbox externo
+   ========================================================= */
+
+(() => {
+
+  function horizontal(){
+    return window.innerWidth > window.innerHeight;
+  }
+
+  function bindTouchReal(button,action){
+
+    if(!button) return;
+
+    button.addEventListener(
+      "pointerdown",
+      event => {
+
+        if(!horizontal()) return;
+
+        /*
+         * Ejecutamos la accion desde el propio boton real.
+         * preventDefault evita esperar al click sintetico
+         * de iOS y evita doble ejecucion.
+         */
+        event.preventDefault();
+        event.stopPropagation();
+
+        action();
+      },
+      {passive:false}
+    );
+  }
+
+  bindTouchReal(
+    monitorBtn,
+    () => {
+      if(monitorAux){
+        egpAbrirMonitoreo();
+      }
+    }
+  );
+
+  bindTouchReal(
+    egpUi24rBack,
+    () => {
+      egpCerrarMonitoreo();
+    }
+  );
+
+})();
+
+/* FIN EGP MUSICOS · TOUCH HORIZONTAL V2 */

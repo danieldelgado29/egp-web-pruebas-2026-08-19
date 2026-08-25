@@ -1877,6 +1877,39 @@ function renderizarEstadoPublico() {
 }
 
 function mostrarApp() {
+  const arranqueCarta2 =
+    document.documentElement.classList.contains("egp-carta2-arranque");
+
+  /*
+   * Entrada normal Carta 1 -> Carta 2:
+   * si Firebase sigue preparando la foto real, esperamos esa foto.
+   *
+   * mostrarApp NO es async.
+   * La restauración por refresh NO entra en esta espera.
+   */
+  if(
+    !arranqueCarta2 &&
+    !window.__EGP_CARTA2_ENTRADA_LISTA__ &&
+    !window.__EGP_CARTA2_FIREBASE_READY_DONE__ &&
+    window.__EGP_CARTA2_FIREBASE_READY__ &&
+    typeof window.__EGP_CARTA2_FIREBASE_READY__.then === "function"
+  ){
+    if(window.__EGP_CARTA2_ENTRADA_ESPERANDO__) return;
+
+    window.__EGP_CARTA2_ENTRADA_ESPERANDO__ = true;
+
+    Promise.race([
+      window.__EGP_CARTA2_FIREBASE_READY__,
+      new Promise(resolve => window.setTimeout(resolve, 2000))
+    ]).then(() => {
+      window.__EGP_CARTA2_ENTRADA_ESPERANDO__ = false;
+      window.__EGP_CARTA2_ENTRADA_LISTA__ = true;
+      mostrarApp();
+    });
+
+    return;
+  }
+
   DOM.landing.hidden = true;
   DOM.app.hidden = false;
   document.body.classList.add("app-abierta");
@@ -1892,6 +1925,13 @@ function mostrarApp() {
       location.pathname + location.search + "#carta2"
     );
   }
+
+  /*
+   * El CSS de arranque temprano ya cumplió su función.
+   * Desde aquí manda nuevamente el estado normal del DOM.
+   */
+  document.documentElement.classList.remove("egp-carta2-arranque");
+  window.__EGP_CARTA2_ENTRADA_LISTA__ = false;
 
   fijarMenu();
   window.scrollTo({ top: 0, behavior: "smooth" });

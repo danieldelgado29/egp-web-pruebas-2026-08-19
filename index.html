@@ -75,7 +75,24 @@
     });
   </script>
 
-  <script type="module" src="script.js?v=carta2-estable-1787613042"></script>
+  <script type="module" src="script.js?v=carta2-aislado-1787619152"></script>
+
+  <!-- EGP-CARTA2-ARRANQUE-TEMPRANO -->
+  <script>
+    if(location.hash === "#carta2"){
+      document.documentElement.classList.add("egp-carta2-arranque");
+    }
+  </script>
+  <style>
+    html.egp-carta2-arranque #landing {
+      display: none !important;
+    }
+
+    html.egp-carta2-arranque #app {
+      display: block !important;
+    }
+  </style>
+
 </head>
 
 <body>
@@ -1260,7 +1277,7 @@ window.egpAplicarFotoCache=function(pictureId,base){
 
 
 <script type="module" class="egpFirebaseFotosPublicas">
-(async function(){
+window.__EGP_CARTA2_FIREBASE_READY__=(async function(){
 
   try{
     const mobile=
@@ -1307,7 +1324,41 @@ window.egpAplicarFotoCache=function(pictureId,base){
 
     const picture=document.getElementById('egpCarta2Picture');
     const source=picture?.querySelector('source');
+
     if(source) source.srcset=d.src;
+
+    /*
+     * EGP CARTA 2:
+     * esperar que la foto REAL recibida de Firebase esté cargada
+     * y decodificada antes de permitir la transición desde Carta 1.
+     */
+    await new Promise(resolve=>{
+      if(el.complete && el.naturalWidth){
+        resolve();
+        return;
+      }
+
+      let terminado=false;
+
+      const terminar=()=>{
+        if(terminado) return;
+        terminado=true;
+        resolve();
+      };
+
+      el.addEventListener('load',terminar,{once:true});
+      el.addEventListener('error',terminar,{once:true});
+      window.setTimeout(terminar,1800);
+    });
+
+    try{
+      if(typeof el.decode==='function'){
+        await el.decode();
+      }
+    }catch(_){}
+
+    window.__EGP_CARTA2_FIREBASE_READY_DONE__=true;
+
 
     el.style.objectPosition=(d.x??50)+'% '+(d.y??50)+'%';
 

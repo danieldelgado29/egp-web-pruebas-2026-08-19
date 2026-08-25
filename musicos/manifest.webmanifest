@@ -2,9 +2,9 @@
   "name": "EGP MUSICOS",
   "short_name": "EGP MUSICOS",
   "description": "Cola activa del show para músicos.",
-  "id": "/elena-girjoaba-music-version-1.6/musicos/",
-  "start_url": "/elena-girjoaba-music-version-1.6/musicos/?musicos_pwa=1",
-  "scope": "/elena-girjoaba-music-version-1.6/musicos/",
+  "id": "/egp-web-pruebas-2026-08-19/musicos/",
+  "start_url": "/egp-web-pruebas-2026-08-19/musicos/?musicos_pwa=1",
+  "scope": "/egp-web-pruebas-2026-08-19/musicos/",
   "display": "standalone",
   "display_override": [
     "standalone",

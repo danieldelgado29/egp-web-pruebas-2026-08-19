@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base href="../">
+  <script src="./egp-photo-responsive.js?v=responsive-photos-20260824"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080808">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EG Music Panel">
+  <meta name="description" content="Elena Girjoaba Music — Música a la Carta. Disfruta de una experiencia interactiva y elige la canción que quieres escuchar.">
+  <meta name="author" content="Elena Girjoaba Music">
+  <meta name="application-name" content="Elena Girjoaba Music">
+  <meta name="version" content="2.0">
+
+  <meta property="og:title" content="Elena Girjoaba Music">
+  <meta property="og:description" content="Música en vivo para tu evento. Tú eliges la canción, nosotros la tocamos.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/foto-banda.jpg">
+
+  <title>Elena Girjoaba Music | Música a la Carta</title>
+
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
+
+  <link rel="stylesheet" href="style.css?v=20260819-180423">
+
+  <script>
+    // Respaldo independiente para desbloquear Música a la Carta.
+    // Funciona aunque Firebase o el script principal fallen.
+    document.addEventListener("DOMContentLoaded", function () {
+      const instagram = document.getElementById("seguirInstagram");
+      const continuar = document.getElementById("continuarExperiencia");
+      const entrar = document.getElementById("entrarRepertorio");
+
+      if (!instagram || !continuar || !entrar) return;
+
+      function mostrarBoton() {
+        continuar.hidden = false;
+        entrar.hidden = false;
+        continuar.classList.remove("is-visible");
+        void continuar.offsetWidth;
+        continuar.classList.add("is-visible");
+      }
+
+      instagram.addEventListener("click", function () {
+        try {
+          sessionStorage.setItem("egmInstagramVisitado", "1");
+          sessionStorage.setItem(
+            "egmInstagramDesbloqueo",
+            String(Date.now() + 3000)
+          );
+        } catch (error) {}
+
+        window.setTimeout(mostrarBoton, 3000);
+      });
+
+      try {
+        const visitado =
+          sessionStorage.getItem("egmInstagramVisitado") === "1";
+        const desbloqueo = Number(
+          sessionStorage.getItem("egmInstagramDesbloqueo") || 0
+        );
+
+        if (visitado) {
+          window.setTimeout(
+            mostrarBoton,
+            Math.max(0, desbloqueo - Date.now())
+          );
+        }
+      } catch (error) {}
+    });
+  </script>
+
+  <script type="module" src="script.js?v=carta2-aislado-1787619152"></script>
+
+  <!-- EGP-CARTA2-ARRANQUE-TEMPRANO -->
+  <script>
+    if(location.hash === "#carta2"){
+      document.documentElement.classList.add("egp-carta2-arranque");
+    }
+  </script>
+  <style>
+    html.egp-carta2-arranque #landing {
+      display: none !important;
+    }
+
+    html.egp-carta2-arranque #app {
+      display: block !important;
+    }
+  </style>
+
+</head>
+
+<body>
+
+<script>
+/*
+ * EGP — CACHE INMEDIATA CARTA 1 / CARTA 2
+ * Misma fuente usada por Inicio.
+ */
+window.egpAplicarFotoCache=function(pictureId,base){
+  try{
+    const mobile=
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'');
+
+    const key=base+'__'+(mobile?'mobile':'desktop');
+
+    const cache=JSON.parse(
+      localStorage.getItem('egp-firebase-photo-cache')||'{}'
+    );
+
+    const d=cache[key];
+
+    if(!d || !d.src) return false;
+
+    const picture=document.getElementById(pictureId);
+    if(!picture) return false;
+
+    const img=picture.querySelector('img');
+    const source=picture.querySelector('source');
+
+    if(img){
+      img.src=d.src;
+      img.style.objectPosition=
+        (d.x??50)+'% '+(d.y??50)+'%';
+
+      if(d.zoom!==undefined){
+        img.style.transform=
+          'scale('+(Number(d.zoom)/100)+')';
+
+        img.style.transformOrigin=
+          (d.x??50)+'% '+(d.y??50)+'%';
+      }
+    }
+
+    if(source){
+      source.srcset=d.src;
+    }
+
+    return true;
+
+  }catch(_){
+    return false;
+  }
+};
+</script>
+    <button id="panelBackButton" class="panel-back-button" type="button" aria-label="Volver al panel de control" hidden>← Panel</button>
+    <a class="skip-link" href="#contenidoPrincipal">Ir al contenido principal</a>
+
+  <!-- =========================================================
+       PANTALLA INICIAL / LANDING
+       ========================================================= -->
+  <section
+    id="landing"
+    class="landing"
+    aria-labelledby="landingTitulo"
+  >
+    <div class="landing__fondo" aria-hidden="true">
+      <picture class="landing__media" id="egpCarta1Picture">
+        <source media="(max-width: 760px)" srcset="assets/foto-banda-mobile.jpg">
+        <img
+          class="landing__imagen"
+          src="assets/foto-banda.jpg"
+          alt=""
+          width="1800"
+          height="1200"
+          fetchpriority="high"
+        >
+      </picture>
+
+      <script>
+        window.egpAplicarFotoCache?.(
+          'egpCarta1Picture',
+          'carta1'
+        );
+      </script>
+    </div>
+
+    <div class="landing__overlay" aria-hidden="true"></div>
+
+    <div class="landing__contenido">
+      <p class="landing__marca">ELENA GIRJOABA MUSIC</p>
+
+      <h1 id="landingTitulo" class="landing__titulo">
+        <span
+          id="adminTriggerPortada"
+          class="landing__admin-trigger"
+          aria-label="Acceso al Panel Maestro"
+        >Música</span> en vivo para tu evento
+      </h1>
+
+      <p class="landing__descripcion">
+        Explora nuestro repertorio y haz de este momento una experiencia inolvidable.
+      </p>
+
+
+      <div id="continuarExperiencia" class="landing__continuar" aria-live="polite" hidden>
+        <p class="landing__continuar-etiqueta">SIGUIENTE PASO</p>
+        <button
+          id="entrarRepertorio"
+          class="boton boton--repertorio boton--repertorio-destacado"
+          type="button"
+          aria-controls="app"
+        >
+          <span class="boton__icono boton__icono--grande" aria-hidden="true">♪</span>
+          <span class="boton__contenido">
+            <strong>Música a la Carta</strong>
+            <small>Entra y elige tu canción</small>
+          </span>
+          <span class="boton__avance" aria-hidden="true">›</span>
+        </button>
+      </div>
+
+      <section class="bloque-formatos" aria-labelledby="formatosTitulo">
+        <h2 id="formatosTitulo" class="formatos__encabezado">Formatos disponibles</h2>
+
+        <div class="formatos" aria-label="Formatos disponibles">
+        <article class="formato">
+          <span class="formato__icono" aria-hidden="true">🎤</span>
+          <h2 class="formato__titulo">Dúo</h2>
+          <p class="formato__texto">Un formato íntimo, cercano y versátil.</p>
+        </article>
+
+        <article class="formato">
+          <span class="formato__icono" aria-hidden="true">🥁</span>
+          <h2 class="formato__titulo">Trío</h2>
+          <p class="formato__texto">Más energía para celebraciones y eventos especiales.</p>
+        </article>
+
+        <article class="formato">
+          <span class="formato__icono" aria-hidden="true">🎸</span>
+          <h2 class="formato__titulo">Banda completa</h2>
+          <p class="formato__texto">La fuerza de un concierto para una experiencia inolvidable.</p>
+        </article>
+        </div>
+      </section>
+
+      <div class="landing__acciones">
+        <a
+          id="seguirInstagram"
+          class="boton boton--instagram"
+          href="https://instagram.com/elenagirjoabamusic"
+          target="_blank"
+          data-instagram-app="instagram://user?username=elenagirjoabamusic"
+          data-instagram-web="https://instagram.com/elenagirjoabamusic"
+          rel="noopener noreferrer"
+          aria-label="Abrir Instagram y seguir a Elena Girjoaba Music"
+        >
+          <span class="boton__icono" aria-hidden="true">◎</span>
+          <span class="boton__texto-doble"><strong>Síguenos para desbloquear la lista de canciones</strong><small>@elenagirjoabamusic</small></span>
+        </a>
+      </div>
+
+      <p class="landing__repertorio">
+        Más de 130 canciones en inglés y español.
+        <strong>Tú eliges la canción, nosotros la tocamos.</strong>
+      </p>
+
+      <a
+        class="landing__contrataciones landing__cotizacion"
+        href="https://wa.me/593987388915"
+        rel="noopener noreferrer"
+      >
+        <span aria-hidden="true">💬</span>
+        <span>
+          <strong>Cotizar mi evento</strong>
+        </span>
+      </a>
+
+      <p class="landing__tipos-evento">
+        Bodas · Eventos corporativos · Cumpleaños · Fiestas privadas
+      </p>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       APLICACIÓN / REPERTORIO
+       ========================================================= -->
+  <div id="app" class="app" hidden>
+    <header class="hero" id="inicio">
+      <picture class="hero__media" id="egpCarta2Picture" aria-hidden="true">
+        <source media="(max-width: 760px)" srcset="">
+        <img
+          class="hero__imagen"
+          alt=""
+          width="1800"
+          height="1200"
+        >
+      </picture>
+
+      <script>
+        window.egpAplicarFotoCache?.(
+          'egpCarta2Picture',
+          'carta2'
+        );
+      </script>
+
+      <div class="hero__overlay" aria-hidden="true"></div>
+
+      <nav class="barra" aria-label="Navegación principal">
+        <a class="barra__marca" href="#inicio" aria-label="Ir al inicio">
+          ELENA GIRJOABA MUSIC
+        </a>
+
+        <div class="barra__enlaces">
+          <a
+            href="https://instagram.com/elenagirjoabamusic"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Instagram
+          </a>
+
+          <a
+            class="barra__contrataciones"
+            href="https://wa.me/593987388915"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            💬 Cotizar mi evento
+          </a>
+        </div>
+      </nav>
+
+      <div class="hero__contenido">
+        <p class="hero__marca">ELENA GIRJOABA MUSIC</p>
+
+        <h2 class="hero__titulo">MÚSICA A LA CARTA</h2>
+
+        <p class="hero__slogan">
+          Tú eliges la canción, nosotros la tocamos.
+        </p>
+
+        <a class="hero__flecha" href="#contenidoPrincipal" aria-label="Bajar al repertorio">
+          <span aria-hidden="true">⌄</span>
+        </a>
+      </div>
+    </header>
+
+    <main id="contenidoPrincipal" class="contenido-principal">
+      <section class="explorador" aria-labelledby="tituloExplorador">
+        <div class="explorador__encabezado">
+          <p class="explorador__eyebrow">MÚSICA A LA CARTA</p>
+          <h2 id="tituloExplorador" class="explorador__titulo">
+            Explora nuestro repertorio
+          </h2>
+          <p class="explorador__descripcion">
+            Busca por nombre, artista o explora las canciones por género.
+          </p>
+        </div>
+
+        <div id="menuCanciones" class="menu-ancla" aria-hidden="true"></div>
+
+        <div id="controlesCanciones" class="controles-canciones">
+          <button id="mostrarTodo" class="mostrar-todo mostrar-todo--principal" type="button">
+            <span class="mostrar-todo__icono" aria-hidden="true">♫</span>
+            <span class="mostrar-todo__contenido">
+              <strong id="textoMostrarTodo">Ver las 130 canciones</strong>
+              <small><span id="totalCancionesBoton">0</span> canciones disponibles</small>
+            </span>
+            <span class="mostrar-todo__flecha" aria-hidden="true">›</span>
+          </button>
+
+          <div class="categorias" role="group" aria-label="Filtrar canciones por categoría">
+            <button class="categoria categoria--rock" type="button" data-categoria="Rock">
+              Rock
+            </button>
+            <button class="categoria" type="button" data-categoria="Rock Español">
+              Rock Español
+            </button>
+            <button class="categoria" type="button" data-categoria="Pop">
+              Pop
+            </button>
+            <button class="categoria" type="button" data-categoria="Bailables">
+              Bailables
+            </button>
+            <button class="categoria" type="button" data-categoria="Románticas">
+              Románticas
+            </button>
+            <button class="categoria" type="button" data-categoria="Reggae">
+              Reggae
+            </button>
+            <button class="categoria" type="button" data-categoria="Blues">
+              Blues
+            </button>
+            <button class="categoria" type="button" data-categoria="Jazz">
+              Jazz
+            </button>
+          </div>
+
+          <div class="buscador">
+            <label class="sr-only" for="buscar">Buscar canción o artista</label>
+
+            <span class="buscador__icono" aria-hidden="true">⌕</span>
+
+            <input
+              id="buscar"
+              class="buscador__campo"
+              type="search"
+              inputmode="search"
+              autocomplete="off"
+              placeholder="Buscar canción o artista..."
+              aria-describedby="ayudaBusqueda"
+            >
+
+            <button
+              id="limpiarBusqueda"
+              class="buscador__limpiar"
+              type="button"
+              aria-label="Limpiar búsqueda"
+              hidden
+            >
+              ×
+            </button>
+          </div>
+
+          <p id="ayudaBusqueda" class="buscador__ayuda">
+            Puedes escribir, por ejemplo: “Maná”, “Música Ligera” o “Amy Winehouse”.
+          </p>
+        </div>
+
+        <div class="estado-lista" aria-live="polite" aria-atomic="true">
+          <p id="contadorCanciones" class="contador-canciones">
+            Cargando canciones...
+          </p>
+        </div>
+
+        <div
+          id="listaCanciones"
+          class="lista-canciones" data-modo="inicial"
+          role="list"
+          aria-label="Lista de canciones"
+        ></div>
+
+        <div id="sinResultados" class="sin-resultados" hidden>
+          <span class="sin-resultados__icono" aria-hidden="true">♪</span>
+          <h3>No encontramos esa canción.</h3>
+          <p>
+            Prueba escribiendo parte del título o el artista.
+          </p>
+        </div>
+
+        <div id="errorCarga" class="error-carga" role="alert" hidden>
+          <h3>No pudimos cargar las canciones.</h3>
+          <p>
+            Abre esta página desde GitHub Pages o mediante un servidor local e inténtalo nuevamente.
+          </p>
+          <button id="reintentarCarga" type="button">Reintentar</button>
+        </div>
+      </section>
+
+
+      <section id="estadoShowPublico" class="cola-publica-compacta" aria-labelledby="colaPublicaTitulo" hidden>
+        <div class="cola-publica-compacta__encabezado">
+          <p class="explorador__eyebrow">SHOW EN VIVO</p>
+          <h2 id="colaPublicaTitulo">Canciones a la cola</h2>
+        </div>
+
+        <ol id="colaPublica" class="cola-publica-compacta__lista"></ol>
+
+        <p id="colaPublicaVacia" class="cola-publica-compacta__vacio">
+          Todavía no hay canciones a la cola.
+        </p>
+
+        <div hidden>
+          <ul id="tocadasPublicas"></ul>
+          <p id="tocadasPublicasVacia"></p>
+        </div>
+      </section>
+
+      <section class="mensaje-final mensaje-final--acciones" aria-labelledby="mensajeFinalTitulo">
+        <p class="mensaje-final__simbolo" aria-hidden="true">✦</p>
+        <h2 id="mensajeFinalTitulo">Gracias por acompañarnos</h2>
+
+        <div class="cierre-acciones">
+          <article class="cierre-accion">
+            <p class="cierre-accion__etiqueta">¿Te gustó nuestra música?</p>
+            <a
+              class="boton boton--cotizar-final"
+              href="https://wa.me/593987388915"
+              rel="noopener noreferrer"
+            >
+              <span aria-hidden="true">💬</span>
+              <span class="boton__texto-doble">
+                <strong>Cotizar mi evento</strong>
+              </span>
+            </a>
+            <p class="cierre-accion__nota">
+              Bodas · Eventos corporativos · Cumpleaños · Fiestas privadas
+            </p>
+          </article>
+
+          <article class="cierre-accion">
+            <p class="cierre-accion__etiqueta">Sigamos conectados</p>
+            <p class="cierre-accion__descripcion">
+              Conoce nuevos videos, próximos eventos y las nuevas canciones que se suman a nuestro repertorio.
+            </p>
+            <a
+              class="boton boton--instagram cierre-instagram"
+              href="https://instagram.com/elenagirjoabamusic"
+              rel="noopener noreferrer"
+            >
+              <span class="boton__icono" aria-hidden="true">◎</span>
+              <span class="boton__texto-doble">
+                <strong>Seguir en Instagram</strong>
+                <small>@elenagirjoabamusic</small>
+              </span>
+            </a>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer__contenido">
+        <div class="footer__marca">
+          <strong>ELENA GIRJOABA MUSIC</strong>
+          <span>Música en vivo para momentos inolvidables</span>
+        </div>
+
+        <div class="footer__enlaces">
+          <a
+            href="https://instagram.com/elenagirjoabamusic"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer__boton footer__boton--instagram"
+          >
+            ◎ Instagram · @elenagirjoabamusic
+          </a>
+
+          <a
+            href="https://wa.me/593987388915"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            💬 Cotizar mi evento
+          </a>
+        </div>
+      </div>
+
+      <button id="adminTrigger" class="footer__copyright footer__admin-trigger" type="button" aria-label="Configuración de listas">
+        © <span id="anioActual"></span> Elena Girjoaba Music.
+      </button>
+    </footer>
+
+    <button
+      id="volverArriba"
+      class="volver-arriba"
+      type="button"
+      aria-label="Volver a Ver todas las canciones, categorías y buscador"
+    >
+      <span class="volver-arriba__flecha" aria-hidden="true">↑</span>
+      <span class="volver-arriba__texto">Menú</span>
+    </button>
+  </div>
+
+
+  <div id="adminModal" class="admin-modal" hidden>
+    <div class="admin-modal__fondo" data-cerrar-admin></div>
+
+    <section class="admin-panel admin-panel--manager" role="dialog" aria-modal="true" aria-labelledby="adminTitulo">
+      <div id="adminAcceso">
+        <p class="admin-panel__eyebrow">PANEL MAESTRO</p>
+        <h2 id="adminTitulo">Control de Elena</h2>
+
+        <label class="admin-panel__label" for="adminClave">Contraseña</label>
+        <input
+          id="adminClave"
+          class="admin-panel__input"
+          type="password"
+          inputmode="numeric"
+          maxlength="4"
+          autocomplete="off"
+        >
+
+        <p id="adminError" class="admin-panel__error" hidden>
+          Contraseña incorrecta.
+        </p>
+
+        <button id="adminIngresar" class="admin-panel__boton" type="button">
+          Entrar
+        </button>
+      </div>
+
+      <div id="adminSelector" hidden>
+        <header class="admin-topbar">
+          <div class="admin-topbar__titulo">
+            <div>
+              <p class="admin-panel__eyebrow">PANEL MAESTRO</p>
+              <h2 id="adminVistaTitulo">Configuración del show</h2>
+            </div>
+
+            <div id="adminAccionesCanciones" class="admin-topbar__controles" hidden>
+              <button id="adminVolverConfiguracion" class="admin-topbar__boton admin-topbar__boton--volver" type="button">
+                ← Volver a configuración
+              </button>
+
+              <button id="adminFinalizarShow" class="admin-topbar__boton admin-topbar__boton--finalizar" type="button">
+                Finalizar show
+              </button>
+            </div>
+          </div>
+
+          <div class="admin-topbar__acciones">
+            <span id="firebaseEstado" class="firebase-estado">Conectando…</span>
+
+            <button
+              id="adminMenuBoton"
+              class="admin-menu-boton"
+              type="button"
+              aria-label="Abrir menú"
+              aria-expanded="false"
+              aria-controls="adminMenuLateral"
+            >
+              <span></span><span></span><span></span>
+            </button>
+
+            <button
+              id="adminCerrarBoton"
+              class="admin-cerrar-boton"
+              type="button"
+              data-cerrar-admin
+              aria-label="Cerrar Panel Maestro"
+            >
+              ×
+            </button>
+          </div>
+        </header>
+
+        <aside id="adminMenuLateral" class="admin-menu-lateral" hidden>
+          <button type="button" data-admin-seccion="estadisticas">Estadísticas y contactos</button>
+          <button type="button" data-admin-seccion="herramientas">Compartir y enlaces</button>
+          <button type="button" data-admin-seccion="configuracion">Configuración del show</button>
+          <button id="adminCerrarSesion" type="button">Cerrar panel</button>
+        </aside>
+
+        <main>
+          <section id="adminPasoConfiguracion" class="admin-vista">
+            <section class="admin-seccion">
+              <h3>1. Lista de canciones</h3>
+              <div id="adminOpciones" class="admin-opciones"></div>
+            </section>
+
+            <section class="admin-seccion">
+              <h3>2. Configuración del evento</h3>
+
+              <label class="admin-panel__label" for="adminLugar">
+                Lugar
+              </label>
+              <input
+                id="adminLugar"
+                class="admin-panel__input"
+                type="text"
+                placeholder="Ejemplo: Hotel Oro Verde"
+                autocomplete="organization"
+              >
+
+              <fieldset class="admin-perfil">
+                <legend>Perfil de clientes</legend>
+
+                <label>
+                  <input type="radio" name="perfilClientes" value="alto">
+                  <span>Alto potencial</span>
+                </label>
+
+                <label>
+                  <input type="radio" name="perfilClientes" value="medio" checked>
+                  <span>Potencial medio</span>
+                </label>
+
+                <label>
+                  <input type="radio" name="perfilClientes" value="bajo">
+                  <span>Bajo potencial</span>
+                </label>
+              </fieldset>
+
+              <div class="admin-configuracion">
+                <label class="admin-switch">
+                  <input id="adminPedidosWhatsapp" type="checkbox">
+                  <span>
+                    <strong>Permitir pedidos por WhatsApp</strong>
+                    <small>El público podrá pedir una canción desde su teléfono.</small>
+                  </span>
+                </label>
+
+                <label class="admin-switch">
+                  <input id="adminMostrarCola" type="checkbox">
+                  <span>
+                    <strong>Mostrar cola en vivo</strong>
+                    <small>El público verá las próximas canciones y las que ya sonaron.</small>
+                  </span>
+                </label>
+              </div>
+            </section>
+
+            <button id="adminNuevaCancion" class="admin-panel__boton admin-panel__boton--nueva-cancion" type="button">＋ Nueva canción</button>
+
+            <p id="adminEstado" class="admin-panel__estado" aria-live="polite"></p>
+
+            <button id="adminGuardar" class="admin-panel__boton admin-panel__boton--comenzar" type="button">
+              Guardar configuración y comenzar show
+            </button>
+          </section>
+
+          <section id="adminPasoCanciones" class="admin-vista" hidden>
+            <div class="admin-show-resumen">
+              <div>
+                <small>Lugar</small>
+                <strong id="adminShowLugar">Sin definir</strong>
+              </div>
+              <div>
+                <small>Lista</small>
+                <strong id="adminShowLista">Principal diario</strong>
+              </div>
+              <div>
+                <small>Perfil</small>
+                <strong id="adminShowPerfil">Potencial medio</strong>
+              </div>
+            </div>
+
+            <section id="adminControlCanciones" class="admin-seccion admin-seccion--sin-borde">
+              <div class="admin-agregar-letra">
+                <button id="adminAgregarLetra" class="admin-agregar-letra__boton" type="button" aria-haspopup="true" aria-expanded="false">Letras</button>
+                <div id="adminAgregarMenu" class="admin-agregar-letra__menu" hidden>
+                  <button type="button" data-crear-letra="publica"><span class="admin-agregar-letra__icono" aria-hidden="true">📄</span><span>Letra para clientes</span></button>
+                  <button type="button" data-crear-letra="administradora"><span class="admin-agregar-letra__icono" aria-hidden="true">🎤</span><span>Cancionero de Elena</span></button>
+                </div>
+              </div>
+              <label class="sr-only" for="adminBuscarCancion">Buscar canción</label>
+              <div class="admin-buscador-fijo">
+                <section class="admin-cola-fija" aria-labelledby="adminColaFijaTitulo">
+                  <div class="admin-cola-fija__titulo">
+                    <strong id="adminColaFijaTitulo">A la cola</strong>
+                    <span id="adminColaFijaCantidad">0</span>
+                  </div>
+
+                  <ol id="adminColaFija" class="admin-cola-fija__lista"></ol>
+
+                  <p id="adminColaFijaVacia" class="admin-cola-fija__vacio">
+                    No hay canciones a la cola.
+                  </p>
+                </section>
+
+                <input
+                  id="adminBuscarCancion"
+                  class="admin-panel__input"
+                  type="search"
+                  placeholder="Buscar por número, canción o artista…"
+                  autocomplete="off"
+                >
+              </div>
+
+              <div id="adminListaCompleta" class="admin-lista-completa"></div>
+            </section>
+
+
+            <button id="adminSubir" class="admin-subir" type="button" aria-label="Subir al buscador">
+              ↑
+              <span>MENÚ</span>
+            </button>
+          </section>
+
+          <section id="adminVistaEstadisticas" class="admin-vista" hidden>
+            <button class="admin-volver-vista" type="button" data-admin-volver>← Volver</button>
+
+            <section class="admin-seccion admin-seccion--sin-borde">
+              <div class="admin-seccion__titulo">
+                <h3>Contactos</h3>
+                <span id="adminCantidadContactos">0</span>
+              </div>
+
+              <div class="admin-filtros-contactos" role="group" aria-label="Filtrar contactos">
+                <button class="admin-filtro-contactos is-active" type="button" data-contactos-filtro="show">
+                  Este show
+                </button>
+                <button class="admin-filtro-contactos" type="button" data-contactos-filtro="mes">
+                  Últimos 30 días
+                </button>
+                <button class="admin-filtro-contactos" type="button" data-contactos-filtro="todos">
+                  Todos
+                </button>
+              </div>
+
+              <div id="adminListaContactos" class="admin-contactos">
+                <p class="admin-panel__ayuda">Todavía no hay contactos registrados.</p>
+              </div>
+
+              <div class="admin-herramientas admin-herramientas--contactos">
+                <button id="adminCompartirContactosElena" class="admin-panel__boton admin-panel__boton--whatsapp" type="button">
+                  Compartir contactos con Elena
+                </button>
+
+                <button id="adminCompartirContactosDaniel" class="admin-panel__boton admin-panel__boton--whatsapp" type="button">
+                  Compartir contactos con Daniel
+                </button>
+
+                <button id="adminExportarContactos" class="admin-panel__boton admin-panel__boton--secundario" type="button">
+                  Exportar contactos
+                </button>
+              </div>
+            </section>
+          </section>
+
+          <section id="adminVistaHerramientas" class="admin-vista" hidden>
+            <button class="admin-volver-vista" type="button" data-admin-volver>← Volver</button>
+
+            <section class="admin-seccion admin-seccion--sin-borde">
+              <h3>Compartir y enlaces</h3>
+
+              <div class="admin-herramientas">
+                <button id="adminAbrirPublico" class="admin-panel__boton admin-panel__boton--secundario" type="button">
+                  Abrir página del público
+                </button>
+
+                <button id="adminAbrirClientes" class="admin-panel__boton admin-panel__boton--secundario" type="button">
+                  Abrir lista completa para clientes
+                </button>
+
+                <button id="adminCopiarEnlace" class="admin-panel__boton admin-panel__boton--secundario" type="button">
+                  Copiar enlace del show
+                </button>
+
+                <button id="adminCompartirElena" class="admin-panel__boton admin-panel__boton--whatsapp" type="button">
+                  Compartir resumen con Elena
+                </button>
+
+                <button id="adminCompartirDaniel" class="admin-panel__boton admin-panel__boton--whatsapp" type="button">
+                  Compartir resumen con Daniel
+                </button>
+
+                <button id="adminExportarDatos" class="admin-panel__boton admin-panel__boton--secundario" type="button">
+                  Exportar datos del show
+                </button>
+              </div>
+            </section>
+          </section>
+        </main>
+      </div>
+    </section>
+  </div>
+
+  <div id="pedidoModal" class="pedido-modal" hidden>
+    <div class="pedido-modal__fondo" data-cerrar-pedido></div>
+    <section class="pedido-panel" role="dialog" aria-modal="true" aria-labelledby="pedidoTitulo">
+      <button class="pedido-panel__cerrar" type="button" data-cerrar-pedido aria-label="Cerrar">×</button>
+      <p class="admin-panel__eyebrow">PEDIR CANCIÓN</p>
+      <p id="pedidoCancion" class="pedido-panel__cancion"></p>
+
+      <label class="pedido-panel__label" for="pedidoTelefono">Escribe tu número de teléfono</label>
+      <input
+        id="pedidoTelefono"
+        class="admin-panel__input"
+        type="tel"
+        inputmode="tel"
+        autocomplete="tel"
+        placeholder="Ejemplo: 0991234567"
+      >
+
+      <p class="pedido-panel__nota">
+        Acepto abrir WhatsApp para enviar mi canción.
+      </p>
+
+      <p id="pedidoError" class="admin-panel__error" hidden>
+        Ingresa un número de WhatsApp válido.
+      </p>
+
+
+      <button id="pedidoEnviar" class="admin-panel__boton" type="button">
+        Enviar por WhatsApp
+      </button>
+    </section>
+  </div>
+
+
+  <div id="notasModal" class="notas-modal" hidden>
+    <div class="notas-modal__fondo" data-cerrar-notas></div>
+
+    <section class="notas-panel" role="dialog" aria-modal="true" aria-labelledby="notasTitulo">
+      <button class="notas-panel__cerrar" type="button" data-cerrar-notas aria-label="Cerrar">×</button>
+      <h2 id="notasTitulo">Notas de la canción</h2>
+      <p id="notasCancion" class="notas-panel__cancion"></p>
+      <img id="notasImagen" class="notas-panel__imagen" alt="">
+    </section>
+  </div>
+
+
+  <div id="letraModal" class="letra-modal" hidden>
+    <div class="letra-modal__fondo" data-cerrar-letra></div>
+    <section class="letra-panel" role="dialog" aria-modal="true" aria-labelledby="letraTitulo">
+      <header class="letra-panel__cabecera">
+        <div>
+          <h2 id="letraTitulo">Letra</h2>
+          <p id="letraArtista"></p>
+        </div>
+        <button class="letra-panel__cerrar" type="button" data-cerrar-letra aria-label="Cerrar">×</button>
+      </header>
+
+      <div id="letraToolbar" class="letra-toolbar" hidden>
+        <div class="letra-toolbar__grupo letra-toolbar__desplegable">
+          <button id="letraColorBoton" class="letra-toolbar__control" type="button" aria-expanded="false">Color <span id="letraColorMuestra" class="letra-color-muestra"></span></button>
+          <div id="letraColorMenu" class="letra-toolbar__menu" hidden>
+            <button type="button" data-letra-color="#111111"><span style="background:#111111"></span>Negro</button>
+            <button type="button" data-letra-color="#d7263d"><span style="background:#d7263d"></span>Rojo</button>
+            <button type="button" data-letra-color="#1557b0"><span style="background:#1557b0"></span>Azul</button>
+            <button type="button" data-letra-color="#16794f"><span style="background:#16794f"></span>Verde</button>
+            <button type="button" data-letra-color="#b7791f"><span style="background:#e9b949"></span>Amarillo</button>
+            <button type="button" data-letra-color="#7b3fa1"><span style="background:#7b3fa1"></span>Morado</button>
+          </div>
+        </div>
+
+        <div class="letra-toolbar__grupo letra-toolbar__desplegable">
+          <button id="letraTamanoBoton" class="letra-toolbar__control" type="button" aria-expanded="false">Tamaño: Normal</button>
+          <div id="letraTamanoMenu" class="letra-toolbar__menu" hidden>
+            <button type="button" data-letra-tamano="2" data-letra-tamano-nombre="Muy pequeño">Muy pequeño</button>
+            <button type="button" data-letra-tamano="3" data-letra-tamano-nombre="Pequeño">Pequeño</button>
+            <button type="button" data-letra-tamano="4" data-letra-tamano-nombre="Normal">Normal</button>
+            <button type="button" data-letra-tamano="5" data-letra-tamano-nombre="Grande">Grande</button>
+            <button type="button" data-letra-tamano="6" data-letra-tamano-nombre="Muy grande">Muy grande</button>
+          </div>
+        </div>
+
+        <button class="letra-toolbar__control letra-toolbar__formato" type="button" data-letra-comando="bold" aria-label="Negrita"><strong>B</strong></button>
+        <button class="letra-toolbar__control letra-toolbar__formato" type="button" data-letra-comando="italic" aria-label="Cursiva"><em>I</em></button>
+
+        <div class="letra-toolbar__grupo letra-toolbar__desplegable">
+          <button id="letraIconosBoton" class="letra-toolbar__control" type="button" aria-expanded="false">Iconos</button>
+          <div id="letraIconosMenu" class="letra-toolbar__menu letra-toolbar__menu--iconos" hidden>
+            <button type="button" data-letra-icono="🎤" title="Voz">🎤 Voz</button>
+            <button type="button" data-letra-icono="🎸" title="Guitarra">🎸 Guitarra</button>
+            <button type="button" data-letra-icono="🥁" title="Batería">🥁 Batería</button>
+            <button type="button" data-letra-icono="🎹" title="Teclado">🎹 Teclado</button>
+            <button type="button" data-letra-icono="🎷" title="Sax">🎷 Sax</button>
+            <button type="button" data-letra-icono="🎺" title="Metales">🎺 Metales</button>
+            <button type="button" data-letra-icono="👥" title="Coros">👥 Coros</button>
+            <button type="button" data-letra-icono="🎼" title="Cambio">🎼 Cambio</button>
+            <button type="button" data-letra-icono="⚠️" title="Atención">⚠️ Atención</button>
+            <button type="button" data-letra-icono="⭐" title="Importante">⭐ Importante</button>
+          </div>
+        </div>
+
+        <button id="letraDeshacer" class="letra-toolbar__control" type="button">↶ Deshacer</button>
+        <button id="letraRehacer" class="letra-toolbar__control" type="button">↷ Rehacer</button>
+        <span class="letra-toolbar__espacio"></span>
+        <button id="letraGuardar" class="letra-toolbar__guardar" type="button">Guardar</button>
+        <button id="letraCancelar" class="letra-toolbar__cancelar" type="button">Cancelar</button>
+      </div>
+
+      <button id="letraEditar" class="letra-panel__editar" type="button">
+        Mantén 2 segundos para editar
+      </button>
+
+      <article id="letraContenido" class="letra-contenido" aria-label="Letra de la canción"></article>
+    </section>
+  </div>
+
+
+  <div id="agregarLetraModal" class="agregar-letra-modal" hidden>
+    <div class="agregar-letra-modal__fondo" data-cerrar-agregar-letra></div>
+    <section class="agregar-letra-panel" role="dialog" aria-modal="true" aria-labelledby="agregarLetraTitulo">
+      <button class="agregar-letra-panel__cerrar" type="button" data-cerrar-agregar-letra aria-label="Cerrar">×</button>
+      <h2 id="agregarLetraTitulo">Crear letra</h2>
+      <div id="agregarLetraExistenteCampos">
+        <label class="admin-panel__label" for="agregarLetraCancion">Seleccionar canción</label>
+        <select id="agregarLetraCancion" class="admin-panel__input"></select>
+      </div>
+
+      <label class="admin-panel__label" for="agregarLetraTexto">Letra</label>
+      <textarea id="agregarLetraTexto" class="agregar-letra-panel__texto" rows="16" placeholder="Pega aquí la letra..."></textarea>
+      <p id="agregarLetraError" class="admin-panel__error" hidden></p>
+      <div class="agregar-letra-panel__acciones">
+        <button id="agregarLetraGuardar" class="admin-panel__boton" type="button">Guardar</button>
+        <button id="agregarLetraCancelar" class="admin-panel__boton admin-panel__boton--secundario" type="button">Cancelar</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="nuevaCancionModal" class="agregar-letra-modal" hidden>
+    <div class="agregar-letra-modal__fondo" data-cerrar-nueva-cancion></div>
+    <section class="agregar-letra-panel nueva-cancion-panel" role="dialog" aria-modal="true" aria-labelledby="nuevaCancionTitulo">
+      <button class="agregar-letra-panel__cerrar" type="button" data-cerrar-nueva-cancion aria-label="Cerrar">×</button>
+      <h2 id="nuevaCancionTitulo">Nueva canción</h2>
+
+      <label class="admin-panel__label" for="nuevaCancionNombre">Título</label>
+      <input id="nuevaCancionNombre" class="admin-panel__input" type="text" autocomplete="off">
+
+      <label class="admin-panel__label" for="nuevaCancionArtista">Artista</label>
+      <input id="nuevaCancionArtista" class="admin-panel__input" type="text" autocomplete="off">
+
+      <label class="admin-panel__label" for="nuevaCancionIdioma">Idioma</label>
+      <select id="nuevaCancionIdioma" class="admin-panel__input">
+        <option value="Inglés">Inglés</option>
+        <option value="Español">Español</option>
+        <option value="Otro">Otro</option>
+      </select>
+
+      <label class="admin-panel__label" for="nuevaCancionGenero">Género o géneros</label>
+      <input id="nuevaCancionGenero" class="admin-panel__input" type="text" placeholder="Ejemplo: Rock, Pop">
+
+      <fieldset class="nueva-cancion-listas">
+        <legend>Agregar a repertorios</legend>
+        <div id="nuevaCancionListas"></div>
+      </fieldset>
+
+      <label class="admin-panel__label" for="nuevaCancionLetraPublica">Letra para clientes (opcional)</label>
+      <textarea id="nuevaCancionLetraPublica" class="agregar-letra-panel__texto" rows="8" placeholder="Pega aquí la letra pública..."></textarea>
+
+      <label class="admin-panel__label" for="nuevaCancionLetraElena">Cancionero de Elena (opcional)</label>
+      <textarea id="nuevaCancionLetraElena" class="agregar-letra-panel__texto" rows="8" placeholder="Pega aquí la versión privada..."></textarea>
+
+      <p id="nuevaCancionError" class="admin-panel__error" hidden></p>
+      <div class="agregar-letra-panel__acciones">
+        <button id="nuevaCancionGuardar" class="admin-panel__boton" type="button">Guardar canción</button>
+        <button id="nuevaCancionCancelar" class="admin-panel__boton admin-panel__boton--secundario" type="button">Cancelar</button>
+      </div>
+    </section>
+  </div>
+
+
+  <div id="confirmacionModal" class="confirmacion" hidden>
+    <div class="confirmacion__fondo" data-confirmacion-cancelar></div>
+    <section class="confirmacion__panel" role="dialog" aria-modal="true" aria-labelledby="confirmacionTitulo">
+      <h2 id="confirmacionTitulo">Confirmar</h2>
+      <p id="confirmacionMensaje"></p>
+      <div class="confirmacion__acciones">
+        <button id="confirmacionCancelar" class="confirmacion__cancelar" type="button">Cancelar</button>
+        <button id="confirmacionAceptar" class="confirmacion__aceptar" type="button">Aceptar</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="avisoApp" class="aviso-app" hidden role="status" aria-live="polite"></div>
+
+  <div class="version-prueba" aria-hidden="true">v2.0.9</div>
+
+  <noscript>
+    <div class="noscript">
+      Esta página necesita JavaScript para mostrar y filtrar las canciones.
+    </div>
+  </noscript>
+  <script src="./pwa.js?v=PRUEBA-SIN-SW-20260819-182530"></script>
+
+<script>
+/* EGP · FOTOS DINAMICAS — 1 CARTA / 2 CARTA */
+(function(){
+
+  async function cargarFotosCarta(){
+
+    /*
+     * WEB PUBLICA:
+     * Firebase es la única fuente dinámica.
+     * El lector local/Core queda reservado para LAN/desarrollo.
+     */
+    if(location.hostname.endsWith('github.io')){
+      return;
+    }
+
+    let sources={};
+    let settings={};
+
+    try{
+      sources=JSON.parse(
+        localStorage.getItem('egm-photo-originals')||'{}'
+      );
+
+      settings=JSON.parse(
+        localStorage.getItem('egm-photo-settings')||'{}'
+      );
+    }catch(_){}
+
+    const mobile =
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'');
+
+    function key(base){
+      const variant=base+'__'+(mobile?'mobile':'desktop');
+      return sources[variant]!==undefined ? variant : base;
+    }
+
+    let remotePhotos={};
+
+    /*
+     * EGP — CARTAS desde Core compartido.
+     * localStorage permanece como respaldo.
+     */
+    try{
+      const coreHost=
+        location.hostname==='127.0.0.1' ||
+        location.hostname==='localhost'
+          ? '127.0.0.1'
+          : location.hostname;
+
+      const response=await fetch(
+        'http://'+coreHost+':8898/api/photos',
+        {cache:'no-store'}
+      );
+
+      if(response.ok){
+        const remote=await response.json();
+        remotePhotos=remote?.photos||{};
+      }
+    }catch(err){
+      console.warn(
+        'Core fotos CARTA no disponible; usando almacenamiento local',
+        err
+      );
+    }
+
+    function aplicar(pictureId,base){
+
+      const picture=document.getElementById(pictureId);
+      if(!picture) return;
+
+      const img=picture.querySelector('img');
+      const source=picture.querySelector('source');
+
+      const variantKey=
+        base+'__'+(mobile?'mobile':'desktop');
+
+      const localKey=key(base);
+
+      const remote=
+        remotePhotos[variantKey]||{};
+
+      const src=
+        remote.src||
+        sources[localKey]||
+        sources[base]||
+        '';
+
+      const d={
+        ...(settings[localKey]||settings[base]||{}),
+        ...remote
+      };
+
+      if(src){
+        if(img) img.src=src;
+        if(source) source.srcset=src;
+      }
+
+      if(img){
+        img.style.objectPosition=
+          (d.x ?? 50)+'% '+(d.y ?? 50)+'%';
+
+        if(d.zoom!==undefined){
+          img.style.transform=
+            'scale('+(Number(d.zoom)/100)+')';
+
+          img.style.transformOrigin=
+            (d.x ?? 50)+'% '+(d.y ?? 50)+'%';
+        }
+      }
+    }
+
+    aplicar('egpCarta1Picture','carta1');
+    aplicar('egpCarta2Picture','carta2');
+  }
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    cargarFotosCarta
+  );
+
+  window.addEventListener(
+    'storage',
+    function(e){
+      if(
+        e.key==='egm-photo-originals' ||
+        e.key==='egm-photo-settings'
+      ){
+        cargarFotosCarta();
+      }
+    }
+  );
+
+})();
+</script>
+
+
+
+<script type="module" class="egpFirebaseFotosPublicas">
+(async function(){
+
+  try{
+    const mobile=
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'');
+
+    const key='carta1__'+(mobile?'mobile':'desktop');
+
+    const [{initializeApp,getApps,getApp},{getFirestore,doc,getDoc}] =
+      await Promise.all([
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js')
+      ]);
+
+    const response=await fetch(
+      './configuracion.json?fotoFirebase='+Date.now(),
+      {cache:'no-store'}
+    );
+
+    const cfg=await response.json();
+
+    const appName='egp-fotos-publicas';
+
+    const app=getApps().some(a=>a.name===appName)
+      ? getApp(appName)
+      : initializeApp(cfg.firebase,appName);
+
+    const db=getFirestore(app);
+
+    const snap=await getDoc(
+      doc(db,'imageEdits','site-photo-'+key)
+    );
+
+    if(!snap.exists()) return;
+
+    const d=snap.data()||{};
+    if(!d.src) return;
+
+    const el=document.querySelector('#egpCarta1Picture img');
+    if(!el) return;
+
+
+    el.src=d.src;
+
+    const picture=document.getElementById('egpCarta1Picture');
+    const source=picture?.querySelector('source');
+    if(source) source.srcset=d.src;
+
+    el.style.objectPosition=(d.x??50)+'% '+(d.y??50)+'%';
+
+    if(d.zoom!==undefined){
+      el.style.transform='scale('+(Number(d.zoom)/100)+')';
+      el.style.transformOrigin=(d.x??50)+'% '+(d.y??50)+'%';
+    }
+
+
+    try{
+      const cache=JSON.parse(
+        localStorage.getItem('egp-firebase-photo-cache')||'{}'
+      );
+
+      cache[key]=d;
+
+      localStorage.setItem(
+        'egp-firebase-photo-cache',
+        JSON.stringify(cache)
+      );
+    }catch(_){}
+
+    try{
+      const cache=JSON.parse(
+        localStorage.getItem('egp-firebase-photo-cache')||'{}'
+      );
+
+      cache[key]=d;
+
+      localStorage.setItem(
+        'egp-firebase-photo-cache',
+        JSON.stringify(cache)
+      );
+    }catch(_){}
+
+    console.log('EGP FOTO FIREBASE:',key,d.updatedAt||'');
+
+  }catch(err){
+    console.error('EGP FOTO FIREBASE ERROR',err);
+  }
+
+})();
+</script>
+
+
+<script type="module" class="egpFirebaseFotosPublicas">
+window.__EGP_CARTA2_FIREBASE_READY__=(async function(){
+
+  try{
+    const mobile=
+      /iPhone|iPad|iPod|Android|Mobile|Windows Phone/i
+        .test(navigator.userAgent||'');
+
+    const key='carta2__'+(mobile?'mobile':'desktop');
+
+    const [{initializeApp,getApps,getApp},{getFirestore,doc,getDoc}] =
+      await Promise.all([
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js')
+      ]);
+
+    const response=await fetch(
+      './configuracion.json?fotoFirebase='+Date.now(),
+      {cache:'no-store'}
+    );
+
+    const cfg=await response.json();
+
+    const appName='egp-fotos-publicas';
+
+    const app=getApps().some(a=>a.name===appName)
+      ? getApp(appName)
+      : initializeApp(cfg.firebase,appName);
+
+    const db=getFirestore(app);
+
+    const snap=await getDoc(
+      doc(db,'imageEdits','site-photo-'+key)
+    );
+
+    if(!snap.exists()) return;
+
+    const d=snap.data()||{};
+    if(!d.src) return;
+
+    const el=document.querySelector('#egpCarta2Picture img');
+    if(!el) return;
+
+
+    el.src=d.src;
+
+    const picture=document.getElementById('egpCarta2Picture');
+    const source=picture?.querySelector('source');
+
+    if(source) source.srcset=d.src;
+
+    /*
+     * EGP CARTA 2:
+     * esperar que la foto REAL recibida de Firebase esté cargada
+     * y decodificada antes de permitir la transición desde Carta 1.
+     */
+    await new Promise(resolve=>{
+      if(el.complete && el.naturalWidth){
+        resolve();
+        return;
+      }
+
+      let terminado=false;
+
+      const terminar=()=>{
+        if(terminado) return;
+        terminado=true;
+        resolve();
+      };
+
+      el.addEventListener('load',terminar,{once:true});
+      el.addEventListener('error',terminar,{once:true});
+      window.setTimeout(terminar,1800);
+    });
+
+    try{
+      if(typeof el.decode==='function'){
+        await el.decode();
+      }
+    }catch(_){}
+
+    window.__EGP_CARTA2_FIREBASE_READY_DONE__=true;
+
+
+    el.style.objectPosition=(d.x??50)+'% '+(d.y??50)+'%';
+
+    if(d.zoom!==undefined){
+      el.style.transform='scale('+(Number(d.zoom)/100)+')';
+      el.style.transformOrigin=(d.x??50)+'% '+(d.y??50)+'%';
+    }
+
+
+    try{
+      const cache=JSON.parse(
+        localStorage.getItem('egp-firebase-photo-cache')||'{}'
+      );
+
+      cache[key]=d;
+
+      localStorage.setItem(
+        'egp-firebase-photo-cache',
+        JSON.stringify(cache)
+      );
+    }catch(_){}
+
+    console.log('EGP FOTO FIREBASE:',key,d.updatedAt||'');
+
+  }catch(err){
+    console.error('EGP FOTO FIREBASE ERROR',err);
+  }
+
+})();
+</script>
+
+</body>
+</html>

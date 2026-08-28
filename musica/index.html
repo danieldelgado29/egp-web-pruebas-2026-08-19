@@ -188,7 +188,11 @@ window.egpAplicarFotoCache=function(pictureId,base){
       <p class="landing__marca">ELENA GIRJOABA MUSIC</p>
 
       <h1 id="landingTitulo" class="landing__titulo">
-        Música en vivo para tu evento
+        <span
+          id="adminTriggerPortada"
+          class="landing__admin-trigger"
+          aria-label="Acceso al Panel Maestro"
+        >Música</span> en vivo para tu evento
       </h1>
 
       <p class="landing__descripcion">
@@ -540,9 +544,9 @@ window.egpAplicarFotoCache=function(pictureId,base){
         </div>
       </div>
 
-      <span class="footer__copyright">
+      <button id="adminTrigger" class="footer__copyright footer__admin-trigger" type="button" aria-label="Configuración de listas">
         © <span id="anioActual"></span> Elena Girjoaba Music.
-      </span>
+      </button>
     </footer>
 
     <button

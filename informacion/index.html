@@ -645,20 +645,6 @@ window.addEventListener('pageshow', function(event) {
       settings.info||
       {};
 
-    const firebasePublicTest =
-      location.hostname.endsWith('github.io') ||
-      location.hostname === 'elenagirjoaba.com' ||
-      location.hostname === 'www.elenagirjoaba.com';
-
-    /*
-     * WEB PUBLICA:
-     * Firebase es la única fuente dinámica.
-     * No consultar Local Core desde el dominio público.
-     */
-    if(firebasePublicTest){
-      return;
-    }
-
     /*
      * EGP — 1 INFO desde Core compartido.
      * localStorage permanece como respaldo.
@@ -771,20 +757,6 @@ window.addEventListener('pageshow', function(event) {
       settings[variantKey]||
       settings.bio||
       {};
-
-    const firebasePublicTest =
-      location.hostname.endsWith('github.io') ||
-      location.hostname === 'elenagirjoaba.com' ||
-      location.hostname === 'www.elenagirjoaba.com';
-
-    /*
-     * WEB PUBLICA:
-     * Firebase es la única fuente dinámica.
-     * No consultar Local Core desde el dominio público.
-     */
-    if(firebasePublicTest){
-      return;
-    }
 
     /*
      * EGP — BIO desde Core compartido.

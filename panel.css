@@ -3216,3 +3216,72 @@ body.egp-ios.live-mode .song-action{
   z-index:2147483647!important;
   position:fixed!important;
 }
+
+
+/* EGP UI24R POSICION Y TACTIL V28
+   Posición según prueba real iPhone.
+   5 mm ≈ 19 CSS px.
+*/
+
+/* ← PANEL
+   Vertical: zona superior izquierda marcada.
+   Horizontal: zona superior central-derecha marcada.
+*/
+#ui24rBackBtn{
+  position:fixed!important;
+  left:max(46px,env(safe-area-inset-left,0px))!important;
+  right:auto!important;
+  top:0!important;
+  transform:none!important;
+  overflow:visible!important;
+  touch-action:manipulation!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+
+/* Área táctil invisible: aprox. 5 mm por todos los lados */
+#ui24rBackBtn::before{
+  content:"";
+  position:absolute;
+  left:-19px;
+  right:-19px;
+  top:-19px;
+  bottom:-19px;
+  background:transparent;
+  pointer-events:auto;
+}
+
+/* Horizontal: mover a la zona indicada en la foto */
+@media (orientation:landscape){
+  #ui24rBackBtn{
+    left:calc(50% + 12px)!important;
+    right:auto!important;
+    top:0!important;
+  }
+}
+
+/* Permitir que el área táctil de Ui24R sobresalga de la barra */
+body.live-mode .live-toolbar,
+body.live-mode .live-toolbar-right{
+  overflow:visible!important;
+}
+
+/* Ui24R: mismo tamaño visual */
+body.live-mode #ui24rBtn{
+  position:relative!important;
+  overflow:visible!important;
+  touch-action:manipulation!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+
+/* Ui24R: aproximadamente 5 mm adicionales SOLO hacia arriba */
+body.live-mode #ui24rBtn::before{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:-19px;
+  height:19px;
+  background:transparent;
+  pointer-events:auto;
+}
+

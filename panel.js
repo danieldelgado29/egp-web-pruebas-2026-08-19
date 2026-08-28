@@ -5870,14 +5870,15 @@ document.documentElement.dataset.egmVersion="6.36.92";
   // El rebote/recarga se controla por CSS con overscroll-behavior.
 
   const login=$('#panelLogin'),loginForm=$('#panelLoginForm'),loginPassword=$('#panelLoginPassword'),loginError=$('#panelLoginError');
-  const params=new URLSearchParams(location.search);
-  const trusted=params.get('trusted')==='1';
-  if(!trusted){ login.removeAttribute('hidden'); login.setAttribute('aria-hidden','false'); }
-  login.hidden=trusted;
+
+  // SEGURIDAD 2026-08-28:
+  // El panel SIEMPRE exige contraseña al abrirse.
+  // Ningún parámetro de URL puede saltarse esta pantalla.
+  login.removeAttribute('hidden');
+  login.setAttribute('aria-hidden','false');
+  login.hidden=false;
   loginForm.addEventListener('submit',e=>{e.preventDefault();const security=JSON.parse(localStorage.getItem('egm-security-settings')||'{}');if(loginPassword.value===(security.password||'2907')){rememberPanelAuth();login.hidden=true;loginError.hidden=true;loginPassword.value='';if(latestRemoteState)applyRemotePanelState(latestRemoteState);else if(state.config)showLive();else showConfig();}else loginError.hidden=false;});
   loadData().then(async()=>{
-    if(trusted)showConfig();
-
     let sharedStateResolved=false;
 
     try{
@@ -5894,11 +5895,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
       }
     }catch(err){
       console.warn('No se pudo leer todavía el estado compartido del show.',err);
-    }
-
-    if(trusted&&!sharedStateResolved){
-      if(state.config)showLive();
-      else showConfig();
     }
 
     egpPedidosLanPanelV85();

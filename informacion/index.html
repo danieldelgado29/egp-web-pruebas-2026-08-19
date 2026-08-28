@@ -493,9 +493,11 @@ window.addEventListener('pageshow', function(event) {
       </a>
 
       <a
-        href="instagram://user?username=elenagirjoabamusic"
+        href="https://www.instagram.com/elenagirjoabamusic/"
         class="explore-card instagram-card"
         id="egpInstagramCard"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         <span>04</span>
         <h3>INSTAGRAM</h3>
@@ -552,6 +554,55 @@ window.addEventListener('pageshow', function(event) {
   </section>
 
 </main>
+
+
+<script id="egpInstagramInfo">
+(function(){
+
+  const link=document.getElementById('egpInstagramCard');
+  if(!link) return;
+
+  const ua=navigator.userAgent||'';
+
+  const esAndroid=/Android/i.test(ua);
+
+  const esIOS=
+    /iPhone|iPad|iPod/i.test(ua) ||
+    (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+
+  const instagramWeb=
+    'https://www.instagram.com/elenagirjoabamusic/';
+
+  const instagramIOS=
+    'instagram://user?username=elenagirjoabamusic';
+
+  const instagramAndroid=
+    'intent://instagram.com/_u/elenagirjoabamusic/#Intent;package=com.instagram.android;scheme=https;S.browser_fallback_url=https%3A%2F%2Fwww.instagram.com%2Felenagirjoabamusic%2F;end';
+
+  link.href=instagramWeb;
+  link.rel='noopener noreferrer';
+
+  if(esIOS || esAndroid){
+
+    link.removeAttribute('target');
+
+    link.addEventListener('click',function(event){
+
+      event.preventDefault();
+
+      window.location.href=
+        esAndroid ? instagramAndroid : instagramIOS;
+
+    });
+
+  }else{
+
+    link.target='_blank';
+
+  }
+
+})();
+</script>
 
 
 <script id="egpFotoInfoDinamica">

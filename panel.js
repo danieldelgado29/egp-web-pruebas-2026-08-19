@@ -4263,38 +4263,14 @@ document.documentElement.dataset.egmVersion="6.36.92";
   );
 
 
-  async function egpLoadPhotosFromCoreTest(){
-    const response=await fetch(
-      EGP_PHOTOS_CORE_URL+'/api/photos',
-      {cache:'no-store'}
-    );
+  const EGP_PHOTO_PENDING_KEY=
+    'egm-photo-sync-pending-v1';
 
-    if(!response.ok){
-      throw new Error('Core de fotos no respondió');
-    }
-
-    const data=await response.json();
-
-    if(!data?.ok || !data.photos || typeof data.photos!=='object'){
-      throw new Error('Respuesta inválida del Core de fotos');
-    }
-
-    return data.photos;
-  }
+  let egpPhotoSyncBusy=false;
 
 
-  async function egpLoadPhotosFromFirebase(){
-    if(!navigator.onLine){
-      throw new Error('Sin conexión a Internet');
-    }
-
-    await initRemoteSync();
-
-    if(!remoteDb || !remoteDoc || !remoteGetDoc){
-      throw new Error('Firebase todavía no está listo');
-    }
-
-    const keys=[
+  function egpPhotoAllowedKeys(){
+    return new Set([
       'portada__desktop',
       'portada__mobile',
       'info__desktop',
@@ -4305,6 +4281,202 @@ document.documentElement.dataset.egmVersion="6.36.92";
       'carta1__mobile',
       'carta2__desktop',
       'carta2__mobile'
+    ]);
+  }
+
+
+  function egpPhotoLoadPending(){
+    try{
+      const value=JSON.parse(
+        localStorage.getItem(EGP_PHOTO_PENDING_KEY)||'{}'
+      );
+
+      return value && typeof value==='object'
+        ? value
+        : {};
+    }catch(_){
+      return {};
+    }
+  }
+
+
+  function egpPhotoSavePending(value){
+    try{
+      const clean=value && typeof value==='object'
+        ? value
+        : {};
+
+      if(Object.keys(clean).length){
+        localStorage.setItem(
+          EGP_PHOTO_PENDING_KEY,
+          JSON.stringify(clean)
+        );
+      }else{
+        localStorage.removeItem(
+          EGP_PHOTO_PENDING_KEY
+        );
+      }
+    }catch(err){
+      console.warn(
+        'No se pudo guardar el estado pendiente de fotos',
+        err
+      );
+    }
+  }
+
+
+  function egpPhotoMarkPending(
+    key,
+    updatedAt,
+    targets={core:true,firebase:true}
+  ){
+    const pending=egpPhotoLoadPending();
+
+    pending[key]={
+      updatedAt:Number(updatedAt)||Date.now(),
+      core:targets.core===true,
+      firebase:targets.firebase===true
+    };
+
+    egpPhotoSavePending(pending);
+  }
+
+
+  function egpPhotoApplySyncResult(
+    key,
+    updatedAt,
+    target,
+    ok
+  ){
+    const pending=egpPhotoLoadPending();
+    const item=pending[key];
+
+    if(!item)return;
+
+    if(
+      Number(item.updatedAt)!==
+      Number(updatedAt)
+    ){
+      return;
+    }
+
+    item[target]=!ok;
+
+    if(
+      item.core!==true &&
+      item.firebase!==true
+    ){
+      delete pending[key];
+    }else{
+      pending[key]=item;
+    }
+
+    egpPhotoSavePending(pending);
+  }
+
+
+  function egpPhotoBuildPayload(
+    key,
+    updatedAt=Date.now()
+  ){
+    if(!egpPhotoAllowedKeys().has(key)){
+      throw new Error(
+        'Destino de foto no permitido'
+      );
+    }
+
+    const sources=loadPhotoSources();
+    const settings=loadPhotoSettings();
+    const saved=settings[key]||{};
+    const src=sources[key]||saved.src||'';
+
+    if(!src){
+      throw new Error(
+        'La foto activa no tiene imagen'
+      );
+    }
+
+    return {
+      type:'site-photo',
+      key,
+      src,
+      x:saved.x ?? 50,
+      y:saved.y ?? 50,
+      zoom:saved.zoom ?? 100,
+      intensity:saved.intensity ?? 55,
+      direction:saved.direction || 'to bottom',
+      color:saved.color || '#000000',
+      opacity:saved.opacity ?? 70,
+      fileName:saved.fileName || '',
+      updatedAt:Number(updatedAt)||Date.now()
+    };
+  }
+
+
+  async function egpLoadPhotosFromCore(){
+    const controller=new AbortController();
+
+    const timer=setTimeout(
+      ()=>controller.abort(),
+      2500
+    );
+
+    try{
+      const response=await fetch(
+        EGP_PHOTOS_CORE_URL+'/api/photos',
+        {
+          cache:'no-store',
+          signal:controller.signal
+        }
+      );
+
+      if(!response.ok){
+        throw new Error(
+          'Core de fotos no respondió'
+        );
+      }
+
+      const data=await response.json();
+
+      if(
+        !data?.ok ||
+        !data.photos ||
+        typeof data.photos!=='object'
+      ){
+        throw new Error(
+          'Respuesta inválida del Core de fotos'
+        );
+      }
+
+      return data.photos;
+
+    }finally{
+      clearTimeout(timer);
+    }
+  }
+
+
+  async function egpLoadPhotosFromFirebase(){
+    if(!navigator.onLine){
+      throw new Error(
+        'Sin conexión a Internet'
+      );
+    }
+
+    await initRemoteSync();
+
+    if(
+      !remoteDb ||
+      !remoteDoc ||
+      !remoteGetDoc
+    ){
+      throw new Error(
+        'Firebase todavía no está listo'
+      );
+    }
+
+    const keys=[
+      ...egpPhotoAllowedKeys()
     ];
 
     const entries=await Promise.all(
@@ -4317,11 +4489,15 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
         const snap=await remoteGetDoc(ref);
 
-        if(!snap.exists()) return null;
+        if(!snap.exists()){
+          return null;
+        }
 
         const value=snap.data()||{};
 
-        if(!value.src) return null;
+        if(!value.src){
+          return null;
+        }
 
         return [key,value];
       })
@@ -4333,46 +4509,38 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
 
-  async function egpSaveActivePhotoToFirebaseTest(){
-    const key=photoStorageKey(activePhotoSlot);
-
-    const allowedKeys=new Set([
-      'portada__desktop',
-      'portada__mobile',
-      'info__desktop',
-      'info__mobile',
-      'bio__desktop',
-      'bio__mobile',
-      'carta1__desktop',
-      'carta1__mobile',
-      'carta2__desktop',
-      'carta2__mobile'
-    ]);
-
-    if(!allowedKeys.has(key)){
-      throw new Error('Destino de foto no permitido');
+  async function egpSavePhotoToFirebase(
+    key,
+    payload
+  ){
+    if(!payload?.src){
+      throw new Error(
+        'La foto no tiene imagen'
+      );
     }
 
-    const sources=loadPhotoSources();
-    const settings=loadPhotoSettings();
-    const saved=settings[key]||{};
-    const src=sources[key]||saved.src||'';
-
-    if(!src){
-      throw new Error('INICIO / MÓVIL no tiene imagen');
+    if(payload.src.length>850000){
+      throw new Error(
+        'La foto supera el límite de Firebase'
+      );
     }
 
-    /*
-     * Mantener margen bajo el límite de 1 MiB por documento Firestore.
-     */
-    if(src.length>850000){
-      throw new Error('La foto es demasiado grande para esta prueba');
+    if(!navigator.onLine){
+      throw new Error(
+        'Sin conexión a Internet'
+      );
     }
 
     await initRemoteSync();
 
-    if(!remoteDb || !remoteDoc || !remoteSetDoc){
-      throw new Error('Firebase todavía no está listo');
+    if(
+      !remoteDb ||
+      !remoteDoc ||
+      !remoteSetDoc
+    ){
+      throw new Error(
+        'Firebase todavía no está listo'
+      );
     }
 
     const ref=remoteDoc(
@@ -4383,20 +4551,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
     await remoteSetDoc(
       ref,
-      {
-        type:'site-photo',
-        key,
-        src,
-        x:saved.x ?? 50,
-        y:saved.y ?? 50,
-        zoom:saved.zoom ?? 100,
-        intensity:saved.intensity ?? 55,
-        direction:saved.direction || 'to bottom',
-        color:saved.color || '#000000',
-        opacity:saved.opacity ?? 70,
-        fileName:saved.fileName || '',
-        updatedAt:Date.now()
-      },
+      payload,
       {merge:false}
     );
 
@@ -4404,49 +4559,223 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
 
-  async function egpSavePhotosToCoreTest(){
-    /*
-     * Enviar SOLO la variante que el usuario está editando.
-     * Ejemplo: info__mobile.
-     * No reenviar las demás imágenes Base64.
-     */
-    const key=photoStorageKey(activePhotoSlot);
-    const sources=loadPhotoSources();
-    const settings=loadPhotoSettings();
-    const saved=settings[key]||{};
-    const src=sources[key]||saved.src||'';
+  async function egpSavePhotoToCore(
+    key,
+    payload
+  ){
+    const controller=new AbortController();
 
-    if(!src){
-      throw new Error('La foto activa no tiene imagen para enviar');
-    }
-
-    const photos={};
-
-    photos[key]={
-      ...saved,
-      src,
-      fileName:saved.fileName||''
-    };
-
-    const response=await fetch(
-      EGP_PHOTOS_CORE_URL+'/api/photos',
-      {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({photos})
-      }
+    const timer=setTimeout(
+      ()=>controller.abort(),
+      5000
     );
 
-    const data=await response.json();
+    try{
+      const photos={};
+      photos[key]=payload;
 
-    if(!response.ok || data?.ok===false){
-      throw new Error(
-        data?.error||'No se pudo guardar la foto en Core'
+      const response=await fetch(
+        EGP_PHOTOS_CORE_URL+'/api/photos',
+        {
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json'
+          },
+          body:JSON.stringify({photos}),
+          signal:controller.signal
+        }
+      );
+
+      const data=await response.json();
+
+      if(
+        !response.ok ||
+        data?.ok===false
+      ){
+        throw new Error(
+          data?.error ||
+          'No se pudo guardar la foto en Core'
+        );
+      }
+
+      return true;
+
+    }finally{
+      clearTimeout(timer);
+    }
+  }
+
+
+  async function egpSyncPhotoKey(
+    key,
+    {
+      updatedAt=Date.now(),
+      core=true,
+      firebase=true
+    }={}
+  ){
+    const stamp=Number(updatedAt)||Date.now();
+    const payload=egpPhotoBuildPayload(
+      key,
+      stamp
+    );
+
+    const corePromise=core
+      ? egpSavePhotoToCore(
+          key,
+          payload
+        )
+      : Promise.resolve(true);
+
+    const firebasePromise=firebase
+      ? egpSavePhotoToFirebase(
+          key,
+          payload
+        )
+      : Promise.resolve(true);
+
+    const results=await Promise.allSettled([
+      corePromise,
+      firebasePromise
+    ]);
+
+    const coreOK=
+      !core ||
+      results[0].status==='fulfilled';
+
+    const firebaseOK=
+      !firebase ||
+      results[1].status==='fulfilled';
+
+    if(core){
+      egpPhotoApplySyncResult(
+        key,
+        stamp,
+        'core',
+        coreOK
       );
     }
 
-    return true;
+    if(firebase){
+      egpPhotoApplySyncResult(
+        key,
+        stamp,
+        'firebase',
+        firebaseOK
+      );
+    }
+
+    if(!coreOK){
+      console.warn(
+        'Foto pendiente de Core',
+        results[0].reason
+      );
+    }
+
+    if(!firebaseOK){
+      console.warn(
+        'Foto pendiente de Firebase',
+        results[1].reason
+      );
+    }
+
+    return {
+      coreOK,
+      firebaseOK,
+      updatedAt:stamp
+    };
   }
+
+
+  async function egpFlushPendingPhotoSync(){
+    if(egpPhotoSyncBusy)return;
+
+    const pending=egpPhotoLoadPending();
+    const entries=Object.entries(pending);
+
+    if(!entries.length)return;
+
+    egpPhotoSyncBusy=true;
+
+    try{
+      for(const [key,item] of entries){
+        const current=
+          egpPhotoLoadPending()[key];
+
+        if(!current)continue;
+
+        if(
+          Number(current.updatedAt)!==
+          Number(item.updatedAt)
+        ){
+          continue;
+        }
+
+        try{
+          await egpSyncPhotoKey(
+            key,
+            {
+              updatedAt:item.updatedAt,
+              core:item.core===true,
+              firebase:item.firebase===true
+            }
+          );
+        }catch(err){
+          console.warn(
+            'Foto pendiente de sincronización',
+            key,
+            err
+          );
+        }
+      }
+    }finally{
+      egpPhotoSyncBusy=false;
+    }
+  }
+
+
+  window.addEventListener(
+    'online',
+    ()=>{
+      setTimeout(
+        egpFlushPendingPhotoSync,
+        500
+      );
+    }
+  );
+
+
+  document.addEventListener(
+    'visibilitychange',
+    ()=>{
+      if(!document.hidden){
+        setTimeout(
+          egpFlushPendingPhotoSync,
+          300
+        );
+      }
+    }
+  );
+
+
+  setTimeout(
+    egpFlushPendingPhotoSync,
+    2500
+  );
+
+
+  setInterval(
+    ()=>{
+      if(
+        Object.keys(
+          egpPhotoLoadPending()
+        ).length
+      ){
+        egpFlushPendingPhotoSync();
+      }
+    },
+    30000
+  );
 
 
   function loadPhotoSettings(){
@@ -4524,7 +4853,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       /*
        * Durante un show la infraestructura local manda.
        */
-      remotePhotos=await egpLoadPhotosFromCoreTest();
+      remotePhotos=await egpLoadPhotosFromCore();
 
     }catch(coreError){
       console.warn(
@@ -4549,6 +4878,31 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
     Object.entries(remotePhotos||{}).forEach(([key,value])=>{
       if(!value || typeof value!=='object') return;
+
+      const localSaved=settings[key]||{};
+      const localSrc=
+        sources[key]||
+        localSaved.src||
+        '';
+
+      const localUpdated=
+        Number(localSaved.updatedAt)||0;
+
+      const remoteUpdated=
+        Number(value.updatedAt)||0;
+
+      if(
+        localSrc &&
+        localUpdated>remoteUpdated
+      ){
+        photoDrafts[key]={
+          ...PHOTO_DEFAULTS,
+          ...localSaved,
+          src:localSrc
+        };
+
+        return;
+      }
 
       photoDrafts[key]={
         ...PHOTO_DEFAULTS,
@@ -4670,58 +5024,74 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const sources=loadPhotoSources();
     const settings=loadPhotoSettings();
 
+    const activeKey=
+      photoStorageKey(activePhotoSlot);
+
+    const syncStamp=Date.now();
+
+    if(photoDrafts[activeKey]){
+      photoDrafts[activeKey].updatedAt=
+        syncStamp;
+    }else{
+      const active=currentPhotoDraft();
+      active.updatedAt=syncStamp;
+    }
+
     Object.entries(photoDrafts).forEach(([slot,d])=>{
       sources[slot]=d.src||'';
       const {src,fileName,...params}=d;
-      settings[slot]={...params,fileName:fileName||''};
+      settings[slot]={
+        ...params,
+        fileName:fileName||''
+      };
     });
 
     try{
-      localStorage.setItem('egm-photo-originals',JSON.stringify(sources));
-      localStorage.setItem('egm-photo-settings',JSON.stringify(settings));
+      localStorage.setItem(
+        'egm-photo-originals',
+        JSON.stringify(sources)
+      );
 
-      /*
-       * La copia local ya quedó guardada.
-       * Ahora sincronizar la foto ACTIVA de forma independiente
-       * hacia Core y Firebase. Nunca se envían las 6 juntas.
-       */
-      rememberDialogState($('#photoManagerDialog'));
+      localStorage.setItem(
+        'egm-photo-settings',
+        JSON.stringify(settings)
+      );
 
-      Promise.allSettled([
-        egpSavePhotosToCoreTest(),
-        egpSaveActivePhotoToFirebaseTest()
-      ]).then(results=>{
-        const coreOK=
-          results[0]?.status==='fulfilled';
-
-        const firebaseOK=
-          results[1]?.status==='fulfilled';
-
-        if(!coreOK){
-          console.warn(
-            'Foto pendiente de Core',
-            results[0]?.reason
-          );
+      egpPhotoMarkPending(
+        activeKey,
+        syncStamp,
+        {
+          core:true,
+          firebase:true
         }
+      );
 
-        if(!firebaseOK){
-          console.warn(
-            'Foto pendiente de Firebase',
-            results[1]?.reason
-          );
+      rememberDialogState(
+        $('#photoManagerDialog')
+      );
+
+      egpSyncPhotoKey(
+        activeKey,
+        {
+          updatedAt:syncStamp,
+          core:true,
+          firebase:true
         }
-
-        if(coreOK && firebaseOK){
+      ).then(result=>{
+        if(
+          result.coreOK &&
+          result.firebaseOK
+        ){
           toast(
             'Guardado exitosamente · Firebase + Core'
           );
 
-        }else if(coreOK){
+        }else if(result.coreOK){
           toast(
             'Guardado exitosamente · Core · Firebase pendiente'
           );
 
-        }else if(firebaseOK){
+        }else if(result.firebaseOK){
           toast(
             'Guardado exitosamente · Firebase · Core pendiente'
           );
@@ -4731,6 +5101,15 @@ document.documentElement.dataset.egmVersion="6.36.92";
             'Guardado local · sincronización pendiente'
           );
         }
+      }).catch(err=>{
+        console.warn(
+          'Sincronización de foto pendiente',
+          err
+        );
+
+        toast(
+          'Guardado local · sincronización pendiente'
+        );
       });
     }
     catch(_){

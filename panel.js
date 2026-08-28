@@ -254,17 +254,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
   const LOCAL_CORE_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':'https://core.elenagirjoaba.com';
   const CORE_TEST_MODE=new URL(location.href).searchParams.get('core_test')==='1';
 
-  const EGP_PHOTOS_CORE_TEST=
-    new URL(location.href).searchParams.get('photos_core_test')==='1';
-
-  const EGP_PHOTOS_FIREBASE_TEST=
-    new URL(location.href).searchParams.get('photos_firebase_test')==='1';
-
+  /*
+   * Fotos del sitio:
+   * - Core local por HTTPS cuando la red EGP está disponible.
+   * - Firebase permanece como copia compartida por Internet.
+   */
   const EGP_PHOTOS_CORE_URL=
-    location.hostname === '127.0.0.1' ||
-    location.hostname === 'localhost'
-      ? 'http://127.0.0.1:8898'
-      : 'http://' + location.hostname + ':8898';
+    'https://core.elenagirjoaba.com';
 
   let LOCAL_QUEUE_MODE=false;
   let localQueueTimer=0;
@@ -4268,8 +4264,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
 
   async function egpLoadPhotosFromCoreTest(){
-    if(!EGP_PHOTOS_CORE_TEST) return null;
-
     const response=await fetch(
       EGP_PHOTOS_CORE_URL+'/api/photos',
       {cache:'no-store'}
@@ -4289,9 +4283,57 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
 
-  async function egpSaveActivePhotoToFirebaseTest(){
-    if(!EGP_PHOTOS_FIREBASE_TEST) return false;
+  async function egpLoadPhotosFromFirebase(){
+    if(!navigator.onLine){
+      throw new Error('Sin conexión a Internet');
+    }
 
+    await initRemoteSync();
+
+    if(!remoteDb || !remoteDoc || !remoteGetDoc){
+      throw new Error('Firebase todavía no está listo');
+    }
+
+    const keys=[
+      'portada__desktop',
+      'portada__mobile',
+      'info__desktop',
+      'info__mobile',
+      'bio__desktop',
+      'bio__mobile',
+      'carta1__desktop',
+      'carta1__mobile',
+      'carta2__desktop',
+      'carta2__mobile'
+    ];
+
+    const entries=await Promise.all(
+      keys.map(async key=>{
+        const ref=remoteDoc(
+          remoteDb,
+          'imageEdits',
+          'site-photo-' + key
+        );
+
+        const snap=await remoteGetDoc(ref);
+
+        if(!snap.exists()) return null;
+
+        const value=snap.data()||{};
+
+        if(!value.src) return null;
+
+        return [key,value];
+      })
+    );
+
+    return Object.fromEntries(
+      entries.filter(Boolean)
+    );
+  }
+
+
+  async function egpSaveActivePhotoToFirebaseTest(){
     const key=photoStorageKey(activePhotoSlot);
 
     const allowedKeys=new Set([
@@ -4363,8 +4405,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
 
   async function egpSavePhotosToCoreTest(){
-    if(!EGP_PHOTOS_CORE_TEST) return false;
-
     /*
      * Enviar SOLO la variante que el usuario está editando.
      * Ejemplo: info__mobile.
@@ -4478,22 +4518,43 @@ document.documentElement.dataset.egmVersion="6.36.92";
       };
     });
 
-    if(EGP_PHOTOS_CORE_TEST){
+    let remotePhotos=null;
+
+    try{
+      /*
+       * Durante un show la infraestructura local manda.
+       */
+      remotePhotos=await egpLoadPhotosFromCoreTest();
+
+    }catch(coreError){
+      console.warn(
+        'Core de fotos no disponible; intentando Firebase',
+        coreError
+      );
+
       try{
-        const remote=await egpLoadPhotosFromCoreTest();
+        /*
+         * Fuera de la red EGP, Firebase mantiene
+         * el acceso compartido entre dispositivos.
+         */
+        remotePhotos=await egpLoadPhotosFromFirebase();
 
-        Object.entries(remote||{}).forEach(([key,value])=>{
-          if(!value || typeof value!=='object') return;
-
-          photoDrafts[key]={
-            ...PHOTO_DEFAULTS,
-            ...value
-          };
-        });
-      }catch(err){
-        console.warn('No se pudieron cargar fotos compartidas',err);
+      }catch(firebaseError){
+        console.warn(
+          'Firebase de fotos no disponible; usando copia local',
+          firebaseError
+        );
       }
     }
+
+    Object.entries(remotePhotos||{}).forEach(([key,value])=>{
+      if(!value || typeof value!=='object') return;
+
+      photoDrafts[key]={
+        ...PHOTO_DEFAULTS,
+        ...value
+      };
+    });
 
     activePhotoSlot='portada';
     $$('[data-photo-slot]').forEach(
@@ -4619,32 +4680,58 @@ document.documentElement.dataset.egmVersion="6.36.92";
       localStorage.setItem('egm-photo-originals',JSON.stringify(sources));
       localStorage.setItem('egm-photo-settings',JSON.stringify(settings));
 
-      if(EGP_PHOTOS_CORE_TEST){
-        egpSavePhotosToCoreTest()
-          .then(()=>{
-            rememberDialogState($('#photoManagerDialog'));
-            toast('Guardado exitosamente · Core compartido');
-          })
-          .catch(err=>{
-            console.error(err);
-            toast('Guardado local · Core de fotos falló');
-          });
+      /*
+       * La copia local ya quedó guardada.
+       * Ahora sincronizar la foto ACTIVA de forma independiente
+       * hacia Core y Firebase. Nunca se envían las 6 juntas.
+       */
+      rememberDialogState($('#photoManagerDialog'));
 
-      }else if(EGP_PHOTOS_FIREBASE_TEST){
+      Promise.allSettled([
+        egpSavePhotosToCoreTest(),
         egpSaveActivePhotoToFirebaseTest()
-          .then(()=>{
-            rememberDialogState($('#photoManagerDialog'));
-            toast('Guardado exitosamente · Firebase compartido');
-          })
-          .catch(err=>{
-            console.error(err);
-            toast('Guardado local · Firebase falló');
-          });
+      ]).then(results=>{
+        const coreOK=
+          results[0]?.status==='fulfilled';
 
-      }else{
-        rememberDialogState($('#photoManagerDialog'));
-        toast('Guardado exitosamente');
-      }
+        const firebaseOK=
+          results[1]?.status==='fulfilled';
+
+        if(!coreOK){
+          console.warn(
+            'Foto pendiente de Core',
+            results[0]?.reason
+          );
+        }
+
+        if(!firebaseOK){
+          console.warn(
+            'Foto pendiente de Firebase',
+            results[1]?.reason
+          );
+        }
+
+        if(coreOK && firebaseOK){
+          toast(
+            'Guardado exitosamente · Firebase + Core'
+          );
+
+        }else if(coreOK){
+          toast(
+            'Guardado exitosamente · Core · Firebase pendiente'
+          );
+
+        }else if(firebaseOK){
+          toast(
+            'Guardado exitosamente · Firebase · Core pendiente'
+          );
+
+        }else{
+          toast(
+            'Guardado local · sincronización pendiente'
+          );
+        }
+      });
     }
     catch(_){
       toast('La imagen es demasiado grande. Usa una imagen más liviana.');

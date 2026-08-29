@@ -1016,11 +1016,9 @@
 
   if(!btn || !overlay || !frame || !back) return;
 
-  const android=/Android/i.test(navigator.userAgent);
-
-  frame.src=android
-    ? 'https://ui.elenagirjoaba.com/phone.html'
-    : 'https://ui.elenagirjoaba.com/mixer.html';
+  if(!frame.getAttribute('src')){
+    frame.src='https://ui.elenagirjoaba.com/mixer.html';
+  }
 
   btn.addEventListener('click',function(e){
     e.preventDefault();
@@ -1028,10 +1026,95 @@
     overlay.setAttribute('aria-hidden','false');
   });
 
-  back.addEventListener('click',function(){
-    overlay.classList.remove('is-open');
-    overlay.setAttribute('aria-hidden','true');
+  let dragging=false;
+  let moved=false;
+  let startX=0;
+  let startY=0;
+  let baseX=0;
+  let baseY=0;
+
+  function poner(x,y){
+    const maxX=Math.max(0,window.innerWidth-back.offsetWidth);
+    const maxY=Math.max(0,window.innerHeight-back.offsetHeight);
+
+    x=Math.max(0,Math.min(x,maxX));
+    y=Math.max(0,Math.min(y,maxY));
+
+    back.style.setProperty('left',x+'px','important');
+    back.style.setProperty('top',y+'px','important');
+    back.style.setProperty('right','auto','important');
+  }
+
+  try{
+    const pos=JSON.parse(localStorage.getItem('egpUi24BackPos')||'null');
+
+    if(pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)){
+      requestAnimationFrame(function(){
+        poner(pos.x,pos.y);
+      });
+    }
+  }catch(e){}
+
+  back.style.touchAction='none';
+
+  back.addEventListener('pointerdown',function(e){
+    dragging=true;
+    moved=false;
+
+    const r=back.getBoundingClientRect();
+
+    startX=e.clientX;
+    startY=e.clientY;
+    baseX=r.left;
+    baseY=r.top;
+
+    try{
+      back.setPointerCapture(e.pointerId);
+    }catch(err){}
+
+    e.preventDefault();
+    e.stopPropagation();
   });
+
+  back.addEventListener('pointermove',function(e){
+    if(!dragging) return;
+
+    const dx=e.clientX-startX;
+    const dy=e.clientY-startY;
+
+    if(Math.abs(dx)>4 || Math.abs(dy)>4){
+      moved=true;
+    }
+
+    poner(baseX+dx,baseY+dy);
+
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  back.addEventListener('pointerup',function(e){
+    if(!dragging) return;
+
+    dragging=false;
+
+    const r=back.getBoundingClientRect();
+
+    try{
+      localStorage.setItem(
+        'egpUi24BackPos',
+        JSON.stringify({x:r.left,y:r.top})
+      );
+    }catch(err){}
+
+    if(!moved){
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden','true');
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
 })();
 </script>
 

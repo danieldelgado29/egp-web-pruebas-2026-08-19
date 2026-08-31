@@ -929,6 +929,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
           schema:Number(data.cronometro_schema)||0,
           elapsedMs:Number(data.cronometro_elapsed_ms)||0,
           running:data.cronometro_running===true,
+          runningPresent:Object.prototype.hasOwnProperty.call(data,'cronometro_running'),
           startedAt:Number(data.cronometro_started_at)||0
         });
         saveStateLocalOnly();
@@ -1140,57 +1141,110 @@ document.documentElement.dataset.egmVersion="6.36.92";
     if(!remote||applyingRemoteShowState===false&&remote===showTimer)return;
 
     const remoteSchema=Number(remote.schema)||0;
+    const now=Date.now();
+    const showStartedAt=state.config?.startedAt
+      ? new Date(state.config.startedAt).getTime()
+      : 0;
+    const physicalMax=showStartedAt>0
+      ? Math.max(0,now-showStartedAt)
+      : null;
 
-    // 6.36.89: cualquier show activo que todavía venga del formato antiguo
-    // puede contener tiempo duplicado. No se intenta "adivinar" el tiempo real:
-    // se reinicia SOLO el cronómetro y se migra una sola vez a schema 2.
+    /*
+     * EGP_TIMER_SHOW_EXISTENTE_SYNC_V2
+     *
+     * Si otro dispositivo entra a un show que YA estaba activo, nunca debe
+     * arrancar el cronometro desde cero solo porque el documento remoto viene
+     * de un schema anterior.
+     *
+     * - Si el remoto dice explicitamente "pausado", se respeta la pausa.
+     * - Si no existe cronometro_running en un formato antiguo, un show con
+     *   inicio_show valido se considera corriendo.
+     * - Para un reloj corriendo antiguo, inicio_show es el ancla fisica segura.
+     */
     if(remoteSchema!==SHOW_TIMER_SCHEMA){
-      const keepRunning=remote.running===true;
-      resetTimerStateOnly(keepRunning);
+      const runningWasStored=remote.runningPresent===true;
+      const keepRunning=runningWasStored
+        ? remote.running===true
+        : showStartedAt>0;
+
+      if(showStartedAt>0 && keepRunning){
+        showTimer={
+          elapsedMs:0,
+          running:true,
+          startedAt:showStartedAt
+        };
+      }else{
+        const safeElapsed=physicalMax===null
+          ? Math.max(0,Number(remote.elapsedMs)||0)
+          : Math.min(Math.max(0,Number(remote.elapsedMs)||0),physicalMax);
+
+        showTimer={
+          elapsedMs:safeElapsed,
+          running:keepRunning,
+          startedAt:keepRunning?(Number(remote.startedAt)||now):0
+        };
+      }
+
+      saveShowTimer();
+      showTimerLoop();
+
       if(state.config&&!legacyRemoteTimerResetPublished){
         legacyRemoteTimerResetPublished=true;
         const patch={
           show_activo:true,
           cronometro_schema:SHOW_TIMER_SCHEMA,
-          cronometro_elapsed_ms:0,
-          cronometro_running:keepRunning,
-          cronometro_started_at:keepRunning?showTimer.startedAt:0
+          cronometro_elapsed_ms:Math.max(0,Number(showTimer.elapsedMs)||0),
+          cronometro_running:showTimer.running===true,
+          cronometro_started_at:showTimer.running?showTimer.startedAt:0
         };
+
         setTimeout(()=>{
-          publishShowPatch(patch).catch(err=>console.warn('No se pudo migrar el cronómetro antiguo',err));
+          publishShowPatch(patch)
+            .catch(err=>console.warn('No se pudo migrar el cronometro del show existente',err));
         },0);
       }
       return;
     }
 
     legacyRemoteTimerResetPublished=true;
+
     let next={
       elapsedMs:Math.max(0,Number(remote.elapsedMs)||0),
       running:remote.running===true,
       startedAt:Number(remote.startedAt)||0
     };
-    if(next.running&&!next.startedAt)next.startedAt=Date.now();
 
-    // 6.36.90: saneamiento físico independiente del schema.
-    // El cronómetro jamás puede ser mayor que el tiempo transcurrido desde inicio_show.
-    // Si una versión anterior dejó horas infladas, reiniciar SOLO el reloj.
-    const showStartedAt=state.config?.startedAt?new Date(state.config.startedAt).getTime():0;
-    const physicalMax=showStartedAt>0?Math.max(0,Date.now()-showStartedAt):null;
-    const incomingTotal=next.elapsedMs+(next.running?Math.max(0,Date.now()-next.startedAt):0);
+    if(next.running&&!next.startedAt){
+      next.startedAt=showStartedAt||now;
+    }
+
+    const incomingTotal=
+      next.elapsedMs+
+      (next.running?Math.max(0,now-next.startedAt):0);
+
     if(physicalMax!==null && incomingTotal>physicalMax+30000){
-      next={elapsedMs:0,running:next.running,startedAt:next.running?Date.now():0};
+      next=next.running
+        ? {elapsedMs:0,running:true,startedAt:showStartedAt}
+        : {elapsedMs:Math.min(next.elapsedMs,physicalMax),running:false,startedAt:0};
+
       if(state.config){
         setTimeout(()=>publishShowPatch({
           show_activo:true,
           cronometro_schema:SHOW_TIMER_SCHEMA,
-          cronometro_elapsed_ms:0,
+          cronometro_elapsed_ms:Math.max(0,Number(next.elapsedMs)||0),
           cronometro_running:next.running,
           cronometro_started_at:next.running?next.startedAt:0
-        }).catch(err=>console.warn('No se pudo sanear el cronómetro remoto',err)),0);
+        }).catch(err=>console.warn('No se pudo sanear el cronometro remoto',err)),0);
       }
     }
-    const same=showTimer.elapsedMs===next.elapsedMs&&showTimer.running===next.running&&showTimer.startedAt===next.startedAt;
+
+    const same=
+      showTimer.elapsedMs===next.elapsedMs &&
+      showTimer.running===next.running &&
+      showTimer.startedAt===next.startedAt;
+
     if(same)return;
+
     showTimer=next;
     saveShowTimer();
     showTimerLoop();

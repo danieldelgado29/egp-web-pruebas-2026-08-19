@@ -646,7 +646,42 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   function saveStateLocalOnly(){
     const venues = $$('#venueHistory option').map(o=>o.value);
-    localStorage.setItem('egm-panel-v3',JSON.stringify({config:state.config,queue:state.queue,played:[...state.played],venues,customSongs:state.customSongs,customRepertoires:state.customRepertoires,songEdits:state.songEdits}));
+    const payload={
+      config:state.config,
+      queue:state.queue,
+      played:[...state.played],
+      venues,
+      customSongs:state.customSongs,
+      customRepertoires:state.customRepertoires,
+      songEdits:state.songEdits
+    };
+
+    /*
+     * EGP_LOCALSTORAGE_QUOTA_SAFE_V1
+     * El cache local nunca puede bloquear una operacion real de cola.
+     */
+    try{
+      localStorage.setItem('egm-panel-v3',JSON.stringify(payload));
+      return true;
+    }catch(err){
+      console.warn(
+        'Cache local lleno o no disponible; la operacion remota continua.',
+        err
+      );
+
+      try{
+        sessionStorage.setItem(
+          'egm-panel-runtime-v1',
+          JSON.stringify({
+            config:state.config,
+            queue:state.queue,
+            played:[...state.played]
+          })
+        );
+      }catch(_){}
+
+      return false;
+    }
   }
 
   async function localQueueRequest(path,body){

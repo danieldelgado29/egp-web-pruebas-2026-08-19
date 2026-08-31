@@ -251,7 +251,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   sessionStorage.setItem('egm-device-id',DEVICE_ID);
 
   const EGP_AUDIT_LOCAL=new URL(location.href).searchParams.get('audit_local')==='1';
-  const LOCAL_CORE_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':'https://core.elenagirjoaba.com';
+  const LOCAL_CORE_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':(location.hostname==='elenagirjoaba.com'?location.origin+'/__egp_core':'https://core.elenagirjoaba.com');
   const CORE_TEST_MODE=new URL(location.href).searchParams.get('core_test')==='1';
 
   /*
@@ -322,12 +322,12 @@ document.documentElement.dataset.egmVersion="6.36.92";
   window.addEventListener('online',()=>{flushPendingImageEdits();});
   setTimeout(()=>flushPendingImageEdits(),1500);
 
-  async function initRemoteSync(){
+  async function initRemoteSync(forceNetwork=false){
     if(EGP_AUDIT_LOCAL){ remoteReady=true; return null; }
     if(remoteStateRef) return remoteStateRef;
     if(remoteInitPromise) return remoteInitPromise;
     remoteInitPromise=(async()=>{
-    if(!navigator.onLine) throw new Error('Sin conexión a internet');
+    if(!navigator.onLine && !forceNetwork) throw new Error('Sin conexión a internet');
     try{
       const [{ initializeApp }, { doc, collection, query, where, getDocs, initializeFirestore, onSnapshot, setDoc: firebaseSetDoc, getDoc, updateDoc, runTransaction }] = await Promise.all([
         import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
@@ -392,8 +392,10 @@ document.documentElement.dataset.egmVersion="6.36.92";
         // Las ediciones de imagen ya no se leen desde config/estado.
         // La única fuente oficial es imageEdits/{owner-songId}.
         if(state.config){
-          state.config.whatsapp=data.pedidos_whatsapp!==false;
-          if(!egpRemoteDesdeCache) state.config.requests=data.pedidos_panel===true;
+          const remoteRequests=egpRemoteDesdeCache?state.config.requests===true:data.pedidos_panel===true;
+          const remoteWhatsapp=remoteRequests?false:(data.pedidos_whatsapp===true);
+          state.config.requests=remoteRequests;
+          state.config.whatsapp=remoteWhatsapp;
           state.config.requestsMode=data.pedidos_modo==='uno_por_turno'?'uno_por_turno':'libre';
           state.config.publicQueue=data.mostrar_cola!==false;
           $('#whatsappToggle').checked=state.config.whatsapp;
@@ -429,7 +431,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       listaActiva:activeId,
       repertorio_activo_ids:activeSongIds,
       repertorioActivoIds:activeSongIds,
-      pedidos_whatsapp:cfg.whatsapp!==false,
+      pedidos_whatsapp:cfg.requests===true?false:(cfg.whatsapp===true),
       pedidos_panel:cfg.requests===true,
       pedidos_modo:cfg.requestsMode==='uno_por_turno'?'uno_por_turno':'libre',
       mostrar_cola:cfg.publicQueue!==false,
@@ -505,12 +507,39 @@ document.documentElement.dataset.egmVersion="6.36.92";
     if(LOCAL_QUEUE_MODE){
       const active=('show_activo' in patch)?patch.show_activo:Boolean(state.config);
       const venue=('lugar' in patch)?patch.lugar:(state.config?.venue||'');
+
       await localQueueRequest('/api/show',{
         active:Boolean(active),
         venue:String(venue||'')
       });
 
-      if(EGP_AUDIT_LOCAL||!navigator.onLine)return revision;
+      // La LAN es autoritativa durante el show.
+      // Si esto funciona, la operación ya está sincronizada localmente.
+      await egpPublicarConfigLan(patch);
+
+      // Firebase queda como sincronización secundaria.
+      // Su fallo nunca invalida una publicación LAN exitosa.
+      if(!EGP_AUDIT_LOCAL){
+        (async()=>{
+          try{
+            // En red EGP, navigator.onLine puede no representar la ruta real a Internet.
+            // Intentamos Firebase de verdad; si no hay Internet, el catch deja LAN intacta.
+            if(!remoteStateRef)await initRemoteSync(true);
+
+            if(remoteStateRef&&window.__egmSetDoc){
+              await window.__egmSetDoc(
+                remoteStateRef,
+                {...patch,show_revision:revision,show_writer:DEVICE_ID,updated_at:revision},
+                {merge:true}
+              );
+            }
+          }catch(err){
+            console.warn('Firebase pendiente; LAN ya sincronizada:',err);
+          }
+        })();
+      }
+
+      return revision;
     }
 
     if(!remoteStateRef) await initRemoteSync();
@@ -604,7 +633,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
     if(state.config){
       $('#venueInput').value = state.config.venue || '';
       $('#profileSelect').value = state.config.profile || 'alto';
-      $('#whatsappToggle').checked = state.config.whatsapp !== false;
+      $('#whatsappToggle').checked = false; // EGP_DEFAULT_PEDIDOS_OFF_V1: no restaurar preferencia vieja
       const requestsToggle=document.getElementById('requestsToggle');
       if(requestsToggle)requestsToggle.checked=state.config.requests===true;
       const requestsMode=document.getElementById('requestsModeSelect');
@@ -774,9 +803,24 @@ document.documentElement.dataset.egmVersion="6.36.92";
     $('#liveRepertoireName').textContent=repertoireName;
     filterSongs();
     const ids=(repertoire==='todas'?state.songs:state.songs.filter(song=>(song.listas||[]).includes(repertoire))).map(song=>song.id);
-    publishShowPatch({lista_activa:repertoire,listaActiva:repertoire,repertorio_nombre:repertoireName,repertorio_activo_ids:ids,repertorioActivoIds:ids,show_activo:true})
-      .then(()=>toast('Repertorio sincronizado en todos los dispositivos.'))
-      .catch(err=>{console.error('No se sincronizó el repertorio',err);toast('Cambio guardado localmente; sincronización pendiente.');});
+
+    const patchRepertorio={
+      lista_activa:repertoire,
+      listaActiva:repertoire,
+      repertorio_nombre:repertoireName,
+      repertorio_activo_ids:ids,
+      repertorioActivoIds:ids,
+      show_activo:true
+    };
+
+    // El cambio del repertorio siempre se publica directamente en LAN.
+    // Firebase continúa como sincronización secundaria.
+    egpPublicarConfigLan(patchRepertorio)
+      .then(()=>toast('Repertorio sincronizado en la red local.'))
+      .catch(err=>console.warn('No se pudo publicar repertorio en LAN:',err));
+
+    publishShowPatch(patchRepertorio)
+      .catch(err=>console.warn('Firebase pendiente; repertorio LAN ya intentado:',err));
   });
   $('#profileSelect').addEventListener('change',()=>sessionStorage.setItem('egm-venue-draft',$('#venueInput').value));
   $('#panelUserSelect').addEventListener('change',()=>{
@@ -837,9 +881,17 @@ document.documentElement.dataset.egmVersion="6.36.92";
     applyingRemoteShowState=true;
     try{
       const incomingQueue=Array.isArray(data.cola)?data.cola.map(String):[];
-      if(!options.skipQueue)applyRemoteQueueSnapshot(incomingQueue);
-      if(!options.skipPlayed&&Array.isArray(data.tocadas)) state.played=new Set(data.tocadas.map(String));
-      if(!queueDragState.active&&!queueDragState.saving){
+      const localQueueAuthoritative=LOCAL_QUEUE_MODE===true;
+
+      if(!localQueueAuthoritative&&!options.skipQueue){
+        applyRemoteQueueSnapshot(incomingQueue);
+      }
+
+      if(!localQueueAuthoritative&&!options.skipPlayed&&Array.isArray(data.tocadas)){
+        state.played=new Set(data.tocadas.map(String));
+      }
+
+      if(!queueDragState.active&&!queueDragState.saving&&!localQueueAuthoritative){
         state.queue=canonicalQueueOrder(state.queue,state.played);
         if(!options.skipQueue)normalizeRemoteQueueIfNeeded(incomingQueue,state.played);
       }
@@ -849,11 +901,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
         const repertoire=data.lista_activa||data.listaActiva||'todas';
         const select=$('#repertoireSelect');
         const option=select?[...select.options].find(o=>o.value===repertoire):null;
+        const remoteRequests=options.preserveLocalRequests&&state.config?state.config.requests===true:data.pedidos_panel===true;
+        const remoteWhatsapp=remoteRequests?false:(data.pedidos_whatsapp===true);
         state.config={
           venue:data.lugar||'', repertoire,
           repertoireName:data.repertorio_nombre||option?.dataset?.name||option?.textContent?.replace(/ · .*$/,'')||titleFromId(repertoire),
-          profile:data.perfil_clientes||'medio', whatsapp:data.pedidos_whatsapp!==false,
-          requests:options.preserveLocalRequests&&state.config?state.config.requests===true:data.pedidos_panel===true,
+          profile:data.perfil_clientes||'medio', whatsapp:remoteWhatsapp,
+          requests:remoteRequests,
           requestsMode:data.pedidos_modo==='uno_por_turno'?'uno_por_turno':'libre',
           publicQueue:data.mostrar_cola!==false,
           advertising:data.uso_publicidad===true,
@@ -878,25 +932,64 @@ document.documentElement.dataset.egmVersion="6.36.92";
           startedAt:Number(data.cronometro_started_at)||0
         });
         saveStateLocalOnly();
-        // Tras autenticar, un show remoto activo lleva directamente a Control en vivo.
-        /*
-         * Una sincronización remota NUNCA debe sacar al usuario
-         * de Configuración mientras esa pantalla esté abierta.
-         * Solo las acciones explícitas de navegación pueden
-         * entrar a Control en vivo.
-         */
-        const configVisible =
-          $('#configView')?.classList.contains('is-active') === true;
 
-        if(
-          panelAuthValid() &&
-          $('#panelLogin').hidden &&
-          !configVisible &&
-          !configOpenedFromLive &&
-          !document.querySelector('#imageEditorDialog[open],#songbookEditorDialog[open]')
-        ) showLive();
+        /*
+         * EGP_AUTOENTRAR_SHOW_ACTIVO_LAN_V1
+         *
+         * Si este dispositivo acaba de conectarse y YA existe un show,
+         * no crea ni reinicia nada: toma el show existente, carga la cola
+         * real desde Core/LAN y, despues de autenticar, entra directamente
+         * a Control en vivo.
+         *
+         * Solo se hace una vez por carga. Si despues el usuario pulsa
+         * Configuracion, las sincronizaciones siguientes no lo devuelven.
+         */
+        if(!window.__egpAutoEntrarShowActivoLanV1){
+          window.__egpAutoEntrarShowActivoLanV1=true;
+
+          refreshLocalQueue().catch(err=>{
+            console.warn('Cola LAN inicial pendiente:',err);
+          });
+
+          const egpIntentarEntradaShowActivoV1=()=>{
+            if(!state.config)return false;
+            if(
+              panelAuthValid() &&
+              $('#panelLogin').hidden &&
+              !configOpenedFromLive &&
+              !document.querySelector('#imageEditorDialog[open],#songbookEditorDialog[open]')
+            ){
+              showLive();
+              refreshLocalQueue().catch(()=>{});
+              return true;
+            }
+            return false;
+          };
+
+          if(!egpIntentarEntradaShowActivoV1()){
+            const egpAutoEntradaTimerV1=setInterval(()=>{
+              if(!state.config){
+                clearInterval(egpAutoEntradaTimerV1);
+                return;
+              }
+              if(egpIntentarEntradaShowActivoV1()){
+                clearInterval(egpAutoEntradaTimerV1);
+              }
+            },250);
+
+            setTimeout(()=>clearInterval(egpAutoEntradaTimerV1),30000);
+          }
+        }
       }else if(data.show_activo===false){
-        state.config=null;state.queue=[];state.played.clear();
+        if(LOCAL_QUEUE_MODE===true){
+          saveStateLocalOnly();
+          renderQueue();
+          renderSongs();
+          return;
+        }
+
+        try{localStorage.removeItem(PANEL_AUTH_SESSION_KEY);}catch(_){}
+    state.config=null;state.queue=[];state.played.clear();
         setStatus(false);
         applyRemoteShowTimer({schema:SHOW_TIMER_SCHEMA,elapsedMs:0,running:false,startedAt:0});
         saveStateLocalOnly();
@@ -914,14 +1007,15 @@ document.documentElement.dataset.egmVersion="6.36.92";
     e.preventDefault();
     const venue=$('#venueInput').value.trim();
     if(!venue) return toast('Escribe el lugar del show');
-    const config={venue,repertoire:$('#repertoireSelect').value,repertoireName:$('#repertoireSelect').selectedOptions[0].dataset.name||$('#repertoireSelect').selectedOptions[0].textContent,profile:$('#profileSelect').value,whatsapp:$('#whatsappToggle').checked,requests:$('#requestsToggle')?.checked===true,requestsMode:$('#requestsModeSelect')?.value==='uno_por_turno'?'uno_por_turno':'libre',publicQueue:$('#publicQueueToggle').checked,advertising:$('#advertisingToggle').checked,startedAt:new Date().toISOString()};
+    const config={venue,repertoire:$('#repertoireSelect').value,repertoireName:$('#repertoireSelect').selectedOptions[0].dataset.name||$('#repertoireSelect').selectedOptions[0].textContent,profile:$('#profileSelect').value,whatsapp:$('#whatsappToggle').checked===true,requests:$('#requestsToggle')?.checked===true,requestsMode:$('#requestsModeSelect')?.value==='uno_por_turno'?'uno_por_turno':'libre',publicQueue:$('#publicQueueToggle').checked,advertising:$('#advertisingToggle').checked,startedAt:new Date().toISOString()};
+    if(config.requests===true){config.whatsapp=false;$('#whatsappToggle').checked=false;}
     askConfirm('Comenzar nuevo show','Se guardará esta configuración y se reiniciará la cola del show anterior.',()=>{
       // Entrada inmediata: no esperar una lectura de verificación para mostrar Control en vivo.
       remoteShowGeneration++;localDesiredShowActive=true;localShowTransitionUntil=Date.now()+10000;
       state.config=config;state.queue=[];state.played.clear();addVenueOption(venue);
       startNewShowTimer();
       saveStateLocalOnly();
-      setStatus(true);showLive();egpPublicarConfigLan({show_activo:true,inicio_show:new Date(config.startedAt).getTime(),pedidos_panel:config.requests===true,pedidos_modo:config.requestsMode});
+      setStatus(true);showLive();egpPublicarConfigLan({show_activo:true,inicio_show:new Date(config.startedAt).getTime(),pedidos_whatsapp:config.whatsapp===true,pedidos_panel:config.requests===true,pedidos_modo:config.requestsMode});
       toast(`Show iniciado. Repertorio activo: ${config.repertoireName}.`);
 
       // Publicación en segundo plano. Los demás dispositivos reciben el show por onSnapshot.
@@ -939,11 +1033,30 @@ document.documentElement.dataset.egmVersion="6.36.92";
     if(!state.config) return toast('Primero configura el show');
     document.documentElement.classList.add('live-mode');document.body.classList.add('live-mode');
     $('#configView').classList.remove('is-active');$('#liveView').classList.add('is-active');
+    const toolbar=document.querySelector('.live-toolbar');
+    const toolbarRight=document.querySelector('.live-toolbar-right');
+    if(toolbar){toolbar.hidden=false;toolbar.removeAttribute('aria-hidden');}
+    if(toolbarRight){toolbarRight.hidden=false;toolbarRight.removeAttribute('aria-hidden');}
     $('#liveRepertoireName').textContent=state.config.repertoireName || 'Repertorio';
     $('#songSearch').value='';filterSongs();renderQueue();
   }
   let configOpenedFromLive=false;
-  function showConfig(fromLive=false){ configOpenedFromLive=Boolean(fromLive&&state.config);document.documentElement.classList.remove('live-mode');document.body.classList.remove('live-mode');$('#liveView').classList.remove('is-active');$('#configView').classList.add('is-active');const continueBtn=$('#continueShowBtn');if(continueBtn)continueBtn.hidden=!configOpenedFromLive;window.scrollTo({left:0,top:0,behavior:'smooth'}); }
+  function showConfig(fromLive=false){
+    if(state.config&&fromLive!==true&&localDesiredShowActive!==false){
+      showLive();
+      return;
+    }
+    configOpenedFromLive=Boolean(fromLive&&state.config);
+    document.documentElement.classList.remove('live-mode');document.body.classList.remove('live-mode');
+    $('#liveView').classList.remove('is-active');$('#configView').classList.add('is-active');
+    const continueBtn=$('#continueShowBtn');if(continueBtn)continueBtn.hidden=!configOpenedFromLive;
+    if(!state.config){
+      const w=document.getElementById('whatsappToggle');if(w)w.checked=false;
+      const r=document.getElementById('requestsToggle');if(r)r.checked=false;
+      try{localStorage.setItem('egp-pedidos-panel-enabled-v1','0');}catch(_){}
+    }
+    window.scrollTo({left:0,top:0,behavior:'smooth'});
+  }
 
   // Entrega 6.36.65 · pausa/play con doble clic o doble toque compatible.
   const SHOW_TIMER_KEY='egm-show-timer-v1';
@@ -1176,11 +1289,12 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const select=$('#repertoireSelect');
     const repertoire=select.value;
     const repertoireName=select.selectedOptions[0]?.dataset?.name||select.selectedOptions[0]?.textContent?.replace(/ · .*$/,'')||titleFromId(repertoire);
-    state.config={...state.config,venue,repertoire,repertoireName,profile:$('#profileSelect').value,whatsapp:$('#whatsappToggle').checked,requests:$('#requestsToggle')?.checked===true,requestsMode:$('#requestsModeSelect')?.value==='uno_por_turno'?'uno_por_turno':'libre',publicQueue:$('#publicQueueToggle').checked,advertising:$('#advertisingToggle').checked};
+    state.config={...state.config,venue,repertoire,repertoireName,profile:$('#profileSelect').value,whatsapp:$('#whatsappToggle').checked===true,requests:$('#requestsToggle')?.checked===true,requestsMode:$('#requestsModeSelect')?.value==='uno_por_turno'?'uno_por_turno':'libre',publicQueue:$('#publicQueueToggle').checked,advertising:$('#advertisingToggle').checked};
+    if(state.config.requests===true){state.config.whatsapp=false;$('#whatsappToggle').checked=false;}
     addVenueOption(venue);invalidateRepertoireCache();saveStateLocalOnly();
     const ids=(repertoire==='todas'?state.songs:state.songs.filter(song=>(song.listas||[]).includes(repertoire))).map(song=>song.id);
     showLive();toast('Configuración actualizada. El show continúa.');
-    await egpPublicarConfigLan({show_activo:true,inicio_show:new Date(state.config.startedAt).getTime(),pedidos_panel:state.config.requests===true,pedidos_modo:state.config.requestsMode});
+    await egpPublicarConfigLan({show_activo:true,inicio_show:new Date(state.config.startedAt).getTime(),pedidos_whatsapp:state.config.whatsapp===true,pedidos_panel:state.config.requests===true,pedidos_modo:state.config.requestsMode});
     try{await publishShowPatch({show_activo:true,lugar:venue,lista_activa:repertoire,listaActiva:repertoire,repertorio_nombre:repertoireName,repertorio_activo_ids:ids,repertorioActivoIds:ids,perfil_clientes:state.config.profile,pedidos_whatsapp:state.config.whatsapp,pedidos_panel:state.config.requests===true,pedidos_modo:state.config.requestsMode==='uno_por_turno'?'uno_por_turno':'libre',mostrar_cola:state.config.publicQueue,uso_publicidad:state.config.advertising===true});}
     catch(err){console.warn('Configuración del show pendiente de sincronizar',err);toast('Cambios guardados localmente; sincronización pendiente.');}
   });
@@ -1190,7 +1304,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
     clearTimeout(remoteShowWriteTimer);
     remoteShowGeneration++;
     remoteShowWriteChain=Promise.resolve();
-    const finishPayload={show_activo:false,cola:[],tocadas:[],pedidos_panel_lista:[],cronometro_elapsed_ms:0,cronometro_running:false,cronometro_started_at:0,inicio_show:0};
+    const finishPayload={show_activo:false,cola:[],tocadas:[],pedidos_whatsapp:false,pedidos_panel:false,pedidos_modo:'libre',pedidos_panel_lista:[],cronometro_elapsed_ms:0,cronometro_running:false,cronometro_started_at:0,inicio_show:0};
 
     if(LOCAL_QUEUE_MODE){
       const cleared=await localQueueRequest('/api/queue/clear',{});
@@ -1209,7 +1323,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
     localDesiredShowActive=false;localShowTransitionUntil=Date.now()+15000;
     state.config=null;state.queue=[];state.played.clear();
     showTimer={elapsedMs:0,running:false,startedAt:0};saveShowTimer();showTimerLoop();
-    saveStateLocalOnly();setStatus(false);showConfig();egpPublicarConfigLan({show_activo:false,inicio_show:0,pedidos_panel:false,pedidos_modo:'libre'});toast('Finalizando show en todos los dispositivos…');
+    saveStateLocalOnly();setStatus(false);showConfig();egpPublicarConfigLan({show_activo:false,inicio_show:0,pedidos_whatsapp:false,pedidos_panel:false,pedidos_modo:'libre'});toast('Finalizando show en todos los dispositivos…');
     try{
       await publishFinishedShow();
       localDesiredShowActive=null;localShowTransitionUntil=0;
@@ -5836,29 +5950,76 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
 
   /* EGP CONFIG LAN CONSOLIDADA V85 */
-  const EGP_REQUESTS_LAN_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':'http://10.10.10.2:8790';
+  const EGP_REQUESTS_LAN_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':(location.hostname==='elenagirjoaba.com'?location.origin+'/__egp_lan':'http://10.10.10.2:8790');
 
   async function egpPublicarConfigLan(data={}){
     try{
       const cfg=state.config||{};
       const active=('show_activo' in data)?data.show_activo===true:Boolean(state.config);
       const showId=String(
-        data.inicio_show ||
-        (cfg.startedAt?new Date(cfg.startedAt).getTime():0) ||
-        latestRemoteState?.inicio_show ||
-        0
+        ('inicio_show' in data)
+          ? (Number(data.inicio_show)||0)
+          : (
+              (cfg.startedAt?new Date(cfg.startedAt).getTime():0) ||
+              latestRemoteState?.inicio_show ||
+              0
+            )
       );
       const enabled=('pedidos_panel' in data)?(active&&data.pedidos_panel===true):(active&&cfg.requests===true);
       const mode=('pedidos_modo' in data)?(data.pedidos_modo==='uno_por_turno'?'uno_por_turno':'libre'):(cfg.requestsMode==='uno_por_turno'?'uno_por_turno':'libre');
+      const repertoire=('lista_activa' in data)?String(data.lista_activa||'todas'):String(cfg.repertoire||'todas');
+      const repertoireName=('repertorio_nombre' in data)?String(data.repertorio_nombre||''):String(cfg.repertoireName||'');
+      const ids=Array.isArray(data.repertorio_activo_ids)
+        ? data.repertorio_activo_ids.map(String)
+        : (repertoire==='todas'
+            ? state.songs
+            : state.songs.filter(song=>(song.listas||[]).includes(repertoire))
+          ).map(song=>String(song.id));
+      const whatsappRequested=('pedidos_whatsapp' in data)?data.pedidos_whatsapp===true:cfg.whatsapp===true;
+      const whatsapp=active&&!enabled&&whatsappRequested;
+      const publicQueue=('mostrar_cola' in data)?data.mostrar_cola!==false:cfg.publicQueue!==false;
+      const venue=('lugar' in data)?String(data.lugar||''):String(cfg.venue||'');
+      const profile=('perfil_clientes' in data)?String(data.perfil_clientes||'medio'):String(cfg.profile||'medio');
+      const advertising=('uso_publicidad' in data)?data.uso_publicidad===true:cfg.advertising===true;
+
+      const publicConfigPayload={
+        show_active:active,
+        show_id:showId,
+        pedidos_panel:enabled,
+        pedidos_modo:mode,
+        pedidos_whatsapp:whatsapp,
+        mostrar_cola:publicQueue,
+        lista_activa:repertoire,
+        repertorio_nombre:repertoireName,
+        repertorio_activo_ids:ids,
+        lugar:venue,
+        perfil_clientes:profile,
+        uso_publicidad:advertising
+      };
+
+      // FASE 1: 8788 recibe la configuración pública sin tocar cola/Bridge.
+      // Si el Core no está disponible, 8790 continúa funcionando igual que antes.
+      try{
+        const coreResponse=await fetch(`${LOCAL_CORE_URL}/api/public-config`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          cache:'no-store',
+          body:JSON.stringify(publicConfigPayload)
+        });
+        if(!coreResponse.ok)throw new Error(`Local Core HTTP ${coreResponse.status}`);
+      }catch(coreErr){
+        console.warn('PublicConfig 8788 no disponible:',coreErr);
+      }
 
       await fetch(`${EGP_REQUESTS_LAN_URL}/api/config`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         cache:'no-store',
-        body:JSON.stringify({show_active:active,show_id:showId,pedidos_panel:enabled,pedidos_modo:mode})
+        body:JSON.stringify(publicConfigPayload)
       });
     }catch(err){
       console.warn('Fallback LAN de Pedidos no disponible:',err);
+      throw err;
     }
   }
 
@@ -5891,22 +6052,44 @@ document.documentElement.dataset.egmVersion="6.36.92";
         card.insertAdjacentElement('afterend',nueva);
         const toggle=nueva.querySelector('#requestsToggle');
         const mode=nueva.querySelector('#requestsModeSelect');
-        toggle.checked=state.config?.requests===true;
+        toggle.checked=false; // EGP_DEFAULT_PEDIDOS_OFF_V1: solo un show remoto activo puede volver a encenderlo
         mode.value=state.config?.requestsMode==='uno_por_turno'?'uno_por_turno':'libre';
         const publishCurrent=async()=>{
+          if(toggle.checked===true&&whatsapp)whatsapp.checked=false;
           localStorage.setItem(EGP_PEDIDOS_PANEL_KEY,toggle.checked?'1':'0');
           if(state.config){
             state.config.requests=toggle.checked===true;
+            state.config.whatsapp=state.config.requests?false:(whatsapp?.checked===true);
             state.config.requestsMode=mode.value==='uno_por_turno'?'uno_por_turno':'libre';
             saveStateLocalOnly();
-            await egpPublicarConfigLan({show_activo:true,inicio_show:new Date(state.config.startedAt).getTime(),pedidos_panel:state.config.requests,pedidos_modo:state.config.requestsMode});
+            const pedidosPatch={pedidos_whatsapp:state.config.whatsapp===true,pedidos_panel:state.config.requests,pedidos_modo:state.config.requestsMode};
+            await egpPublicarConfigLan({show_activo:true,inicio_show:new Date(state.config.startedAt).getTime(),...pedidosPatch});
             if(!EGP_AUDIT_LOCAL){
-              try{await publishShowPatch({pedidos_panel:state.config.requests,pedidos_modo:state.config.requestsMode});}catch(err){console.warn('Pedidos pendientes de sincronizar',err);}
+              try{await publishShowPatch(pedidosPatch);}catch(err){console.warn('Pedidos pendientes de sincronizar',err);}
             }
           }
         };
         toggle.addEventListener('change',publishCurrent);
         mode.addEventListener('change',publishCurrent);
+
+        if(whatsapp&&!whatsapp.dataset.egpPedidosExclusion){
+          whatsapp.dataset.egpPedidosExclusion='1';
+          whatsapp.addEventListener('change',async()=>{
+            if(whatsapp.checked===true)toggle.checked=false;
+            localStorage.setItem(EGP_PEDIDOS_PANEL_KEY,toggle.checked?'1':'0');
+            if(state.config){
+              state.config.whatsapp=whatsapp.checked===true;
+              state.config.requests=state.config.whatsapp?false:(toggle.checked===true);
+              state.config.requestsMode=mode.value==='uno_por_turno'?'uno_por_turno':'libre';
+              saveStateLocalOnly();
+              const pedidosPatch={pedidos_whatsapp:state.config.whatsapp===true,pedidos_panel:state.config.requests===true,pedidos_modo:state.config.requestsMode};
+              try{await egpPublicarConfigLan({show_activo:true,inicio_show:new Date(state.config.startedAt).getTime(),...pedidosPatch});}catch(err){console.warn('Pedidos LAN pendientes',err);}
+              if(!EGP_AUDIT_LOCAL){
+                try{await publishShowPatch(pedidosPatch);}catch(err){console.warn('Pedidos pendientes de sincronizar',err);}
+              }
+            }
+          });
+        }
       }
     }
 
@@ -6188,12 +6371,9 @@ document.documentElement.dataset.egmVersion="6.36.92";
       if(!configResponse.ok)return;
       const configLan=await configResponse.json();
 
-      if(configLan?.ok&&state.config){
-        state.config.requests=configLan.pedidos_panel===true;
-        state.config.requestsMode=configLan.pedidos_modo==='uno_por_turno'?'uno_por_turno':'libre';
-        const t=document.getElementById('requestsToggle');if(t)t.checked=state.config.requests;
-        const m=document.getElementById('requestsModeSelect');if(m)m.value=state.config.requestsMode;
-      }
+      // 8790 es autoridad únicamente para las órdenes/pedidos LAN.
+      // La configuración del show y sus switches vienen de 8788/Firebase.
+      // Nunca reescribir state.config desde /api/config de 8790.
       if(!configLan?.ok || configLan.show_active!==true || !configLan.show_id){
         egpPedidosLan=[];
         egpCombinarPedidosV85();
@@ -6265,7 +6445,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       }
 
       if(pedidosFirebase.length){
-        if(!remoteStateRef)await initRemoteSync();
+        if(!remoteStateRef)await initRemoteSync(true);
         if(!remoteDb||!remoteDoc||!window.__egmUpdateDoc||!remoteRunTransaction||!remoteStateRef){
           throw new Error('Firebase todavía no está listo');
         }
@@ -6326,10 +6506,24 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   egpCrearInterfazPedidos();
 
-  // 6.36.69.2 — La contraseña se solicita en cada apertura del panel.
-  // No se conserva autorización en localStorage/sessionStorage, para que otro dispositivo
-  // nunca entre directamente aunque ya exista un show activo.
-  function rememberPanelAuth(){}
+  // La autorización dura únicamente durante esta sesión de la app.
+  // Sobrevive a recargas y al cambiar temporalmente a otra app,
+  // pero desaparece al cerrar completamente esta ventana/app.
+  const PANEL_AUTH_SESSION_KEY='egm-panel-auth-session-v1';
+
+  function rememberPanelAuth(){
+    try{
+      localStorage.setItem(PANEL_AUTH_SESSION_KEY,'1');
+    }catch(_){}
+  }
+
+  function panelAuthSessionValid(){
+    try{
+      return localStorage.getItem(PANEL_AUTH_SESSION_KEY)==='1';
+    }catch(_){
+      return false;
+    }
+  }
 
   // Android/iPhone: permitir siempre el desplazamiento vertical normal.
   // La prevención global de touchmove podía bloquear el scroll en PWA/Android.
@@ -6337,18 +6531,41 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   const login=$('#panelLogin'),loginForm=$('#panelLoginForm'),loginPassword=$('#panelLoginPassword'),loginError=$('#panelLoginError');
 
-  // SEGURIDAD 2026-08-28:
-  // El panel SIEMPRE exige contraseña al abrirse.
-  // Ningún parámetro de URL puede saltarse esta pantalla.
-  login.removeAttribute('hidden');
-  login.setAttribute('aria-hidden','false');
-  login.hidden=false;
-  loginForm.addEventListener('submit',e=>{e.preventDefault();const security=JSON.parse(localStorage.getItem('egm-security-settings')||'{}');if(loginPassword.value===(security.password||'2907')){rememberPanelAuth();login.hidden=true;loginError.hidden=true;loginPassword.value='';if(latestRemoteState)applyRemotePanelState(latestRemoteState);else if(state.config)showLive();else showConfig();}else loginError.hidden=false;});
+  // Contraseña una vez por sesión real de la app.
+  // Una recarga, actualización del Service Worker o cambio temporal a otra app
+  // no debe volver a pedirla.
+  if(panelAuthSessionValid()){
+    login.hidden=true;
+    login.setAttribute('aria-hidden','true');
+  }else{
+    login.removeAttribute('hidden');
+    login.setAttribute('aria-hidden','false');
+    login.hidden=false;
+  }
+
+  loginForm.addEventListener('submit',e=>{
+    e.preventDefault();
+    const security=JSON.parse(localStorage.getItem('egm-security-settings')||'{}');
+
+    if(loginPassword.value===(security.password||'2907')){
+      rememberPanelAuth();
+      login.hidden=true;
+      login.setAttribute('aria-hidden','true');
+      loginError.hidden=true;
+      loginPassword.value='';
+
+      if(latestRemoteState)applyRemotePanelState(latestRemoteState);
+      else if(state.config)showLive();
+      else showConfig();
+    }else{
+      loginError.hidden=false;
+    }
+  });
   loadData().then(async()=>{
     let sharedStateResolved=false;
 
     try{
-      await initRemoteSync();
+      await initRemoteSync(true);
 
       if(remoteGetDoc&&remoteStateRef){
         const snap=await remoteGetDoc(remoteStateRef);
@@ -6364,6 +6581,23 @@ document.documentElement.dataset.egmVersion="6.36.92";
     }
 
     egpPedidosLanPanelV85();
+
+    // Pedidos de clientes con Internet llegan por Firebase.
+    // Reintentar el listener aunque navigator.onLine sea enganoso en la red EGP.
+    let egpFirebasePedidosEnsureTimerV1=0;
+    const egpAsegurarFirebasePedidosV1=async()=>{
+      clearTimeout(egpFirebasePedidosEnsureTimerV1);
+      if(!remoteStateRef&&!EGP_AUDIT_LOCAL){
+        try{
+          await initRemoteSync(true);
+          console.log('Firebase pedidos: listener listo');
+        }catch(err){
+          console.warn('Firebase pedidos todavia no disponible:',err);
+        }
+      }
+      egpFirebasePedidosEnsureTimerV1=setTimeout(egpAsegurarFirebasePedidosV1,5000);
+    };
+    egpFirebasePedidosEnsureTimerV1=setTimeout(egpAsegurarFirebasePedidosV1,1200);
   });
 })();
 

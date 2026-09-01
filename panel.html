@@ -146,6 +146,11 @@
     */
     #configView .egp-config-field-inline{
       gap:0;
+      padding:0;
+      border:0;
+      border-radius:0;
+      background:transparent;
+      box-shadow:none;
     }
 
     #configView .egp-config-field-inline input,
@@ -223,13 +228,10 @@
             </select>
           </label>
 
-          <label class="field">
-            <span>Usuario de este dispositivo</span>
-            <select id="panelUserSelect" required>
-              <option value="elena">Elena</option>
-              <option value="daniel">Daniel</option>
-            </select>
-          </label>
+          <select id="panelUserSelect" hidden aria-hidden="true" tabindex="-1">
+            <option value="elena">Elena</option>
+            <option value="daniel">Daniel</option>
+          </select>
 
           <label class="field">
             <span>Abrir al entrar una canción a la cola</span>

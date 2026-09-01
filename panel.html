@@ -2545,5 +2545,189 @@ html.egp-desktop-computer body.egp-two-column.live-mode
 })();
 </script>
 
+
+<!-- EGP_UI24R_AVAILABILITY_V1_INICIO -->
+
+<style id="EGP_UI24R_AVAILABILITY_V1_CSS">
+#ui24rBtn.egp-ui24-offline{
+  background:#3a3d45 !important;
+  color:#8d929c !important;
+  border-color:#4b4f58 !important;
+  box-shadow:none !important;
+  opacity:.78 !important;
+  cursor:not-allowed !important;
+  filter:saturate(.15) !important;
+}
+
+#ui24rBtn.egp-ui24-checking{
+  background:#3a3d45 !important;
+  color:#a7abb3 !important;
+  border-color:#4b4f58 !important;
+  box-shadow:none !important;
+  opacity:.88 !important;
+}
+</style>
+
+<script id="EGP_UI24R_AVAILABILITY_V1_JS">
+(function(){
+  const btn=document.getElementById('ui24rBtn');
+  if(!btn) return;
+
+  /*
+    El botón NO comprueba nada al hacer clic.
+    Mantiene un estado calculado previamente en segundo plano.
+    Por eso, cuando está azul, abre con el mismo flujo inmediato de siempre.
+  */
+
+  const PROBE_INTERVAL=4000;
+  const PROBE_TIMEOUT=1400;
+  const FAILURES_TO_OFFLINE=2;
+
+  let state='checking';
+  let consecutiveFailures=0;
+  let probing=false;
+  let timer=0;
+
+  function probeUrl(){
+    /*
+      En producción, el Local Core/proxy expone la Ui24R por esta ruta.
+      Cuando la consola no está disponible, esa ruta cae en el hosting web
+      y responde como página no encontrada. Una respuesta 2xx significa
+      que la ruta local de Ui24R está realmente disponible.
+    */
+    return location.origin + '/__egp_ui/mixer.html';
+  }
+
+  function applyState(next){
+    state=next;
+
+    btn.classList.toggle('egp-ui24-checking',next==='checking');
+    btn.classList.toggle('egp-ui24-offline',next==='offline');
+
+    const disabled=next!=='online';
+    btn.setAttribute('aria-disabled',disabled?'true':'false');
+
+    if(next==='online'){
+      btn.title='Abrir consola Ui24R';
+    }else if(next==='checking'){
+      btn.title='Comprobando Ui24R';
+    }else{
+      btn.title='Ui24R no disponible';
+    }
+  }
+
+  function notifyUnavailable(){
+    const toast=document.getElementById('toast');
+    if(!toast) return;
+
+    toast.textContent='Ui24R no disponible';
+    toast.classList.add('show');
+
+    clearTimeout(notifyUnavailable.timer);
+    notifyUnavailable.timer=setTimeout(function(){
+      toast.classList.remove('show');
+    },1800);
+  }
+
+  /*
+    Captura el clic ANTES del listener existente que abre el iframe.
+    Solo se bloquea cuando el último estado conocido no es online.
+    Cuando está online, este listener no interfiere en absoluto.
+  */
+  btn.addEventListener('click',function(e){
+    if(state==='online') return;
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    notifyUnavailable();
+  },true);
+
+  async function probe(){
+    if(probing) return;
+
+    /*
+      El estado solo importa cuando el documento está visible.
+      Así no se gasta trabajo de red con la app escondida.
+    */
+    if(document.visibilityState==='hidden') return;
+
+    probing=true;
+
+    const controller=new AbortController();
+    const timeout=setTimeout(function(){
+      controller.abort();
+    },PROBE_TIMEOUT);
+
+    try{
+      const response=await fetch(
+        probeUrl() + '?egp_probe=' + Date.now(),
+        {
+          method:'GET',
+          cache:'no-store',
+          credentials:'same-origin',
+          redirect:'manual',
+          signal:controller.signal,
+          headers:{
+            'Accept':'text/html,*/*;q=0.1'
+          }
+        }
+      );
+
+      clearTimeout(timeout);
+
+      /*
+        No necesitamos descargar/interpretar mixer.html.
+        En cuanto tenemos status + headers, cancelamos el cuerpo.
+      */
+      try{
+        if(response.body && typeof response.body.cancel==='function'){
+          response.body.cancel();
+        }
+      }catch(_){}
+
+      if(response.status>=200 && response.status<300){
+        consecutiveFailures=0;
+        applyState('online');
+      }else{
+        consecutiveFailures++;
+
+        if(state==='checking' || consecutiveFailures>=FAILURES_TO_OFFLINE){
+          applyState('offline');
+        }
+      }
+    }catch(_){
+      clearTimeout(timeout);
+      consecutiveFailures++;
+
+      if(state==='checking' || consecutiveFailures>=FAILURES_TO_OFFLINE){
+        applyState('offline');
+      }
+    }finally{
+      probing=false;
+    }
+  }
+
+  function start(){
+    clearInterval(timer);
+    probe();
+    timer=setInterval(probe,PROBE_INTERVAL);
+  }
+
+  applyState('checking');
+  start();
+
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='visible'){
+      probe();
+    }
+  });
+
+  window.addEventListener('focus',probe);
+  window.addEventListener('online',probe);
+})();
+</script>
+
+<!-- EGP_UI24R_AVAILABILITY_V1_FIN -->
+
 </body>
 </html>

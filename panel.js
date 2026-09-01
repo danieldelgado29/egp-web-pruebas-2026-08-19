@@ -2269,63 +2269,191 @@ document.documentElement.dataset.egmVersion="6.36.92";
       );
     }
 
+    if(stage.__egpNoteGestureStartHandler){
+      stage.removeEventListener(
+        'gesturestart',
+        stage.__egpNoteGestureStartHandler
+      );
+    }
+
+    if(stage.__egpNoteGestureChangeHandler){
+      stage.removeEventListener(
+        'gesturechange',
+        stage.__egpNoteGestureChangeHandler
+      );
+    }
+
+    if(stage.__egpNoteGestureEndHandler){
+      stage.removeEventListener(
+        'gestureend',
+        stage.__egpNoteGestureEndHandler
+      );
+    }
+
+    const viewerPoint=e=>{
+      const rect=stage.getBoundingClientRect();
+
+      const hasX=
+        Number.isFinite(Number(e.clientX));
+
+      const hasY=
+        Number.isFinite(Number(e.clientY));
+
+      return {
+        x:
+          (hasX ? Number(e.clientX)-rect.left : stage.clientWidth/2)
+          -stage.clientWidth/2,
+        y:
+          (hasY ? Number(e.clientY)-rect.top : stage.clientHeight/2)
+          -stage.clientHeight/2
+      };
+    };
+
+    let macNativeGestureActive=false;
+    let macNativeGestureStartScale=1;
+
     const wheelHandler=e=>{
       if(!stage.classList.contains('is-note-viewer'))return;
 
-      e.preventDefault();
+      if(!isDesktopMac){
+        e.preventDefault();
 
-      const rect=stage.getBoundingClientRect();
-
-      const centerX=
-        e.clientX-rect.left-stage.clientWidth/2;
-
-      const centerY=
-        e.clientY-rect.top-stage.clientHeight/2;
-
-      if(isDesktopMac){
-        const unit=
-          e.deltaMode===1
-            ? 16
-            : e.deltaMode===2
-              ? Math.max(1,stage.clientHeight)
-              : 1;
-
-        const rawDelta=e.deltaY*unit;
-
-        const delta=Math.max(
-          -32,
-          Math.min(32,rawDelta)
-        );
-
-        if(Math.abs(delta)<0.01)return;
-
-        const factor=Math.exp(-delta*0.0022);
+        const point=viewerPoint(e);
+        const factor=e.deltaY<0 ? 1.12 : 0.88;
 
         setNoteScale(
           img,
           noteViewerState.scale*factor,
-          centerX,
-          centerY
+          point.x,
+          point.y
         );
 
         return;
       }
 
-      const factor=e.deltaY<0?1.12:0.88;
+      e.preventDefault();
+
+      const unit=
+        e.deltaMode===1
+          ? 16
+          : e.deltaMode===2
+            ? Math.max(1,stage.clientHeight)
+            : 1;
+
+      const dx=e.deltaX*unit;
+      const dy=e.deltaY*unit;
+
+      if(e.ctrlKey){
+        if(macNativeGestureActive)return;
+
+        const point=viewerPoint(e);
+
+        const delta=Math.max(
+          -22,
+          Math.min(22,dy)
+        );
+
+        if(Math.abs(delta)<0.001)return;
+
+        const factor=Math.exp(
+          -delta*0.012
+        );
+
+        setNoteScale(
+          img,
+          noteViewerState.scale*factor,
+          point.x,
+          point.y
+        );
+
+        return;
+      }
+
+      const panX=
+        e.shiftKey && Math.abs(dx)<0.01
+          ? dy
+          : dx;
+
+      const panY=
+        e.shiftKey && Math.abs(dx)<0.01
+          ? 0
+          : dy;
+
+      noteViewerState.x-=panX;
+      noteViewerState.y-=panY;
+
+      clampNotePosition(img);
+      applyNoteTransform(img);
+    };
+
+    const gestureStart=e=>{
+      if(!isDesktopMac)return;
+      if(!stage.classList.contains('is-note-viewer'))return;
+
+      e.preventDefault();
+
+      macNativeGestureActive=true;
+      macNativeGestureStartScale=
+        noteViewerState.scale;
+    };
+
+    const gestureChange=e=>{
+      if(!isDesktopMac)return;
+      if(!stage.classList.contains('is-note-viewer'))return;
+
+      e.preventDefault();
+
+      const scale=
+        Number.isFinite(Number(e.scale))
+          ? Number(e.scale)
+          : 1;
+
+      const point=viewerPoint(e);
 
       setNoteScale(
         img,
-        noteViewerState.scale*factor,
-        centerX,
-        centerY
+        macNativeGestureStartScale*scale,
+        point.x,
+        point.y
       );
     };
 
+    const gestureEnd=e=>{
+      if(!isDesktopMac)return;
+
+      if(e && typeof e.preventDefault==='function'){
+        e.preventDefault();
+      }
+
+      macNativeGestureActive=false;
+    };
+
     stage.__egpNoteWheelHandler=wheelHandler;
+    stage.__egpNoteGestureStartHandler=gestureStart;
+    stage.__egpNoteGestureChangeHandler=gestureChange;
+    stage.__egpNoteGestureEndHandler=gestureEnd;
 
     stage.addEventListener(
       'wheel',
       wheelHandler,
+      {passive:false}
+    );
+
+    stage.addEventListener(
+      'gesturestart',
+      gestureStart,
+      {passive:false}
+    );
+
+    stage.addEventListener(
+      'gesturechange',
+      gestureChange,
+      {passive:false}
+    );
+
+    stage.addEventListener(
+      'gestureend',
+      gestureEnd,
       {passive:false}
     );
   }

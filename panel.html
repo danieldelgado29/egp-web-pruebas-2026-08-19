@@ -179,6 +179,82 @@
     }
   </style>
 
+
+
+  <style id="EGP_PEDIDOS_DESPLEGABLE_V1">
+    #pedidosConfigGroup{
+      grid-column:1/-1;
+      width:100%;
+      border-top:1px solid var(--line,#2a2e37);
+      border-bottom:1px solid var(--line,#2a2e37);
+    }
+
+    #pedidosConfigHeader{
+      width:100%;
+      min-height:52px;
+      padding:0 4px;
+      border:0;
+      background:transparent;
+      color:var(--text,#f5f6f8);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      cursor:pointer;
+      text-align:left;
+    }
+
+    #pedidosConfigHeader .egp-pedidos-title{
+      font-size:16px;
+      font-weight:850;
+    }
+
+    #pedidosConfigHeader .egp-pedidos-right{
+      display:flex;
+      align-items:center;
+      gap:9px;
+      color:var(--muted,#949aa7);
+    }
+
+    #pedidosConfigStatus{
+      font-size:12px;
+      font-weight:700;
+    }
+
+    #pedidosConfigArrow{
+      display:block;
+      font-size:21px;
+      line-height:1;
+      transition:transform .18s ease;
+    }
+
+    #pedidosConfigHeader[aria-expanded="true"]
+    #pedidosConfigArrow{
+      transform:rotate(180deg);
+    }
+
+    #pedidosConfigBody{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      padding:0 0 12px;
+    }
+
+    #pedidosConfigBody[hidden]{
+      display:none !important;
+    }
+
+    #pedidosConfigBody .switch-card{
+      margin:0;
+    }
+
+    @media(max-width:760px){
+      #pedidosConfigBody{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+
 </head>
 <body data-build="6.36.76">
 
@@ -239,12 +315,46 @@
             <small id="panelAutoOpenHelp">Elena: por defecto no se abre nada.</small>
           </label>
 
-          <div class="switch-card">
-            <div>
-              <strong>Pedidos por WhatsApp</strong>
-              <small>Mostrar u ocultar el botón público</small>
+          <div id="pedidosConfigGroup" class="egp-pedidos-group">
+            <button
+              id="pedidosConfigHeader"
+              class="egp-pedidos-header"
+              type="button"
+              aria-expanded="false"
+              aria-controls="pedidosConfigBody"
+            >
+              <span class="egp-pedidos-title">Pedidos</span>
+              <span class="egp-pedidos-right">
+                <small id="pedidosConfigStatus">Desactivados</small>
+                <span id="pedidosConfigArrow" class="egp-pedidos-arrow">⌄</span>
+              </span>
+            </button>
+
+            <div id="pedidosConfigBody" class="egp-pedidos-body" hidden>
+
+              <div class="switch-card">
+                <div>
+                  <strong>Pedidos por WhatsApp</strong>
+                  <small>Mostrar u ocultar el botón público</small>
+                </div>
+                <label class="switch">
+                  <input id="whatsappToggle" type="checkbox">
+                  <span></span>
+                </label>
+              </div>
+
+              <div class="switch-card">
+                <div>
+                  <strong>Pedidos al Panel</strong>
+                  <small>Recibir pedidos directamente en el Panel</small>
+                </div>
+                <label class="switch">
+                  <input id="requestsToggle" type="checkbox">
+                  <span></span>
+                </label>
+              </div>
+
             </div>
-            <label class="switch"><input id="whatsappToggle" type="checkbox"><span></span></label>
           </div>
 
           <div class="switch-card">
@@ -1068,6 +1178,72 @@
   setInterval(syncQueueRepertoire,500);
 })();
 </script>
+
+
+
+<script id="EGP_PEDIDOS_DESPLEGABLE_V1_JS">
+(function(){
+  const header=document.getElementById('pedidosConfigHeader');
+  const body=document.getElementById('pedidosConfigBody');
+  const status=document.getElementById('pedidosConfigStatus');
+  const whatsapp=document.getElementById('whatsappToggle');
+  const panel=document.getElementById('requestsToggle');
+
+  if(!header || !body || !status || !whatsapp || !panel) return;
+
+  function actualizarEstado(){
+    if(panel.checked){
+      status.textContent='Panel';
+    }else if(whatsapp.checked){
+      status.textContent='WhatsApp';
+    }else{
+      status.textContent='Desactivados';
+    }
+  }
+
+  header.addEventListener('click',function(){
+    const abrir=header.getAttribute('aria-expanded')!=='true';
+
+    header.setAttribute('aria-expanded',String(abrir));
+    body.hidden=!abrir;
+  });
+
+  whatsapp.addEventListener('change',function(){
+    if(whatsapp.checked){
+      panel.checked=false;
+      try{
+        localStorage.setItem('egp-pedidos-panel-enabled-v1','0');
+      }catch(_){}
+    }
+
+    actualizarEstado();
+  });
+
+  panel.addEventListener('change',function(){
+    if(panel.checked){
+      whatsapp.checked=false;
+      try{
+        localStorage.setItem('egp-pedidos-panel-enabled-v1','1');
+      }catch(_){}
+    }else{
+      try{
+        localStorage.setItem('egp-pedidos-panel-enabled-v1','0');
+      }catch(_){}
+    }
+
+    actualizarEstado();
+  });
+
+  /*
+    El Panel puede actualizar los switches desde Firebase/LAN
+    sin disparar un evento change. El título se mantiene sincronizado.
+  */
+  setInterval(actualizarEstado,500);
+
+  actualizarEstado();
+})();
+</script>
+
 
   <script src="./pwa.js?v=PRUEBA-SIN-SW-20260819-182530"></script>
 

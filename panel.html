@@ -459,6 +459,40 @@
 }
 </style>
 
+
+<style id="EGP_MAC_SCROLL_V1">
+@media(min-width:900px){
+
+  html:not(.live-mode),
+  body:not(.live-mode){
+    height:auto !important;
+    min-height:100% !important;
+    overflow-y:auto !important;
+  }
+
+  body:not(.live-mode) .app-shell{
+    height:auto !important;
+    min-height:100vh !important;
+    overflow:visible !important;
+  }
+
+  body:not(.live-mode) #configView{
+    height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+
+  body.live-mode .song-scroll-region{
+    min-height:0 !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    scroll-behavior:auto !important;
+    scrollbar-gutter:stable !important;
+  }
+
+}
+</style>
+
 </head>
 <body data-build="6.36.76">
 
@@ -1363,8 +1397,110 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="panel.js?v=gestos-trackpad-mac-v3-20260901"></script>
+  <script type="module" src="panel.js?v=arranque-scroll-mac-v4-20260901"></script>
   <script type="module" src="./panel-profile-switch-20260901.js?v=blanco-v2-20260901"></script>
+
+<script id="EGP_MAC_LIVE_SCROLL_V1">
+(function(){
+
+  const isMac=
+    /Macintosh|MacIntel/.test(
+      navigator.platform || navigator.userAgent
+    ) &&
+    Number(navigator.maxTouchPoints||0)===0;
+
+  if(!isMac)return;
+
+  function bind(){
+
+    const live=
+      document.getElementById("liveView");
+
+    const scroller=
+      document.querySelector(
+        ".song-scroll-region"
+      );
+
+    if(!live || !scroller)return;
+
+    if(live.dataset.egpMacScroll==="1")return;
+
+    live.dataset.egpMacScroll="1";
+
+    live.addEventListener(
+      "wheel",
+      function(e){
+
+        if(
+          !document.body.classList.contains(
+            "live-mode"
+          )
+        ){
+          return;
+        }
+
+        if(e.ctrlKey)return;
+
+        if(
+          document.querySelector(
+            "dialog[open]"
+          )
+        ){
+          return;
+        }
+
+        const unit=
+          e.deltaMode===1
+            ? 16
+            : e.deltaMode===2
+              ? Math.max(
+                  1,
+                  scroller.clientHeight
+                )
+              : 1;
+
+        const dy=e.deltaY*unit;
+
+        if(Math.abs(dy)<0.01)return;
+
+        const max=
+          Math.max(
+            0,
+            scroller.scrollHeight-
+            scroller.clientHeight
+          );
+
+        if(max<=0)return;
+
+        const before=
+          scroller.scrollTop;
+
+        scroller.scrollTop+=dy;
+
+        if(
+          scroller.scrollTop!==before
+        ){
+          e.preventDefault();
+        }
+
+      },
+      {passive:false}
+    );
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener(
+      "DOMContentLoaded",
+      bind,
+      {once:true}
+    );
+  }else{
+    bind();
+  }
+
+})();
+</script>
+
 
 <script id="EGP_MAC_SWITCH_POSITION_V1">
 (function(){

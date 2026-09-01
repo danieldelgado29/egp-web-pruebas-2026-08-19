@@ -281,6 +281,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   let remoteLibraryWriteChain = Promise.resolve();
   let localShowTransitionUntil = 0;
   let localDesiredShowActive = null;
+  let showActiveConfirmed=false;
   let remoteInitPromise = null;
   let activeViewerSongId=null, activeViewerType=null, activeImageOwner='elena', activeImageSongId=null, activeImageMode='image', returnToImageViewer=false, viewerRenderGeneration=0, pendingViewerRefresh=null;
   let applyingRemoteShowState=false;
@@ -689,7 +690,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       const requestsMode=document.getElementById('requestsModeSelect');
       if(requestsMode)requestsMode.value=state.config.requestsMode==='uno_por_turno'?'uno_por_turno':'libre';
       $('#publicQueueToggle').checked = state.config.publicQueue !== false;
-      setStatus(true);
+      setStatus(showActiveConfirmed===true);
     }
     refreshPanelProfileControls();
   }
@@ -760,6 +761,46 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   function applyLocalQueueSnapshot(snapshot,{force=false}={}){
     if(!snapshot||!Array.isArray(snapshot.queue))return false;
+
+    const localPublicConfig=
+      snapshot.publicConfig &&
+      typeof snapshot.publicConfig==='object'
+        ? snapshot.publicConfig
+        : null;
+
+    if(
+      localPublicConfig &&
+      typeof localPublicConfig.show_active==='boolean'
+    ){
+      const localActive=
+        localPublicConfig.show_active===true;
+
+      if(localActive){
+        showActiveConfirmed=true;
+        setStatus(true);
+
+        if(
+          state.config &&
+          panelAuthValid() &&
+          $('#panelLogin').hidden &&
+          !configOpenedFromLive &&
+          !document.body.classList.contains('live-mode')
+        ){
+          showLive();
+        }
+      }else if(localDesiredShowActive!==true){
+        showActiveConfirmed=false;
+        setStatus(false);
+
+        if(
+          document.body.classList.contains('live-mode') &&
+          !configOpenedFromLive
+        ){
+          showConfig(false);
+        }
+      }
+    }
+
     if(!force&&(queueDragState.active||queueDragState.saving))return false;
 
     const before=[...state.queue];
@@ -1007,6 +1048,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       const remoteActive=data.show_activo===true;
       if(Date.now()<localShowTransitionUntil && localDesiredShowActive!==null && remoteActive!==localDesiredShowActive)return;
       if(remoteActive){
+        showActiveConfirmed=true;
         const repertoire=data.lista_activa||data.listaActiva||'todas';
         const select=$('#repertoireSelect');
         const option=select?[...select.options].find(o=>o.value===repertoire):null;
@@ -1098,6 +1140,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
           return;
         }
 
+        showActiveConfirmed=false;
+
         try{localStorage.removeItem(PANEL_AUTH_SESSION_KEY);}catch(_){}
     state.config=null;state.queue=[];state.played.clear();
         setStatus(false);
@@ -1121,7 +1165,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
     if(config.requests===true){config.whatsapp=false;$('#whatsappToggle').checked=false;}
     askConfirm('Comenzar nuevo show','Se guardará esta configuración y se reiniciará la cola del show anterior.',()=>{
       // Entrada inmediata: no esperar una lectura de verificación para mostrar Control en vivo.
-      remoteShowGeneration++;localDesiredShowActive=true;localShowTransitionUntil=Date.now()+10000;
+      remoteShowGeneration++;localDesiredShowActive=true;showActiveConfirmed=true;localShowTransitionUntil=Date.now()+10000;
       state.config=config;state.queue=[];state.played.clear();addVenueOption(venue);
       startNewShowTimer();
       saveStateLocalOnly();
@@ -1152,7 +1196,11 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
   let configOpenedFromLive=false;
   function showConfig(fromLive=false){
-    if(state.config&&fromLive!==true&&localDesiredShowActive!==false){
+    if(
+      state.config &&
+      fromLive!==true &&
+      (showActiveConfirmed===true || localDesiredShowActive===true)
+    ){
       showLive();
       return;
     }
@@ -1483,7 +1531,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
   $('#finishShowBtn').addEventListener('click',()=>askConfirm('Finalizar show','Se cerrará el show actual y se limpiará la cola en todos los dispositivos.',async()=>{
-    localDesiredShowActive=false;localShowTransitionUntil=Date.now()+15000;
+    localDesiredShowActive=false;showActiveConfirmed=false;localShowTransitionUntil=Date.now()+15000;
     state.config=null;state.queue=[];state.played.clear();
     showTimer={elapsedMs:0,running:false,startedAt:0};saveShowTimer();showTimerLoop();
     saveStateLocalOnly();setStatus(false);showConfig();egpPublicarConfigLan({show_activo:false,inicio_show:0,pedidos_whatsapp:false,pedidos_panel:false,pedidos_modo:'libre'});toast('Finalizando show en todos los dispositivos…');
@@ -6921,7 +6969,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
       loginPassword.value='';
 
       if(latestRemoteState)applyRemotePanelState(latestRemoteState);
-      else if(state.config)showLive();
       else showConfig();
     }else{
       loginError.hidden=false;

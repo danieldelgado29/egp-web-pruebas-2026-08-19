@@ -1,0 +1,11 @@
+EGP MUSICOS — PRUEBA ULTIMA APROBADA
+Fuente local:
+/Users/isupport/Desktop/aprobados/EGP-MUSICOS-TOUCH-FINAL-20260825-115209/musicos
+
+Generada:
+2026-09-01 13:26:45 -0500
+
+Comparada contra:
+/Users/isupport/Downloads/egp-web-pruebas-2026-08-19/musicos
+
+La carpeta /musicos/ publicada NO fue reemplazada.

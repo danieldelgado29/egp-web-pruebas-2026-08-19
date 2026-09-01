@@ -1,0 +1,1609 @@
+
+:root{color-scheme:dark;--bg:#08090c;--panel:#12151b;--line:#252a35;--text:#fff;--muted:#9ea5b4;--accent:#f0b84a;--next:#262033}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:var(--bg);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
+body{min-height:100dvh;overflow:hidden}
+button{font:inherit}
+.install-view{min-height:100dvh;padding:max(32px,env(safe-area-inset-top)) 24px max(28px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;text-align:center}
+.brand{width:min(72vw,320px);display:flex;flex-direction:column;align-items:stretch}
+.brand-egp{font-size:clamp(84px,28vw,142px);font-weight:900;letter-spacing:-.08em;line-height:.78;margin:0;text-align:center}
+.brand-musicos{width:100%;font-size:clamp(24px,7.6vw,39px);font-weight:950;letter-spacing:-.045em;line-height:.94;margin-top:16px;white-space:nowrap;text-align:center;transform:scaleX(.96);transform-origin:center}
+.install-btn{width:min(100%,420px);min-height:66px;border:0;border-radius:20px;background:linear-gradient(135deg,#f7d477,#dfa52f);color:#15110a;font-weight:900;font-size:22px;box-shadow:0 18px 42px rgba(223,165,47,.22)}
+.install-btn:active{transform:scale(.985)}
+.install-hint{max-width:420px;min-height:22px;color:var(--muted);margin:0;font-size:15px}
+.ios-help{width:min(100%,420px);display:grid;gap:12px;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;font-size:16px}.share-icon{font-size:22px}
+.app-view{height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden}
+.venue-header{position:relative;padding:max(18px,env(safe-area-inset-top)) 22px 18px;border-bottom:1px solid var(--line);background:#0d0f14}
+.mini-brand{color:var(--muted);font-size:12px;font-weight:900;letter-spacing:.12em;margin-bottom:10px}.mini-brand span{font-size:10px;font-weight:950;margin-left:5px;letter-spacing:-.02em}
+.venue-header h1{font-size:clamp(26px,7vw,46px);line-height:1.08;margin:0;padding-right:28px;overflow-wrap:anywhere}
+.connection-dot{position:absolute;right:22px;bottom:24px;width:11px;height:11px;border-radius:50%;background:#737987;box-shadow:0 0 0 5px rgba(115,121,135,.12)}
+.connection-dot.online{background:#48d27a;box-shadow:0 0 0 5px rgba(72,210,122,.13)}
+.queue-section{min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);padding:18px 14px max(14px,env(safe-area-inset-bottom));overflow:hidden}
+.queue-title-row{display:flex;align-items:end;justify-content:space-between;padding:0 6px 14px}.queue-title-row h2{margin:0;font-size:18px;text-transform:uppercase;letter-spacing:.13em}.queue-title-row span{color:var(--accent);font-weight:800}
+.queue-list{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:12px;padding:0 2px 2px}
+.song-card{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center;min-height:112px;padding:18px;border:1px solid #2d3340;border-radius:22px;background:linear-gradient(180deg,#171a21,#12151b);box-shadow:0 10px 26px rgba(0,0,0,.18)}
+.song-card.next{min-height:150px;background:linear-gradient(135deg,#342943,#1b1723);border-color:#725d8e;box-shadow:0 18px 45px rgba(67,43,91,.3)}
+.song-number{display:grid;place-items:center;width:64px;height:64px;border-radius:18px;background:#232833;font-size:28px;font-weight:950;color:var(--accent)}
+.song-card.next .song-number{width:76px;height:76px;font-size:34px;background:#f0b84a;color:#17110a}
+.song-label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#d7bfef;font-weight:900;margin-bottom:5px}
+.song-title{font-size:clamp(22px,6vw,36px);font-weight:950;line-height:1.05;overflow-wrap:anywhere}.song-card.next .song-title{font-size:clamp(28px,8vw,44px)}
+.song-artist{margin-top:8px;color:#aeb4c1;font-size:clamp(16px,4.4vw,23px);font-weight:650}
+.empty-state{grid-row:2;display:grid;place-items:center;text-align:center;color:var(--muted);font-size:20px;font-weight:750;border:1px dashed #343a47;border-radius:22px;min-height:190px}
+.install-dialog{border:1px solid #343a47;border-radius:22px;background:#151820;color:#fff;max-width:360px;padding:28px;box-shadow:0 24px 70px rgba(0,0,0,.65)}.install-dialog::backdrop{background:rgba(0,0,0,.72)}.install-dialog h2{margin-top:0}.dialog-close{position:absolute;right:12px;top:10px;border:0;background:transparent;color:#fff;font-size:30px}
+[hidden]{display:none!important}
+@media (min-width:760px){.queue-section{padding-left:max(24px,calc((100vw - 900px)/2));padding-right:max(24px,calc((100vw - 900px)/2))}.song-card{min-height:126px}.song-card.next{min-height:170px}}
+
+/* EGP MUSICOS 1.1.0 */
+.add-home-icon{display:inline-grid;place-items:center;width:24px;height:24px;border:2px solid currentColor;border-radius:7px;font-size:18px;font-weight:900;line-height:1;vertical-align:-4px}
+.song-card.next{animation:musicosNextBlink 1.45s ease-in-out infinite}
+.song-card.played{order:99;opacity:.55;filter:grayscale(1);background:linear-gradient(180deg,#24262b,#191b1f);border-color:#4a4d54;box-shadow:none;animation:none}
+.song-card.played .song-number{background:#5a5d63;color:#ddd}
+.song-card.played .song-title,.song-card.played .song-artist{color:#a3a5aa}
+.played-label{color:#b8bbc1}
+@keyframes musicosNextBlink{0%,100%{filter:brightness(1);transform:scale(1)}50%{filter:brightness(1.18);transform:scale(1.008)}}
+@media(prefers-reduced-motion:reduce){.song-card.next{animation:none}}
+
+/* EGP MUSICOS 1.1.2 - inicio seguro */
+.app-error{margin:12px 0 0;padding:10px 12px;border:1px solid #6f3d45;border-radius:12px;background:#2a171b;color:#ffd9de;font-size:14px;font-weight:700;line-height:1.35}
+
+/* EGP MUSICOS 1.1.3 · prioridad visual de la cola */
+.song-card.next{animation:musicosNextStrong 1s ease-in-out infinite;transform-origin:center;border-width:2px}
+.song-card.next .song-number{animation:musicosNumberPulse 1s ease-in-out infinite}
+.song-card.played{min-height:68px!important;padding:9px 14px!important;border-radius:16px;gap:11px;opacity:.48}
+.song-card.played .song-number{width:46px;height:46px;border-radius:13px;font-size:20px}
+.song-card.played .song-title{font-size:clamp(16px,4.5vw,23px);line-height:1.05}
+.song-card.played .song-artist{margin-top:3px;font-size:clamp(12px,3.4vw,16px)}
+.song-card.played .song-label{font-size:9px;margin-bottom:2px}
+@keyframes musicosNextStrong{0%,100%{filter:brightness(1);transform:scale(1);box-shadow:0 18px 45px rgba(67,43,91,.30)}50%{filter:brightness(1.42);transform:scale(1.018);box-shadow:0 0 0 4px rgba(240,184,74,.20),0 18px 52px rgba(240,184,74,.32)}}
+@keyframes musicosNumberPulse{0%,100%{box-shadow:0 0 0 0 rgba(240,184,74,.15)}50%{box-shadow:0 0 0 8px rgba(240,184,74,.20)}}
+@media(prefers-reduced-motion:reduce){.song-card.next,.song-card.next .song-number{animation:none}}
+@media(min-width:760px){.song-card.played{min-height:72px!important}}
+
+
+/* EGP MUSICOS 1.2.0 · ventana angosta y tocadas compactas */
+@media(max-width:430px){
+  .queue-section{padding-left:9px;padding-right:9px}
+  .queue-title-row{padding-left:3px;padding-right:3px}
+  .song-card{grid-template-columns:54px minmax(0,1fr);gap:11px;min-height:92px;padding:13px 12px;border-radius:18px}
+  .song-card.next{grid-template-columns:62px minmax(0,1fr);min-height:122px;padding:14px 12px}
+  .song-number{width:52px;height:52px;border-radius:15px;font-size:23px}
+  .song-card.next .song-number{width:60px;height:60px;font-size:29px}
+  .song-title{font-size:clamp(19px,7vw,27px);line-height:1.04}
+  .song-card.next .song-title{font-size:clamp(24px,8.5vw,33px)}
+  .song-artist{margin-top:5px;font-size:clamp(13px,4.7vw,18px)}
+  .song-card.played{grid-template-columns:38px minmax(0,1fr);min-height:54px!important;padding:6px 9px!important;gap:8px!important;border-radius:13px}
+  .song-card.played .song-number{width:36px;height:36px;border-radius:10px;font-size:17px}
+  .song-card.played .song-label{font-size:8px;margin-bottom:1px}
+  .song-card.played .song-title{font-size:15px!important;line-height:1.02;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .song-card.played .song-artist{margin-top:2px;font-size:11px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
+/* Titileo más evidente, sin cambiar el orden de la cola. */
+.song-card.next{animation:musicosNextStrong120 0.78s ease-in-out infinite!important}
+.song-card.next .song-number{animation:musicosNumberPulse120 0.78s ease-in-out infinite!important}
+@keyframes musicosNextStrong120{0%,100%{filter:brightness(.92);transform:scale(1);box-shadow:0 12px 34px rgba(67,43,91,.24)}50%{filter:brightness(1.62);transform:scale(1.025);box-shadow:0 0 0 5px rgba(240,184,74,.30),0 18px 58px rgba(240,184,74,.42)}}
+@keyframes musicosNumberPulse120{0%,100%{box-shadow:0 0 0 0 rgba(240,184,74,.12)}50%{box-shadow:0 0 0 10px rgba(240,184,74,.28)}}
+@media(prefers-reduced-motion:reduce){.song-card.next,.song-card.next .song-number{animation:none!important}}
+
+#openChromeBtn{text-decoration:none;text-align:center;display:block}#openChromeBtn[hidden]{display:none!important}
+
+
+/* EGP MUSICOS 1.5.0 · SONANDO SIGUE TOCADAS */
+
+.song-card.playing{
+  box-shadow:inset 4px 0 0 currentColor;
+}
+
+.playing-label{
+  display:flex!important;
+  align-items:center;
+  gap:.48rem;
+}
+
+.egp-eq{
+  display:inline-flex;
+  align-items:center;
+  gap:2px;
+  height:13px;
+}
+
+.egp-eq i{
+  display:block;
+  width:3px;
+  height:11px;
+  border-radius:2px;
+  background:currentColor;
+  transform-origin:center bottom;
+  animation:egpMusicosEq .72s ease-in-out infinite alternate;
+}
+
+.egp-eq i:nth-child(2){
+  animation-delay:-.28s;
+}
+
+.egp-eq i:nth-child(3){
+  animation-delay:-.46s;
+}
+
+.egp-eq i:nth-child(4){
+  animation-delay:-.16s;
+}
+
+.song-card.played{
+  opacity:.58;
+}
+
+@keyframes egpMusicosEq{
+  0%{transform:scaleY(.28)}
+  45%{transform:scaleY(1)}
+  100%{transform:scaleY(.48)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .egp-eq i{
+    animation:none!important;
+  }
+
+  .egp-eq i:nth-child(1){transform:scaleY(.35)}
+  .egp-eq i:nth-child(2){transform:scaleY(.8)}
+  .egp-eq i:nth-child(3){transform:scaleY(.55)}
+  .egp-eq i:nth-child(4){transform:scaleY(1)}
+}
+
+
+/* EGP MUSICOS 1.5.3 · FLUJO MONITOREO */
+
+.monitor-setup{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:#0c0d10;
+}
+
+.monitor-setup[hidden]{
+  display:none!important;
+}
+
+.monitor-setup-card{
+  width:min(430px,100%);
+  text-align:center;
+}
+
+.monitor-setup-card h2{
+  margin:26px 0 22px;
+  font-size:23px;
+  line-height:1.2;
+}
+
+.monitor-main-buttons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.monitor-main-buttons button{
+  min-height:94px;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:18px;
+  background:#191c22;
+  color:#fff;
+  font:900 20px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+.monitor-main-buttons button:active,
+.monitor-profile-list button:active{
+  transform:scale(.98);
+}
+
+.monitor-profile-list{
+  display:grid;
+  gap:10px;
+}
+
+.monitor-profile-list button{
+  width:100%;
+  min-height:60px;
+  padding:12px 18px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:14px;
+  background:#191c22;
+  color:#fff;
+  font:800 17px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+.monitor-back{
+  display:block;
+  margin:0 0 8px;
+  padding:8px 0;
+  border:0;
+  background:transparent;
+  color:#aaa;
+  font:700 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+.venue-monitor-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.venue-monitor-row #venueName{
+  min-width:0;
+  margin-right:auto;
+}
+
+.monitor-btn{
+  flex:0 0 auto;
+  min-height:36px;
+  padding:7px 11px;
+  border:0;
+  border-radius:9px;
+  background:#1593c0;
+  color:#fff;
+  font:900 11px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  letter-spacing:.04em;
+}
+
+
+
+/* EGP MUSICOS 1.5.8 · UI24R PERSISTENTE */
+
+.venue-actions{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  flex:0 0 auto!important;
+}
+
+.venue-actions .connection-dot,
+.venue-actions .monitor-btn{
+  position:static!important;
+  inset:auto!important;
+  transform:none!important;
+  margin:0!important;
+}
+
+
+.egp-ui24r-overlay{
+  position:fixed;
+  inset:0;
+  z-index:999999;
+
+  width:100%;
+  height:100%;
+
+  background:#000;
+
+  opacity:0;
+  pointer-events:none;
+
+  /*
+   * NO visibility:hidden:
+   * mantenemos Ui24R montada/renderizada.
+   */
+}
+
+
+.egp-ui24r-overlay.is-open{
+  opacity:1;
+  pointer-events:auto;
+}
+
+
+#egpUi24rFrame{
+  position:absolute;
+  inset:0;
+
+  width:100%;
+  height:100%;
+
+  border:0;
+  background:#000;
+}
+
+
+#egpUi24rWait{
+  display:none;
+
+  position:absolute;
+  inset:0;
+  z-index:2;
+
+  align-items:center;
+  justify-content:center;
+
+  background:#000;
+  color:#fff;
+
+  font:800 14px
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  letter-spacing:.06em;
+}
+
+
+.egp-ui24r-overlay.is-waiting
+#egpUi24rWait{
+  display:flex;
+}
+
+
+#egpUi24rBack{
+  position:fixed;
+  z-index:3;
+
+  top:max(
+    8px,
+    env(safe-area-inset-top)
+  );
+
+  right:max(
+    8px,
+    env(safe-area-inset-right)
+  );
+
+  padding:7px 11px;
+
+  border:0;
+  border-radius:8px;
+
+  background:#c62828;
+  color:#fff;
+
+  font:800 12px
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  box-shadow:
+    0 2px 10px
+    rgba(0,0,0,.45);
+}
+
+
+body.egp-ui24r-open{
+  overflow:hidden!important;
+}
+
+
+/* EGP MUSICOS · TITULO GRANDE SOLO EN PANTALLAS INICIALES */
+
+.egp-setup-main-title{
+  font-size:34px!important;
+  line-height:1.05!important;
+  font-weight:800!important;
+  margin-bottom:18px!important;
+}
+
+
+/* EGP MUSICOS · TITULO GRANDE SOLO EN PANTALLAS INICIALES */
+
+.egp-setup-main-title{
+  font-size:34px!important;
+  line-height:1.05!important;
+  font-weight:800!important;
+  margin-bottom:18px!important;
+}
+
+
+/* EGP MUSICOS · TITULO GRANDE SETUP — SELECTOR REAL */
+
+#monitorSetup .mini-brand{
+  font-size:36px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  margin-bottom:22px!important;
+}
+
+#monitorSetup .mini-brand span{
+  font-size:22px!important;
+  font-weight:900!important;
+}
+
+
+/* EGP MUSICOS 1.5.8.2 · MARCA CENTRADA POR ESPACIO REAL */
+
+#monitorSetup .mini-brand{
+  position:fixed!important;
+  left:50%!important;
+
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+
+  margin:0!important;
+  padding:0!important;
+
+  transform:translate(-50%,-50%)!important;
+
+  font-size:42px!important;
+  line-height:.88!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+
+  text-align:center!important;
+  white-space:nowrap!important;
+
+  z-index:2;
+}
+
+#monitorSetup .mini-brand span{
+  display:block!important;
+
+  margin-top:7px!important;
+
+  font-size:21px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:.18em!important;
+}
+
+
+/* EGP MUSICOS 1.5.8.4 · MONO 2 FILAS DE 4 */
+
+#monitorProfileList.egp-mono-8{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+
+#monitorProfileList.egp-mono-8 button{
+  min-width:0!important;
+  min-height:58px!important;
+  padding:8px 5px!important;
+  font-size:14px!important;
+  line-height:1.05!important;
+}
+
+
+/* EGP MUSICOS 1.5.8.6 · REGRESAR JUNTO A CONFIG UI24R */
+
+#egpUi24rBack{
+  top:max(8px,env(safe-area-inset-top))!important;
+  right:92px!important;
+  left:auto!important;
+
+  margin:0!important;
+
+  padding:7px 11px!important;
+  min-height:0!important;
+
+  border-radius:8px!important;
+
+  font-size:12px!important;
+  line-height:1.2!important;
+}
+
+
+/* EGP MUSICOS 1.5.8.7 · MISMA POSICION QUE PANEL */
+
+#egpUi24rBack{
+  left:342px!important;
+  right:auto!important;
+  top:0px!important;
+  transform:none!important;
+}
+
+
+/* EGP MUSICOS 1.5.8.12 · ISLA IGUAL QUE PANEL */
+
+#egpUi24rFrame{
+  left:0!important;
+  right:0!important;
+  top:0!important;
+  bottom:0!important;
+
+  width:100%!important;
+  height:100%!important;
+
+  transform-origin:
+    var(--egp-ui-origin,50% 50%)!important;
+
+  transform:
+    scaleX(var(--egp-ui-sx,1))!important;
+}
+
+
+/* EGP MUSICOS 1.5.8.16 · CABECERA COLA HORIZONTAL */
+
+@media (orientation:landscape){
+
+  /* Ocultar SOLO la marca de la página de cola */
+  .venue-header > .mini-brand{
+    display:none!important;
+  }
+
+  /* Cabecera más compacta */
+  .venue-header{
+    padding-top:max(10px,env(safe-area-inset-top))!important;
+    padding-bottom:10px!important;
+  }
+
+  /* COLA ACTIVA mantiene apariencia original */
+  .egp-landscape-queue-title{
+    margin:0!important;
+    padding:0!important;
+    font-size:18px!important;
+    line-height:1!important;
+    text-transform:uppercase!important;
+    letter-spacing:.13em!important;
+    color:inherit!important;
+    font-weight:700!important;
+    white-space:nowrap!important;
+    flex:0 0 auto!important;
+  }
+
+  .venue-monitor-row{
+    align-items:center!important;
+  }
+
+  /* Ya no reservar espacio arriba de la lista para el título */
+  .queue-title-row{
+    padding-bottom:8px!important;
+  }
+}
+
+
+/* EGP MUSICOS 1.5.8.17 · COLA HORIZONTAL CSS DIRECTO */
+
+@media (orientation:landscape){
+
+  /* EGP MUSICOS desaparece SOLO de la cola */
+  .venue-header > .mini-brand{
+    display:none!important;
+  }
+
+  /* Cabecera compacta */
+  .venue-header{
+    padding-top:max(10px,env(safe-area-inset-top))!important;
+    padding-bottom:10px!important;
+  }
+
+  /*
+   * COLA ACTIVA sube visualmente
+   * entre LUGAR y MONITOREO.
+   * Conserva su tamaño y colores originales.
+   */
+  .queue-title-row h2,
+  .venue-monitor-row .egp-landscape-queue-title{
+    display:block!important;
+    position:fixed!important;
+
+    left:50%!important;
+    top:calc(max(10px,env(safe-area-inset-top)) + 10px)!important;
+
+    transform:translateX(-50%)!important;
+
+    margin:0!important;
+    padding:0!important;
+
+    z-index:50!important;
+    pointer-events:none!important;
+
+    font-size:18px!important;
+    line-height:1.2!important;
+    text-transform:uppercase!important;
+    letter-spacing:.13em!important;
+  }
+
+  /* Abajo queda solamente el contador */
+  .queue-title-row{
+    justify-content:flex-end!important;
+    padding-bottom:8px!important;
+  }
+}
+
+
+/* EGP MUSICOS · COLA + CONTADOR JUNTOS HORIZONTAL */
+@media (orientation:landscape){
+
+  .queue-title-row #queueCount{
+    position:fixed!important;
+    top:calc(max(10px,env(safe-area-inset-top)) + 10px)!important;
+    left:calc(50% + 88px)!important;
+
+    margin:0!important;
+    padding:0!important;
+
+    z-index:51!important;
+    white-space:nowrap!important;
+    pointer-events:none!important;
+  }
+}
+
+
+/* EGP MUSICOS · CABECERA HORIZONTAL MAS COMPACTA */
+@media (orientation:landscape){
+
+  .venue-header{
+    padding-top:max(6px,env(safe-area-inset-top))!important;
+    padding-bottom:6px!important;
+  }
+
+  .venue-monitor-row #venueName{
+    font-size:22px!important;
+    line-height:1!important;
+    max-width:34vw!important;
+    padding-right:0!important;
+  }
+
+  .venue-monitor-row{
+    gap:8px!important;
+  }
+}
+
+
+/* EGP MUSICOS · SAFE AREA COLA HORIZONTAL */
+@media (orientation:landscape){
+
+  .venue-header{
+    padding-left:max(22px,env(safe-area-inset-left))!important;
+    padding-right:max(22px,env(safe-area-inset-right))!important;
+  }
+
+  .queue-section{
+    padding-left:max(14px,env(safe-area-inset-left))!important;
+    padding-right:max(14px,env(safe-area-inset-right))!important;
+  }
+
+}
+
+
+
+/* EGP MUSICOS · FLECHA VOLVER CONFIG */
+.config-back-btn{
+  flex:0 0 auto;
+  width:36px;
+  height:36px;
+  display:grid;
+  place-items:center;
+
+  border:1px solid #343a47;
+  border-radius:10px;
+  background:#171a21;
+  color:#fff;
+
+  padding:0;
+  margin:0;
+
+  font-size:24px;
+  font-weight:900;
+  line-height:1;
+}
+
+.config-back-btn:active{
+  transform:scale(.96);
+}
+
+@media (orientation:landscape){
+  .config-back-btn{
+    width:32px;
+    height:32px;
+    font-size:21px;
+  }
+}
+
+/* EGP MUSICOS · STEREO SEGUNDA PAGINA HORIZONTAL */
+@media (orientation:landscape){
+
+  /* STEREO = lista que NO usa la clase mono de 8 AUX */
+  #monitorProfileStep:not([hidden])
+  #monitorProfileList:not(.egp-mono-8){
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:10px!important;
+    width:100%!important;
+  }
+
+  #monitorProfileStep:not([hidden])
+  #monitorProfileList:not(.egp-mono-8) button{
+    min-width:0!important;
+    min-height:54px!important;
+
+    padding:8px 5px!important;
+
+    font-size:14px!important;
+    line-height:1.05!important;
+
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    word-break:normal!important;
+  }
+}
+
+
+/* =========================================================
+   EGP MUSICOS · IDENTIDAD VISUAL ECOSISTEMA
+   SOLO VISUAL — NO MODIFICA FUNCIONES
+   ========================================================= */
+
+:root{
+  --egp-bg:#090b0f;
+  --egp-bg2:#0d1016;
+  --egp-panel:#13171e;
+  --egp-panel2:#181d25;
+  --egp-line:rgba(255,255,255,.10);
+
+  --egp-gold:#e6b54a;
+  --egp-gold-soft:#f0cf7b;
+
+  --egp-blue:#1593c0;
+  --egp-blue2:#1ba9da;
+
+  --egp-text:#f5f7fa;
+  --egp-muted:#969eaa;
+}
+
+
+/* ---------- FONDO GENERAL ---------- */
+
+body{
+  background:
+    radial-gradient(
+      circle at 50% -20%,
+      rgba(230,181,74,.09),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      var(--egp-bg2),
+      var(--egp-bg)
+    )!important;
+}
+
+
+/* ---------- CABECERA COLA ---------- */
+
+.venue-header{
+  background:
+    linear-gradient(
+      180deg,
+      rgba(18,22,29,.98),
+      rgba(11,14,19,.98)
+    )!important;
+
+  border-bottom:
+    1px solid rgba(230,181,74,.14)!important;
+
+  box-shadow:
+    0 8px 26px rgba(0,0,0,.20)!important;
+}
+
+
+.venue-header .mini-brand{
+  color:#fff!important;
+}
+
+.venue-header .mini-brand span{
+  color:var(--egp-gold)!important;
+}
+
+
+/* nombre del lugar */
+
+#venueName{
+  color:var(--egp-text)!important;
+  font-weight:850!important;
+  letter-spacing:-.025em!important;
+}
+
+
+/* ---------- FLECHA CONFIG ---------- */
+
+.config-back-btn{
+  background:
+    linear-gradient(
+      180deg,
+      #1c212a,
+      #13171d
+    )!important;
+
+  border:
+    1px solid rgba(255,255,255,.13)!important;
+
+  color:var(--egp-gold-soft)!important;
+
+  box-shadow:
+    0 5px 16px rgba(0,0,0,.20)!important;
+}
+
+
+/* ---------- BOTON MONITOREO ---------- */
+
+.monitor-btn{
+  background:
+    linear-gradient(
+      135deg,
+      var(--egp-blue2),
+      var(--egp-blue)
+    )!important;
+
+  box-shadow:
+    0 6px 20px rgba(21,147,192,.23)!important;
+
+  border:
+    1px solid rgba(255,255,255,.10)!important;
+
+  letter-spacing:.07em!important;
+}
+
+
+/* ---------- COLA ACTIVA ---------- */
+
+.queue-title-row h2,
+.egp-landscape-queue-title{
+  color:var(--egp-text)!important;
+  font-weight:900!important;
+}
+
+
+/* contador */
+
+#queueCount{
+  color:#171109!important;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--egp-gold-soft),
+      var(--egp-gold)
+    )!important;
+
+  border-radius:999px!important;
+
+  padding:5px 10px!important;
+
+  font-size:12px!important;
+  font-weight:900!important;
+
+  box-shadow:
+    0 4px 14px rgba(230,181,74,.15)!important;
+}
+
+
+/* ---------- TARJETAS DE CANCIONES ---------- */
+
+.song-card{
+  background:
+    linear-gradient(
+      145deg,
+      rgba(25,30,39,.98),
+      rgba(15,18,24,.98)
+    )!important;
+
+  border:
+    1px solid rgba(255,255,255,.09)!important;
+
+  box-shadow:
+    0 8px 22px rgba(0,0,0,.20)!important;
+}
+
+
+/* número normal */
+
+.song-number{
+  background:#222833!important;
+
+  border:
+    1px solid rgba(255,255,255,.07)!important;
+
+  color:var(--egp-gold-soft)!important;
+}
+
+
+/* SIGUE mantiene protagonismo */
+
+.song-card.next{
+  background:
+    linear-gradient(
+      135deg,
+      #342b1c,
+      #181719 55%,
+      #14161a
+    )!important;
+
+  border:
+    1px solid rgba(230,181,74,.42)!important;
+
+  box-shadow:
+    0 12px 34px rgba(230,181,74,.10)!important;
+}
+
+.song-card.next .song-number{
+  background:
+    linear-gradient(
+      135deg,
+      var(--egp-gold-soft),
+      var(--egp-gold)
+    )!important;
+
+  color:#151008!important;
+}
+
+
+/* textos */
+
+.song-title{
+  color:#fff!important;
+}
+
+.song-artist{
+  color:#a9b0ba!important;
+}
+
+.song-label{
+  color:var(--egp-gold-soft)!important;
+}
+
+
+/* ---------- CONFIGURACION INICIAL ---------- */
+
+.monitor-setup{
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(230,181,74,.10),
+      transparent 38%
+    ),
+    #090b0f!important;
+}
+
+
+.monitor-setup-card{
+  background:
+    linear-gradient(
+      180deg,
+      rgba(25,29,36,.96),
+      rgba(14,17,22,.98)
+    )!important;
+
+  border:
+    1px solid rgba(255,255,255,.10)!important;
+
+  border-radius:24px!important;
+
+  padding:28px!important;
+
+  box-shadow:
+    0 28px 70px rgba(0,0,0,.45)!important;
+}
+
+
+/* marca */
+
+#monitorSetup .mini-brand{
+  color:#fff!important;
+  letter-spacing:-.04em!important;
+}
+
+#monitorSetup .mini-brand span{
+  color:var(--egp-gold)!important;
+}
+
+
+/* subtitulos */
+
+.monitor-setup-card h2{
+  color:#f5f7fa!important;
+  font-weight:800!important;
+}
+
+
+/* botones STEREO / MONO + perfiles */
+
+.monitor-main-buttons button,
+.monitor-profile-list button{
+  background:
+    linear-gradient(
+      180deg,
+      #20252e,
+      #161a21
+    )!important;
+
+  border:
+    1px solid rgba(255,255,255,.12)!important;
+
+  color:#f7f8fa!important;
+
+  box-shadow:
+    0 8px 20px rgba(0,0,0,.22)!important;
+
+  transition:
+    transform .12s ease,
+    border-color .12s ease,
+    background .12s ease!important;
+}
+
+
+.monitor-main-buttons button:active,
+.monitor-profile-list button:active{
+  border-color:
+    rgba(230,181,74,.55)!important;
+
+  background:
+    linear-gradient(
+      180deg,
+      #29281f,
+      #1b1913
+    )!important;
+}
+
+
+/* botón ATRÁS configuración */
+
+.monitor-back{
+  color:var(--egp-gold-soft)!important;
+}
+
+
+/* ---------- ESTADO VACIO ---------- */
+
+.empty-state{
+  background:
+    rgba(255,255,255,.018)!important;
+
+  border:
+    1px dashed rgba(255,255,255,.13)!important;
+
+  color:var(--egp-muted)!important;
+}
+
+
+/* ---------- SCROLLBAR DISCRETA ---------- */
+
+.queue-list{
+  scrollbar-color:
+    rgba(230,181,74,.35)
+    transparent;
+}
+
+
+/* ---------- HORIZONTAL ---------- */
+
+@media (orientation:landscape){
+
+  .monitor-setup-card{
+    padding:20px 24px!important;
+  }
+
+  #queueCount{
+    padding:4px 9px!important;
+  }
+
+}
+
+
+/* =====================================================
+   EGP MUSICOS · FILA HORIZONTAL DEFINITIVA
+   ← LUGAR | COLA ACTIVA | CONTADOR | FOCO | MONITOREO
+   ===================================================== */
+
+@media (orientation:landscape){
+
+  .venue-header > .mini-brand{
+    display:none!important;
+  }
+
+  .venue-header{
+    padding-top:max(8px,env(safe-area-inset-top))!important;
+    padding-bottom:8px!important;
+
+    padding-left:max(22px,env(safe-area-inset-left))!important;
+    padding-right:max(22px,env(safe-area-inset-right))!important;
+  }
+
+  .venue-monitor-row{
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+
+    gap:9px!important;
+    width:100%!important;
+    min-height:38px!important;
+  }
+
+  /* FLECHA */
+  #configBackBtn{
+    position:static!important;
+    transform:none!important;
+    margin:0!important;
+
+    flex:0 0 32px!important;
+  }
+
+  /* LUGAR */
+  .venue-monitor-row #venueName{
+    position:static!important;
+    transform:none!important;
+
+    flex:1 1 auto!important;
+
+    min-width:70px!important;
+    max-width:27vw!important;
+
+    margin:0!important;
+    padding:0!important;
+
+    font-size:20px!important;
+    line-height:1!important;
+
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  /* COLA ACTIVA */
+  .venue-monitor-row h2,
+  .venue-monitor-row .egp-landscape-queue-title{
+    position:static!important;
+
+    left:auto!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:auto!important;
+
+    transform:none!important;
+
+    flex:0 0 auto!important;
+
+    margin:0!important;
+    padding:0!important;
+
+    font-size:18px!important;
+    line-height:1!important;
+
+    white-space:nowrap!important;
+  }
+
+  /* 0 CANCIONES */
+  .venue-monitor-row #queueCount{
+    position:static!important;
+
+    left:auto!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:auto!important;
+
+    transform:none!important;
+
+    flex:0 0 auto!important;
+
+    min-width:94px!important;
+    min-height:30px!important;
+
+    margin:0!important;
+    padding:6px 12px!important;
+
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+
+    line-height:1!important;
+    white-space:nowrap!important;
+  }
+
+  /* FOCO VERDE */
+  .venue-monitor-row #connectionDot{
+    position:static!important;
+
+    left:auto!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:auto!important;
+
+    transform:none!important;
+
+    flex:0 0 11px!important;
+
+    margin:0 2px!important;
+  }
+
+  /* MONITOREO */
+  .venue-monitor-row #monitorBtn{
+    position:static!important;
+
+    left:auto!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:auto!important;
+
+    transform:none!important;
+
+    flex:0 0 auto!important;
+    margin:0!important;
+  }
+
+  /* Ya no necesitamos la fila inferior del título */
+  .queue-title-row{
+    display:none!important;
+  }
+
+}
+
+
+
+/* EGP BOTON ROJO FIJO ESQUINA V1 */
+
+#egpUi24rBack{
+  position:fixed!important;
+
+  left:max(
+    8px,
+    env(safe-area-inset-left)
+  )!important;
+
+  right:auto!important;
+
+  top:max(
+    8px,
+    env(safe-area-inset-top)
+  )!important;
+
+  bottom:auto!important;
+
+  margin:0!important;
+  transform:none!important;
+
+  z-index:1000001!important;
+}
+
+/* FOCO + MONITOREO permanecen como una sola unidad */
+
+@media (orientation:landscape){
+
+  .venue-monitor-row .venue-actions{
+    position:static!important;
+    transform:none!important;
+
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+
+    flex:0 0 auto!important;
+    gap:8px!important;
+
+    margin-left:auto!important;
+  }
+}
+
+/* FIN EGP BOTON ROJO FIJO ESQUINA V1 */
+
+
+/* =====================================================
+   EGP MUSICOS · COMPACTO + MOVIMIENTO SUAVE 2026-08-19
+   ===================================================== */
+
+/* La tarjeta completa usa ahora movimiento controlado */
+.song-card.next{
+  animation:none!important;
+  filter:none!important;
+}
+
+/* Solo el número mantiene una señal MUY discreta */
+.song-card.next .song-number{
+  animation:egpNextNumberSoft 2.8s ease-in-out infinite!important;
+}
+
+@keyframes egpNextNumberSoft{
+  0%,100%{
+    box-shadow:0 0 0 0 rgba(240,184,74,.08);
+    filter:brightness(1);
+  }
+  50%{
+    box-shadow:0 0 0 4px rgba(240,184,74,.10);
+    filter:brightness(1.05);
+  }
+}
+
+/* Nunca permitir desborde horizontal */
+.queue-section,
+.queue-list,
+.song-card{
+  min-width:0!important;
+  max-width:100%;
+}
+
+.queue-section,
+.queue-list{
+  overflow-x:hidden!important;
+}
+
+/* Pantallas grandes: cola centrada y compacta */
+@media (min-width:760px){
+
+  .queue-title-row,
+  .queue-list,
+  .empty-state{
+    width:min(900px,100%)!important;
+    max-width:900px!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+  }
+
+  .song-card{
+    min-height:92px!important;
+    padding:14px 16px!important;
+    gap:14px!important;
+    border-radius:18px!important;
+  }
+
+  .song-card.next{
+    min-height:118px!important;
+    padding:15px 16px!important;
+  }
+
+  .song-number{
+    width:56px!important;
+    height:56px!important;
+    font-size:24px!important;
+    border-radius:15px!important;
+  }
+
+  .song-card.next .song-number{
+    width:66px!important;
+    height:66px!important;
+    font-size:29px!important;
+  }
+
+  .song-title{
+    font-size:clamp(21px,2.2vw,30px)!important;
+  }
+
+  .song-card.next .song-title{
+    font-size:clamp(26px,2.7vw,36px)!important;
+  }
+
+  .song-artist{
+    margin-top:5px!important;
+    font-size:clamp(14px,1.6vw,19px)!important;
+  }
+}
+
+/* Respeta además la preferencia del sistema */
+@media (prefers-reduced-motion:reduce){
+  .song-card.next,
+  .song-card.next .song-number,
+  .egp-eq i{
+    animation:none!important;
+  }
+}
+
+
+/* =====================================================
+   EGP MUSICOS · ANIMACION SUAVE DEFINITIVA
+   ===================================================== */
+
+.song-card.next{
+  animation:egpNextSoftGlow 2.6s ease-in-out infinite!important;
+}
+
+.song-card.next .song-number{
+  animation:egpNextNumberSoftFinal 2.6s ease-in-out infinite!important;
+}
+
+@keyframes egpNextSoftGlow{
+  0%,100%{
+    filter:brightness(1);
+    box-shadow:
+      0 12px 30px rgba(0,0,0,.22),
+      inset 0 0 0 1px rgba(240,184,74,.10);
+  }
+
+  50%{
+    filter:brightness(1.07);
+    box-shadow:
+      0 12px 32px rgba(0,0,0,.24),
+      0 0 18px rgba(240,184,74,.10),
+      inset 0 0 0 1px rgba(240,184,74,.24);
+  }
+}
+
+@keyframes egpNextNumberSoftFinal{
+  0%,100%{
+    filter:brightness(1);
+    box-shadow:0 0 0 0 rgba(240,184,74,.08);
+  }
+
+  50%{
+    filter:brightness(1.10);
+    box-shadow:0 0 0 5px rgba(240,184,74,.11);
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .song-card.next,
+  .song-card.next .song-number{
+    animation:none!important;
+  }
+}
+
+
+/* =====================================================
+   EGP MUSICOS · MOVIMIENTO CONTROLADO DEFINITIVO
+   ===================================================== */
+
+.song-card.next{
+  transform-origin:center center!important;
+  animation:egpNextMoveControlled 2.2s ease-in-out infinite!important;
+}
+
+.song-card.next .song-number{
+  animation:egpNextNumberControlled 2.2s ease-in-out infinite!important;
+}
+
+@keyframes egpNextMoveControlled{
+  0%,100%{
+    transform:translateY(0) scale(1);
+    filter:brightness(1);
+  }
+
+  50%{
+    transform:translateY(-2px) scale(1.004);
+    filter:brightness(1.08);
+  }
+}
+
+@keyframes egpNextNumberControlled{
+  0%,100%{
+    transform:scale(1);
+    filter:brightness(1);
+    box-shadow:0 0 0 0 rgba(240,184,74,.10);
+  }
+
+  50%{
+    transform:scale(1.035);
+    filter:brightness(1.12);
+    box-shadow:0 0 0 5px rgba(240,184,74,.12);
+  }
+}
+
+/* evita que el pequeño movimiento produzca desbordes */
+.queue-list{
+  padding-top:4px!important;
+  padding-bottom:6px!important;
+  overflow-x:hidden!important;
+}
+
+
+
+/* =====================================================
+   EGP MUSICOS · TARJETA SIGUE MOVIMIENTO FINAL
+   ===================================================== */
+
+.song-card.next{
+  transform-origin:center center!important;
+  animation:egpTarjetaSigueFinal 2.15s ease-in-out infinite!important;
+}
+
+.song-card.next .song-number{
+  animation:egpNumeroSigueFinal 2.15s ease-in-out infinite!important;
+}
+
+@keyframes egpTarjetaSigueFinal{
+  0%,100%{
+    transform:translateY(0) scale(1);
+    filter:brightness(1);
+  }
+
+  50%{
+    transform:translateY(-3px) scale(1.006);
+    filter:brightness(1.07);
+  }
+}
+
+@keyframes egpNumeroSigueFinal{
+  0%,100%{
+    transform:scale(1);
+    filter:brightness(1);
+  }
+
+  50%{
+    transform:scale(1.035);
+    filter:brightness(1.12);
+  }
+}
+
+.queue-list{
+  padding-top:6px!important;
+}
+
+
+/* =====================================================
+   EGP MUSICOS · MOVIMIENTO SIN CRECER
+   ===================================================== */
+
+.song-card.next{
+  transform-origin:center center!important;
+  animation:egpTarjetaSigueSinEscala 2.15s ease-in-out infinite!important;
+}
+
+@keyframes egpTarjetaSigueSinEscala{
+  0%,100%{
+    transform:translateY(0)!important;
+    filter:brightness(1);
+    box-shadow:
+      0 12px 30px rgba(0,0,0,.22),
+      0 0 0 1px rgba(240,184,74,.14);
+  }
+
+  50%{
+    transform:translateY(-3px)!important;
+    filter:brightness(1.06);
+    box-shadow:
+      0 14px 34px rgba(0,0,0,.24),
+      0 0 14px rgba(240,184,74,.10),
+      0 0 0 1px rgba(240,184,74,.28);
+  }
+}
+
+.queue-list{
+  padding-top:8px!important;
+  padding-left:4px!important;
+  padding-right:4px!important;
+}
+
+
+/* =====================================================
+   EGP MUSICOS · CRECIMIENTO SIN RECORTE FINAL
+   ===================================================== */
+
+/* Espacio interior para que la animación no choque
+   contra el fondo/scroll de la cola */
+.queue-list{
+  padding-top:14px!important;
+  padding-bottom:16px!important;
+  padding-left:14px!important;
+  padding-right:14px!important;
+}
+
+/* La tarjeta conserva espacio propio alrededor */
+.song-card{
+  margin-left:5px!important;
+  margin-right:5px!important;
+}
+
+/* SIGUE vuelve a crecer, pero ahora dentro de su espacio */
+.song-card.next{
+  transform-origin:center center!important;
+  animation:egpTarjetaSigueConEspacio 2.15s ease-in-out infinite!important;
+}
+
+@keyframes egpTarjetaSigueConEspacio{
+  0%,100%{
+    transform:translateY(0) scale(1);
+    filter:brightness(1);
+    box-shadow:
+      0 12px 30px rgba(0,0,0,.22),
+      0 0 0 1px rgba(240,184,74,.14);
+  }
+
+  50%{
+    transform:translateY(-3px) scale(1.006);
+    filter:brightness(1.07);
+    box-shadow:
+      0 14px 34px rgba(0,0,0,.24),
+      0 0 14px rgba(240,184,74,.16),
+      0 0 0 2px rgba(240,184,74,.30);
+  }
+}
+
+/* En pantallas pequeñas dejamos también aire suficiente */
+@media(max-width:759px){
+  .queue-list{
+    padding-left:10px!important;
+    padding-right:10px!important;
+  }
+
+  .song-card{
+    margin-left:3px!important;
+    margin-right:3px!important;
+  }
+}

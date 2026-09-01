@@ -671,8 +671,8 @@
     grid-template-columns:
       auto
       auto
-      auto
       minmax(20px,1fr)
+      auto
       auto
       auto
       auto !important;
@@ -720,9 +720,9 @@
   .egp-mac-desktop body.live-mode
   #egpPedidosBtn{
 
-    grid-column:3 !important;
+    grid-column:4 !important;
 
-    justify-self:start !important;
+    justify-self:end !important;
   }
 
 
@@ -760,9 +760,9 @@
 
     grid-template-columns:
       minmax(165px,225px)
-      max-content !important;
+      minmax(0,1fr) !important;
 
-    justify-content:start !important;
+    justify-content:stretch !important;
     align-items:center !important;
 
     column-gap:7px !important;
@@ -796,6 +796,7 @@
   .song-actions{
 
     grid-column:2 !important;
+    justify-self:end !important;
 
     display:flex !important;
     align-items:center !important;

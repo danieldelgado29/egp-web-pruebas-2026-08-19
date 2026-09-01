@@ -59,8 +59,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
     if(!profile||!auto)return;
     profile.value=panelDevicePrefs.profile;
     auto.innerHTML=panelDevicePrefs.profile==='daniel'
-      ? '<option value="image">Imagen, solo si existe contenido</option><option value="songbook">Cancionero Daniel</option><option value="none">No abrir nada</option>'
-      : '<option value="none">No abrir nada</option><option value="image">Imagen</option><option value="lyrics">Letra</option>';
+      ? '<option value="image">Abrir cancionero · Imagen</option><option value="songbook">Abrir cancionero · Cancionero Daniel</option><option value="none">Abrir cancionero · No abrir</option>'
+      : '<option value="none">Abrir cancionero · No abrir</option><option value="image">Abrir cancionero · Imagen</option><option value="lyrics">Abrir cancionero · Letra</option>';
     if(![...auto.options].some(o=>o.value===panelDevicePrefs.autoOpen))panelDevicePrefs.autoOpen=panelDevicePrefs.profile==='daniel'?defaultDanielAutoOpen:'none';
     auto.value=panelDevicePrefs.autoOpen;
     const help=$('#panelAutoOpenHelp');
@@ -215,13 +215,56 @@ document.documentElement.dataset.egmVersion="6.36.92";
       }else if(pref==='songbook')openViewer(song,'daniel');
     }
   }
-  function processQueueAdditions(previous,next){
-    if(!remoteReady||Date.now()<suppressQueueAutoOpenUntil)return;
-    const before=new Set(previous||[]);
-    const added=(next||[]).filter(id=>!before.has(id));
-    if(!added.length)return;
-    const song=state.songs.find(x=>x.id===added[added.length-1]);
-    if(song)setTimeout(()=>maybeAutoOpenQueuedSong(song),120);
+  /*
+   * EGP_AUTOOPEN_PRIMERA_COLA_V1
+   *
+   * Una canción NO abre por el hecho de entrar a la cola.
+   * Abre únicamente cuando pasa a ser la primera pendiente.
+   */
+  function firstPendingQueueId(queue,played){
+    const playedSet=played instanceof Set
+      ? played
+      : new Set(
+          Array.isArray(played)
+            ? played.map(String)
+            : []
+        );
+
+    return (Array.isArray(queue)?queue:[])
+      .map(String)
+      .find(id=>!playedSet.has(id)) || '';
+  }
+
+  function processQueueHeadChange(
+    previousQueue,
+    nextQueue,
+    previousPlayed,
+    nextPlayed
+  ){
+    if(Date.now()<suppressQueueAutoOpenUntil)return;
+
+    const beforeHead=firstPendingQueueId(
+      previousQueue,
+      previousPlayed
+    );
+
+    const nextHead=firstPendingQueueId(
+      nextQueue,
+      nextPlayed
+    );
+
+    if(!nextHead || nextHead===beforeHead)return;
+
+    const song=state.songs.find(
+      x=>String(x.id)===nextHead
+    );
+
+    if(song){
+      setTimeout(
+        ()=>maybeAutoOpenQueuedSong(song),
+        120
+      );
+    }
   }
   const fallbackRepertoires = [{id:'todas',name:'Todas las canciones'}];
   loadPanelDevicePrefs();
@@ -410,7 +453,14 @@ document.documentElement.dataset.egmVersion="6.36.92";
         remoteReady=true;
         renderQueue();
         if(document.body.classList.contains('live-mode')) renderSongs();
-        if(wasRemoteReady&&queueSnapshotApplied)processQueueAdditions(queueBeforeSnapshot,state.queue);
+        if(wasRemoteReady&&queueSnapshotApplied){
+          processQueueHeadChange(
+            queueBeforeSnapshot,
+            state.queue,
+            oldPlayedOrder,
+            state.played
+          );
+        }
       },err=>console.warn('Sincronización remota no disponible',err));
     }catch(err){ console.warn('No se pudo iniciar la sincronización remota',err); throw err; }
     return remoteStateRef;
@@ -714,6 +764,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
     const before=[...state.queue];
     const beforePlayed=[...state.played];
+    const wasRemoteReady=remoteReady;
 
     state.currentId=String(snapshot.currentId||'');
 
@@ -733,15 +784,24 @@ document.documentElement.dataset.egmVersion="6.36.92";
     saveStateLocalOnly();
     remoteReady=true;
 
-    if(before.join('|')!==ids.join('|') ||
-       beforePlayed.join('|')!==played.join('|') ||
-       force){
+    const queueChanged=
+      before.join('|')!==ids.join('|');
+
+    const playedChanged=
+      beforePlayed.join('|')!==played.join('|');
+
+    if(queueChanged || playedChanged || force){
       renderQueue();
       renderSongs();
     }
 
-    if(before.join('|')!==ids.join('|')){
-      processQueueAdditions(before,ids);
+    if(wasRemoteReady && (queueChanged || playedChanged)){
+      processQueueHeadChange(
+        before,
+        ids,
+        beforePlayed,
+        played
+      );
     }
 
     return true;
@@ -1563,9 +1623,11 @@ document.documentElement.dataset.egmVersion="6.36.92";
   function handleSongAction(song,act){
     if(act==='queue'){
       const wasQueued=state.queue.includes(song.id);
-      persistQueueStateMutation(song.id,wasQueued?'remove':'add').then(()=>{
-        if(!wasQueued)setTimeout(()=>maybeAutoOpenQueuedSong(song),100);
-      }).catch(()=>{});
+
+      persistQueueStateMutation(
+        song.id,
+        wasQueued?'remove':'add'
+      ).catch(()=>{});
     } else if(act==='played'){
       const wasPlayed=state.played.has(song.id);
       persistQueueStateMutation(song.id,wasPlayed?'unplay':'play').catch(()=>{});
@@ -1688,6 +1750,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
           throw new Error('LAN APPLY | '+(err?.name||'Error')+' | '+(err?.message||String(err)));
         }
 
+        processQueueHeadChange(
+          originalQueue,
+          state.queue,
+          originalPlayed,
+          state.played
+        );
+
         return result;
       }
 
@@ -1733,6 +1802,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
       state.queue=[...(result?.queue||state.queue)];
       state.played=new Set(result?.played||[...state.played]);
       saveStateLocalOnly();renderQueue();renderSongs();
+
+      processQueueHeadChange(
+        originalQueue,
+        state.queue,
+        originalPlayed,
+        state.played
+      );
     }catch(err){
       console.warn('No se pudo guardar el cambio de cola',err);
       state.queue=originalQueue;state.played=originalPlayed;

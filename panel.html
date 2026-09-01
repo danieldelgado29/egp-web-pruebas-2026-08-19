@@ -139,6 +139,41 @@
     }
   </style>
 
+  <style id="EGP_CONFIG_CAMPOS_DENTRO_V1">
+    /*
+      Lugar: placeholder dentro y desaparece al entrar.
+      Repertorio / Perfil: etiqueta inicial dentro del select.
+    */
+    #configView .egp-config-field-inline{
+      gap:0;
+    }
+
+    #configView .egp-config-field-inline input,
+    #configView .egp-config-field-inline select{
+      min-height:48px;
+    }
+
+    #venueInput::placeholder{
+      color:var(--muted,#949aa7);
+      opacity:1;
+    }
+
+    #venueInput:focus::placeholder{
+      color:transparent;
+      opacity:0;
+    }
+
+    #repertoireSelect:invalid,
+    #profileSelect:invalid{
+      color:var(--muted,#949aa7);
+    }
+
+    #repertoireSelect option,
+    #profileSelect option{
+      color:var(--text,#f5f6f8);
+    }
+  </style>
+
 </head>
 <body data-build="6.36.76">
 
@@ -170,20 +205,18 @@
         </div>
 
         <form id="showForm" class="config-grid" autocomplete="off">
-          <label class="field">
-            <span>Lugar</span>
-            <input id="venueInput" name="egm-show-place" type="text" list="venueHistory" placeholder="Ej. Hotel Oro Verde" autocomplete="off" autocapitalize="sentences" autocorrect="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore required>
+          <label class="field egp-config-field-inline">
+            <input id="venueInput" name="egm-show-place" type="text" list="venueHistory" placeholder="Lugar" aria-label="Lugar" autocomplete="off" autocapitalize="sentences" autocorrect="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore required>
             <datalist id="venueHistory"></datalist>
           </label>
 
-          <label class="field">
-            <span>Repertorio</span>
-            <select id="repertoireSelect" required></select>
+          <label class="field egp-config-field-inline">
+            <select id="repertoireSelect" aria-label="Repertorio" required></select>
           </label>
 
-          <label class="field">
-            <span>Perfil del cliente</span>
-            <select id="profileSelect" required>
+          <label class="field egp-config-field-inline">
+            <select id="profileSelect" aria-label="Perfil del cliente" required>
+              <option value="" disabled selected>Perfil del cliente</option>
               <option value="alto">Alto potencial</option>
               <option value="medio">Potencial medio</option>
               <option value="bajo">Bajo potencial</option>
@@ -1009,7 +1042,7 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="panel.js?v=quota-cola-20260831-185535"></script>
+  <script type="module" src="panel.js?v=config-compacta-20260901-1"></script>
   <script type="module" src="./panel-profile-switch-20260901.js?v=1"></script>
   <script>
 (function(){

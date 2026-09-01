@@ -804,14 +804,28 @@ document.documentElement.dataset.egmVersion="6.36.92";
       if(!map.has(id)) map.set(id, titleFromId(id));
     }));
     const select=$('#repertoireSelect');
+    const savedRepertoire=state.config?.repertoire||'';
+
     select.innerHTML='';
+
+    /*
+     * EGP_CONFIG_CAMPOS_DENTRO_V1
+     * Sin show/configuración previa, "Repertorio" vive dentro del select.
+     * Al elegir uno, desaparece y queda visible la selección.
+     */
+    const placeholder=new Option('Repertorio','');
+    placeholder.disabled=true;
+    placeholder.selected=!savedRepertoire;
+    select.add(placeholder);
+
     [...map].sort((a,b)=>a[1].localeCompare(b[1],'es')).forEach(([id,name])=>{
       const count=state.songs.filter(song=>id==='todas'||(song.listas||[]).includes(id)).length;
       const option=new Option(`${name} · ${count} ${count===1?'canción':'canciones'}`,id);
       option.dataset.name=name;
       select.add(option);
     });
-    select.value = state.config?.repertoire || (map.has('principal-diario')?'principal-diario':'todas');
+
+    select.value=savedRepertoire||'';
   }
 
   function titleFromId(id){ return id.split('-').map(w=>w[0]?.toUpperCase()+w.slice(1)).join(' '); }

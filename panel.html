@@ -2458,7 +2458,7 @@ html.egp-android-panel
 </script>
 
 
-  <script src="./pwa.js?v=6.36.98-android-lan-show-ui24r"></script>
+  <script src="./pwa.js?v=6.36.99-ios-ui24r-viewport-real"></script>
 
 <script>
 (function(){
@@ -2521,6 +2521,101 @@ html.egp-android-panel
 
 
 
+<!-- EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1_INICIO -->
+<script id="EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1">
+(function(){
+  const isiPhone=/iPhone|iPod/i.test(navigator.userAgent);
+
+  window.egpUi24rSyncIntrinsicSize=function(frame){
+    if(!isiPhone || !frame) return;
+
+    /*
+     * iOS puede dar a un iframe embebido el viewport intrínseco
+     * HTML por defecto (aprox. 300x150) aunque CSS lo pinte grande.
+     *
+     * mixer.html usa width=device-width, por lo que debemos escribir
+     * el tamaño físico del iframe ANTES de asignar src.
+     */
+    const sync=function(){
+      const r=frame.getBoundingClientRect();
+
+      const w=Math.max(
+        1,
+        Math.round(r.width || window.innerWidth || 1)
+      );
+
+      const h=Math.max(
+        1,
+        Math.round(r.height || window.innerHeight || 1)
+      );
+
+      frame.setAttribute('width',String(w));
+      frame.setAttribute('height',String(h));
+
+      frame.style.setProperty(
+        '--egp-ios-frame-w',
+        w+'px'
+      );
+
+      frame.style.setProperty(
+        '--egp-ios-frame-h',
+        h+'px'
+      );
+    };
+
+    sync();
+    requestAnimationFrame(sync);
+  };
+
+  function resync(){
+    const frame=document.getElementById('ui24rFrame');
+    if(!frame) return;
+
+    window.egpUi24rSyncIntrinsicSize(frame);
+  }
+
+  window.addEventListener('resize',resync);
+
+  window.addEventListener(
+    'orientationchange',
+    function(){
+      setTimeout(resync,80);
+      setTimeout(resync,250);
+      setTimeout(resync,600);
+    }
+  );
+
+  if(window.visualViewport){
+    window.visualViewport.addEventListener(
+      'resize',
+      resync
+    );
+  }
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    function(){
+      requestAnimationFrame(resync);
+    },
+    {once:true}
+  );
+})();
+</script>
+
+<style id="EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1_CSS">
+@supports (-webkit-touch-callout:none){
+  #ui24rFrame{
+    min-width:0 !important;
+    min-height:0 !important;
+    max-width:none !important;
+    max-height:none !important;
+    box-sizing:border-box !important;
+    -webkit-transform:none !important;
+  }
+}
+</style>
+<!-- EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1_FIN -->
+
 <div id="ui24rOverlay" class="ui24r-overlay" aria-hidden="true">
   <iframe
   id="ui24rFrame"
@@ -2546,6 +2641,10 @@ html.egp-android-panel
     const actual=frame.getAttribute('src') || '';
 
     if(actual && actual!=='about:blank') return;
+
+    if(typeof window.egpUi24rSyncIntrinsicSize==='function'){
+      window.egpUi24rSyncIntrinsicSize(frame);
+    }
 
     frame.setAttribute(
       'src',
@@ -2925,6 +3024,10 @@ html.egp-android-panel
     frame.dataset.egpPersistentLoaded='1';
 
     if(!actual || actual==='about:blank'){
+      if(typeof window.egpUi24rSyncIntrinsicSize==='function'){
+        window.egpUi24rSyncIntrinsicSize(frame);
+      }
+
       frame.setAttribute('src',REAL_URL);
     }
   }

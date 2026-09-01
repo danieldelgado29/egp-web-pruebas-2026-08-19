@@ -2262,13 +2262,72 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const finish=e=>{noteViewerState.pointers.delete(e.pointerId);if(noteViewerState.pointers.size===1){const p=[...noteViewerState.pointers.values()][0];noteViewerState.startX=p.x;noteViewerState.startY=p.y;noteViewerState.originX=noteViewerState.x;noteViewerState.originY=noteViewerState.y;}clampNotePosition(img);applyNoteTransform(img);};
     img.addEventListener('pointerup',finish);img.addEventListener('pointercancel',finish);
     img.addEventListener('dblclick',e=>{e.preventDefault();setNoteScale(img,noteViewerState.scale>1?1:2,e.clientX-stage.getBoundingClientRect().left-stage.clientWidth/2,e.clientY-stage.getBoundingClientRect().top-stage.clientHeight/2);});
-    stage.addEventListener('wheel',e=>{
+    if(stage.__egpNoteWheelHandler){
+      stage.removeEventListener(
+        'wheel',
+        stage.__egpNoteWheelHandler
+      );
+    }
+
+    const wheelHandler=e=>{
       if(!stage.classList.contains('is-note-viewer'))return;
+
       e.preventDefault();
+
       const rect=stage.getBoundingClientRect();
+
+      const centerX=
+        e.clientX-rect.left-stage.clientWidth/2;
+
+      const centerY=
+        e.clientY-rect.top-stage.clientHeight/2;
+
+      if(isDesktopMac){
+        const unit=
+          e.deltaMode===1
+            ? 16
+            : e.deltaMode===2
+              ? Math.max(1,stage.clientHeight)
+              : 1;
+
+        const rawDelta=e.deltaY*unit;
+
+        const delta=Math.max(
+          -32,
+          Math.min(32,rawDelta)
+        );
+
+        if(Math.abs(delta)<0.01)return;
+
+        const factor=Math.exp(-delta*0.0022);
+
+        setNoteScale(
+          img,
+          noteViewerState.scale*factor,
+          centerX,
+          centerY
+        );
+
+        return;
+      }
+
       const factor=e.deltaY<0?1.12:0.88;
-      setNoteScale(img,noteViewerState.scale*factor,e.clientX-rect.left-stage.clientWidth/2,e.clientY-rect.top-stage.clientHeight/2);
-    },{passive:false,once:false});
+
+      setNoteScale(
+        img,
+        noteViewerState.scale*factor,
+        centerX,
+        centerY
+      );
+    };
+
+    stage.__egpNoteWheelHandler=wheelHandler;
+
+    stage.addEventListener(
+      'wheel',
+      wheelHandler,
+      {passive:false}
+    );
   }
 
   function imageField(owner){ return owner==='daniel'?'notasDaniel':'notasElena'; }

@@ -654,6 +654,213 @@
     }
   </style>
 
+
+
+  <style id="EGP_HEADER_DESKTOP_RESPIRA_V1">
+
+    @media(min-width:900px){
+
+      /*
+       * Recuperar la presencia visual que tenía la cabecera
+       * antes de que se compactara.
+       */
+      body:not(.live-mode) .app-shell{
+        padding-top:34px !important;
+      }
+
+      body:not(.live-mode) .brandbar{
+        box-sizing:border-box !important;
+
+        display:grid !important;
+        grid-template-columns:
+          minmax(360px,1fr)
+          auto
+          auto !important;
+
+        grid-template-areas:
+          "title actions profile" !important;
+
+        align-items:center !important;
+        column-gap:22px !important;
+
+        width:100% !important;
+
+        min-height:104px !important;
+
+        margin:0 0 32px 0 !important;
+
+        padding:
+          18px
+          4px
+          26px
+          4px !important;
+
+        border-bottom:
+          1px solid var(--line,#2a2e37) !important;
+      }
+
+      /*
+       * PANEL DE CONTROL grande.
+       */
+      body:not(.live-mode) .brandbar h1{
+        grid-area:title !important;
+        justify-self:start !important;
+
+        display:flex !important;
+        align-items:baseline !important;
+
+        gap:10px !important;
+
+        margin:0 !important;
+        padding:0 !important;
+
+        color:var(--text,#f5f6f8) !important;
+
+        font-size:36px !important;
+        font-weight:800 !important;
+        line-height:1.05 !important;
+
+        letter-spacing:-.035em !important;
+
+        white-space:nowrap !important;
+      }
+
+      /*
+       * / Configuración también vuelve a tener presencia,
+       * pero sigue siendo secundario.
+       */
+      body:not(.live-mode) .brandbar h1::after{
+        content:"/ Configuración" !important;
+
+        font-size:16px !important;
+        font-weight:600 !important;
+        line-height:1 !important;
+
+        color:var(--muted,#949aa7) !important;
+
+        letter-spacing:0 !important;
+      }
+
+      /*
+       * Estado + menú + cerrar.
+       * Más grandes, pero sin competir con el título.
+       */
+      body:not(.live-mode) .brandbar .header-actions{
+        grid-area:actions !important;
+
+        justify-self:end !important;
+
+        display:flex !important;
+        align-items:center !important;
+
+        gap:10px !important;
+
+        margin:0 !important;
+      }
+
+      body:not(.live-mode) .brandbar .status-chip{
+        min-height:46px !important;
+
+        display:flex !important;
+        align-items:center !important;
+
+        padding:0 16px !important;
+
+        font-size:13px !important;
+
+        border-radius:999px !important;
+      }
+
+      body:not(.live-mode) .brandbar #openMenuBtn{
+        width:50px !important;
+        min-width:50px !important;
+        max-width:50px !important;
+
+        height:50px !important;
+        min-height:50px !important;
+        max-height:50px !important;
+
+        padding:0 !important;
+
+        border-radius:14px !important;
+      }
+
+      body:not(.live-mode) .brandbar #exitPanelBtn{
+        width:50px !important;
+        min-width:50px !important;
+        max-width:50px !important;
+
+        height:50px !important;
+        min-height:50px !important;
+        max-height:50px !important;
+
+        padding:0 !important;
+
+        font-size:30px !important;
+        line-height:1 !important;
+
+        border-radius:14px !important;
+      }
+
+      /*
+       * SWITCH:
+       * se queda PEQUEÑO y va al extremo derecho.
+       */
+      body:not(.live-mode)
+      .brandbar
+      #panelUserQuickSwitch{
+        grid-area:profile !important;
+
+        justify-self:end !important;
+
+        width:auto !important;
+        min-width:0 !important;
+        max-width:none !important;
+
+        margin:0 !important;
+        padding:0 !important;
+
+        gap:6px !important;
+
+        flex-grow:0 !important;
+        flex-shrink:0 !important;
+
+        transform:none !important;
+      }
+
+      body:not(.live-mode)
+      .brandbar
+      #panelUserQuickSwitch
+      .panel-user-name{
+        font-size:13px !important;
+
+        padding:6px 7px !important;
+
+        min-width:0 !important;
+        width:auto !important;
+
+        flex:0 0 auto !important;
+      }
+
+      body:not(.live-mode)
+      .brandbar
+      #panelUserQuickSwitch
+      .panel-profile-switch{
+        width:50px !important;
+        min-width:50px !important;
+        max-width:50px !important;
+
+        height:28px !important;
+        min-height:28px !important;
+        max-height:28px !important;
+
+        flex:0 0 50px !important;
+      }
+
+    }
+
+  </style>
+
 </head>
 <body data-build="6.36.76">
 

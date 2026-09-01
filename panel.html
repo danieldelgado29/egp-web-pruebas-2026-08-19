@@ -851,9 +851,12 @@
 </style>
 
 
-<!-- EGP_DESKTOP_LECTURA_V1_INICIO -->
 
-<script id="EGP_DESKTOP_COMPUTER_CLASS_V1">
+
+
+<!-- EGP_DESKTOP_LECTURA_V2_INICIO -->
+
+<script id="EGP_DESKTOP_COMPUTER_CLASS_V2">
 (function(){
   const ua=String(navigator.userAgent||'');
   const platform=String(navigator.platform||'');
@@ -872,16 +875,8 @@
 })();
 </script>
 
-<style id="EGP_DESKTOP_LECTURA_V1">
+<style id="EGP_DESKTOP_LECTURA_V2">
 
-/*
-  SOLO COMPUTADORA:
-  - Mac
-  - Windows
-
-  No afecta iPhone, Android ni tablets.
-  No cambia listeners, eventos ni lógica.
-*/
 html.egp-desktop-computer body.egp-two-column.live-mode
 #liveView.view.is-active .live-toolbar{
   min-height:52px !important;
@@ -912,7 +907,28 @@ html.egp-desktop-computer body.egp-two-column.live-mode
 }
 
 
-/* BUSCADOR — aproximadamente 1 cm más alto visualmente */
+/* X superior: más ancha y perfectamente centrada */
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active #closePanelBtn{
+  box-sizing:border-box !important;
+  width:58px !important;
+  min-width:58px !important;
+  max-width:58px !important;
+  height:42px !important;
+  min-height:42px !important;
+  max-height:42px !important;
+  padding:0 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  text-align:center !important;
+  font-size:22px !important;
+  font-weight:700 !important;
+  line-height:1 !important;
+}
+
+
+/* BUSCADOR */
 html.egp-desktop-computer body.egp-two-column.live-mode
 #liveView.view.is-active .search-wrap{
   box-sizing:border-box !important;
@@ -946,7 +962,7 @@ html.egp-desktop-computer body.egp-two-column.live-mode
 }
 
 
-/* COLA — aprovechar mejor el espacio de escritorio */
+/* COLA */
 html.egp-desktop-computer body.egp-two-column.live-mode
 #liveView.view.is-active .queue-panel{
   padding:14px !important;
@@ -999,7 +1015,7 @@ html.egp-desktop-computer body.egp-two-column.live-mode
 }
 
 
-/* CANCIONES — más aire y mayor lectura */
+/* CANCIONES */
 html.egp-desktop-computer body.egp-two-column.live-mode
 #liveView.view.is-active .song-list{
   gap:9px !important;
@@ -1037,8 +1053,6 @@ html.egp-desktop-computer body.egp-two-column.live-mode
   overflow:hidden !important;
 }
 
-
-/* NÚMERO + NOMBRE EN LA MISMA LÍNEA */
 html.egp-desktop-computer body.egp-two-column.live-mode
 #liveView.view.is-active .song-number{
   display:inline-flex !important;
@@ -1067,15 +1081,13 @@ html.egp-desktop-computer body.egp-two-column.live-mode
   text-align:left !important;
 }
 
-
-/* En esta vista de escritorio dejamos el artista oculto como estaba */
 html.egp-desktop-computer body.egp-two-column.live-mode
 #liveView.view.is-active .song-artist{
   display:none !important;
 }
 
 
-/* BOTONES DE CADA CANCIÓN — más grandes sin cambiar funciones */
+/* BOTONES DE CADA CANCIÓN */
 html.egp-desktop-computer body.egp-two-column.live-mode
 #liveView.view.is-active .song-actions{
   grid-column:2 !important;
@@ -1118,7 +1130,7 @@ html.egp-desktop-computer body.egp-two-column.live-mode
 
 </style>
 
-<!-- EGP_DESKTOP_LECTURA_V1_FIN -->
+<!-- EGP_DESKTOP_LECTURA_V2_FIN -->
 
 </head>
 <body data-build="6.36.76">

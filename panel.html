@@ -261,6 +261,164 @@
     }
   </style>
 
+
+
+  <style id="EGP_CONFIG_DESKTOP_V1">
+
+    /* SWITCH SIEMPRE VISIBLE */
+    #panelUserQuickSwitch{
+      margin-left:auto;
+      display:flex !important;
+      align-items:center;
+      gap:8px;
+      flex:0 0 auto;
+    }
+
+    #panelUserQuickSwitch .panel-user-name{
+      appearance:none;
+      border:1px solid transparent;
+      background:transparent;
+      color:var(--muted,#949aa7);
+      padding:7px 9px;
+      border-radius:10px;
+      font-weight:850;
+      cursor:pointer;
+      opacity:.5;
+    }
+
+    #panelUserQuickSwitch .panel-user-name.is-active{
+      color:#fff0b4;
+      opacity:1;
+      border-color:rgba(242,201,109,.48);
+      background:rgba(242,201,109,.13);
+    }
+
+    #panelUserQuickSwitch .panel-profile-switch{
+      position:relative;
+      display:block;
+      width:50px;
+      height:28px;
+      flex:0 0 50px;
+      cursor:pointer;
+    }
+
+    #panelUserQuickSwitch .panel-profile-switch input{
+      position:absolute;
+      width:1px;
+      height:1px;
+      opacity:0;
+      pointer-events:none;
+    }
+
+    #panelUserQuickSwitch .panel-profile-switch__track{
+      position:absolute;
+      inset:0;
+      border-radius:999px;
+      border:1px solid #3b404a;
+      background:#20232a;
+    }
+
+    #panelUserQuickSwitch .panel-profile-switch__track::after{
+      content:"";
+      position:absolute;
+      width:22px;
+      height:22px;
+      left:2px;
+      top:2px;
+      border-radius:50%;
+      background:#fff;
+      box-shadow:0 2px 7px rgba(0,0,0,.42);
+      transition:.18s ease;
+    }
+
+    #panelUserQuickSwitch
+    .panel-profile-switch input:checked
+    + .panel-profile-switch__track::after{
+      transform:translateX(22px);
+      background:#fff;
+    }
+
+    /* COMPUTADORA */
+    @media(min-width:900px){
+
+      #configView .section-heading{
+        display:flex !important;
+        align-items:center;
+        justify-content:space-between;
+        min-height:54px;
+        margin-bottom:18px;
+      }
+
+      #configView .config-grid{
+        grid-template-columns:
+          minmax(220px,1.15fr)
+          minmax(220px,1fr)
+          minmax(220px,1fr)
+          minmax(260px,1.25fr);
+        column-gap:14px;
+        row-gap:18px;
+      }
+
+      #configView .egp-config-field-inline{
+        grid-column:auto !important;
+        width:100%;
+      }
+
+      #configView .egp-config-field-inline input,
+      #configView .egp-config-field-inline select{
+        width:100%;
+        min-height:58px !important;
+        padding:0 16px !important;
+        font-size:16px !important;
+        border-radius:13px !important;
+      }
+
+      #pedidosConfigGroup{
+        grid-column:1/-1 !important;
+      }
+
+      #configView .egp-config-muted-title{
+        grid-column:1/-1;
+      }
+
+      #continueShowBtn,
+      #configView .start-btn{
+        grid-column:1/-1 !important;
+      }
+    }
+
+    /* TELEFONO: conservar distribución vertical */
+    @media(max-width:899px){
+      #panelUserQuickSwitch{
+        gap:4px;
+      }
+
+      #panelUserQuickSwitch .panel-user-name{
+        font-size:12px;
+        padding:5px;
+      }
+
+      #panelUserQuickSwitch .panel-profile-switch{
+        width:44px;
+        height:26px;
+        flex-basis:44px;
+      }
+
+      #panelUserQuickSwitch
+      .panel-profile-switch__track::after{
+        width:20px;
+        height:20px;
+      }
+
+      #panelUserQuickSwitch
+      .panel-profile-switch input:checked
+      + .panel-profile-switch__track::after{
+        transform:translateX(18px);
+      }
+    }
+
+  </style>
+
 </head>
 <body data-build="6.36.76">
 
@@ -289,6 +447,35 @@
       <section id="configView" class="view is-active" aria-labelledby="configTitle">
         <div class="section-heading">
           <h2 id="configTitle">Configuración</h2>
+
+          <div id="panelUserQuickSwitch" class="panel-user-quick-switch">
+            <button
+              id="panelUserElenaQuick"
+              class="panel-user-name"
+              type="button"
+              aria-pressed="false"
+            >Elena</button>
+
+            <label
+              class="panel-profile-switch"
+              aria-label="Cambiar entre Elena y Daniel"
+            >
+              <input
+                id="panelUserToggleQuick"
+                type="checkbox"
+                role="switch"
+                aria-label="Perfil Daniel"
+              >
+              <span class="panel-profile-switch__track"></span>
+            </label>
+
+            <button
+              id="panelUserDanielQuick"
+              class="panel-user-name"
+              type="button"
+              aria-pressed="false"
+            >Daniel</button>
+          </div>
         </div>
 
         <form id="showForm" class="config-grid" autocomplete="off">
@@ -1166,7 +1353,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script type="module" src="panel.js?v=abrir-cancionero-primera-20260901-1"></script>
-  <script type="module" src="./panel-profile-switch-20260901.js?v=blanco-v2-20260901"></script>
+  <script type="module" src="./panel-profile-switch-20260901.js?v=desktop-v1-20260901"></script>
   <script>
 (function(){
   function syncQueueRepertoire(){

@@ -296,7 +296,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   sessionStorage.setItem('egm-device-id',DEVICE_ID);
 
   const EGP_AUDIT_LOCAL=new URL(location.href).searchParams.get('audit_local')==='1';
-  const LOCAL_CORE_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':(location.hostname==='elenagirjoaba.com'?location.origin+'/__egp_core':'https://core.elenagirjoaba.com');
+  const LOCAL_CORE_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':'https://core.elenagirjoaba.com';
   const CORE_TEST_MODE=new URL(location.href).searchParams.get('core_test')==='1';
 
   /*
@@ -312,6 +312,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
   let localQueueBusy=false;
   let localQueueMutationChain=Promise.resolve();
   let localQueueMutationPending=0;
+
+  /*
+   * EGP_LAN_PRIORITY_FAILOVER_V1
+   * LAN manda durante el show.
+   * Firebase recibe copia secundaria para web publica y failover.
+   */
+  let egpQueueFirebaseMirrorChain=Promise.resolve();
 
 
   // 6.36.35 — Persistencia offline-first para imágenes y anotaciones.
@@ -515,7 +522,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       remoteReady=true;
       return payload;
     }
-    if(!remoteStateRef) await initRemoteSync();
+    if(!remoteStateRef) await initRemoteSync(true);
     if(!remoteStateRef||!window.__egmSetDoc) throw new Error('Firebase todavía no está listo');
     // Siempre construir el payload justo antes de escribir. Así una tarea antigua
     // nunca puede reactivar un show que ya fue finalizado.
@@ -560,41 +567,56 @@ document.documentElement.dataset.egmVersion="6.36.92";
       const active=('show_activo' in patch)?patch.show_activo:Boolean(state.config);
       const venue=('lugar' in patch)?patch.lugar:(state.config?.venue||'');
 
-      await localQueueRequest('/api/show',{
-        active:Boolean(active),
-        venue:String(venue||'')
-      });
+      try{
+        /*
+         * Esta es la escritura que decide si la LAN esta viva.
+         */
+        await localQueueRequest('/api/show',{
+          active:Boolean(active),
+          venue:String(venue||'')
+        });
 
-      // La LAN es autoritativa durante el show.
-      // Si esto funciona, la operación ya está sincronizada localmente.
-      await egpPublicarConfigLan(patch);
+        /*
+         * Config/pedidos LAN es adicional.
+         * Su fallo NO puede declarar caido al Local Core principal.
+         */
+        egpPublicarConfigLan(patch).catch(err=>{
+          console.warn('Config LAN secundaria pendiente:',err);
+        });
 
-      // Firebase queda como sincronización secundaria.
-      // Su fallo nunca invalida una publicación LAN exitosa.
-      if(!EGP_AUDIT_LOCAL){
-        (async()=>{
-          try{
-            // En red EGP, navigator.onLine puede no representar la ruta real a Internet.
-            // Intentamos Firebase de verdad; si no hay Internet, el catch deja LAN intacta.
-            if(!remoteStateRef)await initRemoteSync(true);
+        /*
+         * Firebase sigue en paralelo para web publica/respaldo.
+         */
+        if(!EGP_AUDIT_LOCAL){
+          (async()=>{
+            try{
+              if(!remoteStateRef)await initRemoteSync(true);
 
-            if(remoteStateRef&&window.__egmSetDoc){
-              await window.__egmSetDoc(
-                remoteStateRef,
-                {...patch,show_revision:revision,show_writer:DEVICE_ID,updated_at:revision},
-                {merge:true}
-              );
+              if(remoteStateRef&&window.__egmSetDoc){
+                await window.__egmSetDoc(
+                  remoteStateRef,
+                  {...patch,show_revision:revision,show_writer:DEVICE_ID,updated_at:revision},
+                  {merge:true}
+                );
+              }
+            }catch(err){
+              console.warn('Firebase pendiente; LAN ya sincronizada:',err);
             }
-          }catch(err){
-            console.warn('Firebase pendiente; LAN ya sincronizada:',err);
-          }
-        })();
-      }
+          })();
+        }
 
-      return revision;
+        return revision;
+
+      }catch(err){
+        console.warn(
+          'LAN caida durante publicacion; usando Firebase:',
+          err
+        );
+        LOCAL_QUEUE_MODE=false;
+      }
     }
 
-    if(!remoteStateRef) await initRemoteSync();
+    if(!remoteStateRef) await initRemoteSync(true);
     if(!remoteStateRef||!window.__egmSetDoc) throw new Error('Firebase todavía no está listo');
     await window.__egmSetDoc(
       remoteStateRef,
@@ -738,7 +760,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   async function localQueueRequest(path,body){
     const controller=new AbortController();
-    const timeoutMs=body===undefined?2500:8000;
+    const timeoutMs=body===undefined?500:900;
     const timer=setTimeout(()=>controller.abort(),timeoutMs);
     try{
       const options={
@@ -759,6 +781,54 @@ document.documentElement.dataset.egmVersion="6.36.92";
       clearTimeout(timer);
     }
   }
+
+  function egpMirrorQueueLanToFirebase(){
+    if(EGP_AUDIT_LOCAL)return Promise.resolve();
+
+    const queue=[...state.queue].map(String);
+    const played=[...state.played].map(String);
+    const revision=Date.now();
+
+    const run=async()=>{
+      try{
+        /*
+         * No confiar en navigator.onLine:
+         * Android puede tener LAN por Wi-Fi e Internet por datos moviles.
+         */
+        if(!remoteStateRef)await initRemoteSync(true);
+
+        if(!remoteStateRef||!window.__egmSetDoc){
+          throw new Error('Firebase todavia no esta listo');
+        }
+
+        await window.__egmSetDoc(
+          remoteStateRef,
+          {
+            cola:queue,
+            tocadas:played,
+            show_revision:revision,
+            show_writer:DEVICE_ID,
+            updated_at:revision
+          },
+          {merge:true}
+        );
+      }catch(err){
+        /*
+         * Nunca romper el show local porque Internet falle.
+         */
+        console.warn(
+          'Firebase cola pendiente; LAN sigue autoritativa:',
+          err
+        );
+      }
+    };
+
+    egpQueueFirebaseMirrorChain=
+      egpQueueFirebaseMirrorChain.then(run,run);
+
+    return egpQueueFirebaseMirrorChain;
+  }
+
 
   function applyLocalQueueSnapshot(snapshot,{force=false}={}){
     if(!snapshot||!Array.isArray(snapshot.queue))return false;
@@ -1000,6 +1070,14 @@ document.documentElement.dataset.egmVersion="6.36.92";
     if(queueChanged || playedChanged || force){
       renderQueue();
       renderSongs();
+
+      /*
+       * Si el cambio vino por LAN desde otro Panel o Bridge,
+       * reflejarlo tambien en Firebase sin frenar la LAN.
+       */
+      if(LOCAL_QUEUE_MODE && (queueChanged || playedChanged)){
+        egpMirrorQueueLanToFirebase();
+      }
     }
 
     if(wasRemoteReady && (queueChanged || playedChanged)){
@@ -1058,10 +1136,10 @@ document.documentElement.dataset.egmVersion="6.36.92";
   function startLocalQueueSync(){
     if(localQueueTimer)return;
     refreshLocalQueue();
-    localQueueTimer=setInterval(refreshLocalQueue,550);
+    localQueueTimer=setInterval(refreshLocalQueue,150);
   }
 
-  setTimeout(startLocalQueueSync,500);
+  setTimeout(startLocalQueueSync,50);
   function saveState(immediate=false){ saveStateLocalOnly(); return syncRemoteState(immediate); }
 
   function buildRepertoires(){
@@ -1684,8 +1762,16 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const finishPayload={show_activo:false,cola:[],tocadas:[],pedidos_whatsapp:false,pedidos_panel:false,pedidos_modo:'libre',pedidos_panel_lista:[],cronometro_elapsed_ms:0,cronometro_running:false,cronometro_started_at:0,inicio_show:0};
 
     if(LOCAL_QUEUE_MODE){
-      const cleared=await localQueueRequest('/api/queue/clear',{});
-      applyLocalQueueSnapshot(cleared,{force:true});
+      try{
+        const cleared=await localQueueRequest('/api/queue/clear',{});
+        applyLocalQueueSnapshot(cleared,{force:true});
+      }catch(err){
+        console.warn(
+          'LAN caida al finalizar show; usando Firebase:',
+          err
+        );
+        LOCAL_QUEUE_MODE=false;
+      }
     }
 
     await egpCerrarPedidosPendientes();
@@ -1951,31 +2037,44 @@ document.documentElement.dataset.egmVersion="6.36.92";
           body={id};
         }
 
-        let result;
         try{
-          result=await localQueueRequest(path,body);
-        }catch(err){
-          throw new Error('LAN REQUEST | '+(err?.name||'Error')+' | '+(err?.message||String(err)));
-        }
+          const result=await localQueueRequest(path,body);
 
-        try{
           applyLocalQueueSnapshot(result,{force:true});
+
+          processQueueHeadChange(
+            originalQueue,
+            state.queue,
+            originalPlayed,
+            state.played
+          );
+
+          /*
+           * Bridge/Musicos ya recibieron por LAN.
+           * Firebase se actualiza despues, sin bloquear la accion.
+           */
+          egpMirrorQueueLanToFirebase();
+
+          return result;
+
         }catch(err){
-          throw new Error('LAN APPLY | '+(err?.name||'Error')+' | '+(err?.message||String(err)));
+          /*
+           * El Core cayo justo durante esta accion.
+           * No revertir: continuar por Internet en la misma accion.
+           */
+          console.warn(
+            'LAN caida durante cambio de cola; usando Firebase:',
+            err
+          );
+          LOCAL_QUEUE_MODE=false;
         }
-
-        processQueueHeadChange(
-          originalQueue,
-          state.queue,
-          originalPlayed,
-          state.played
-        );
-
-        return result;
       }
 
-      if(!navigator.onLine)throw new Error('OFFLINE');
-      if(!remoteStateRef)await initRemoteSync();
+      /*
+       * FAILOVER INTERNET.
+       * Intentar Firebase realmente aunque navigator.onLine sea enganoso.
+       */
+      if(!remoteStateRef)await initRemoteSync(true);
       if(!remoteStateRef||!remoteRunTransaction)throw new Error('Firestore todavía no está listo');
 
       const result=await remoteRunTransaction(remoteDb,async transaction=>{
@@ -2118,18 +2217,30 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
     try{
       if(LOCAL_QUEUE_MODE){
-        const result=await localQueueRequest('/api/queue/reorder',{
-          order:state.queue.map(String)
-        });
-        applyLocalQueueSnapshot(result,{force:true});
-        queueDragState.pendingRemoteQueue=null;
-        saveStateLocalOnly();
-        toast('Orden de cola guardado');
-        return result;
+        try{
+          const result=await localQueueRequest('/api/queue/reorder',{
+            order:state.queue.map(String)
+          });
+
+          applyLocalQueueSnapshot(result,{force:true});
+          queueDragState.pendingRemoteQueue=null;
+          saveStateLocalOnly();
+
+          egpMirrorQueueLanToFirebase();
+
+          toast('Orden de cola guardado');
+          return result;
+
+        }catch(err){
+          console.warn(
+            'LAN caida durante reordenamiento; usando Firebase:',
+            err
+          );
+          LOCAL_QUEUE_MODE=false;
+        }
       }
 
-      if(!navigator.onLine)throw new Error('OFFLINE');
-      if(!remoteStateRef)await initRemoteSync();
+      if(!remoteStateRef)await initRemoteSync(true);
       if(!remoteStateRef||!remoteRunTransaction)throw new Error('Firestore todavía no está listo');
 
       const result=await remoteRunTransaction(remoteDb,async transaction=>{

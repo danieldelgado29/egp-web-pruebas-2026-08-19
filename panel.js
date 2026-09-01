@@ -7246,15 +7246,41 @@ document.documentElement.dataset.egmVersion="6.36.92";
   // pero desaparece al cerrar completamente esta ventana/app.
   const PANEL_AUTH_SESSION_KEY='egm-panel-auth-session-v1';
 
+  /*
+   * Migración de seguridad:
+   * versiones anteriores guardaban por error la autorización en localStorage.
+   * Se elimina ese residuo; NO concede acceso a la sesión actual.
+   */
+  try{
+    localStorage.removeItem(PANEL_AUTH_SESSION_KEY);
+  }catch(_){}
+
   function rememberPanelAuth(){
     try{
-      localStorage.setItem(PANEL_AUTH_SESSION_KEY,'1');
+      /*
+       * Autorización SOLO de esta sesión real.
+       * Una recarga dentro de la misma app conserva sessionStorage.
+       * Una nueva sesión de la app vuelve a pedir contraseña.
+       */
+      sessionStorage.setItem(PANEL_AUTH_SESSION_KEY,'1');
+
+      /*
+       * Limpieza de la implementación anterior.
+       * No usamos más este permiso persistente.
+       */
+      localStorage.removeItem(PANEL_AUTH_SESSION_KEY);
     }catch(_){}
   }
 
   function panelAuthSessionValid(){
     try{
-      return localStorage.getItem(PANEL_AUTH_SESSION_KEY)==='1';
+      /*
+       * IMPORTANTE:
+       * No leer localStorage aquí.
+       * El permiso persistente era la causa de que Android entrara
+       * incluso después de reinstalar la PWA.
+       */
+      return sessionStorage.getItem(PANEL_AUTH_SESSION_KEY)==='1';
     }catch(_){
       return false;
     }

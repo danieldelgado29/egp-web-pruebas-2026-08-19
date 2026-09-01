@@ -1177,6 +1177,134 @@ html.egp-desktop-computer body.egp-two-column.live-mode
 
 <!-- EGP_MOVIL_HORIZONTAL_DERECHA_V1_FIN -->
 
+
+
+<!-- EGP_ANDROID_PANEL_FIX_V1_INICIO -->
+<script id="EGP_ANDROID_PANEL_CLASS_V1">
+(function(){
+  if(/Android/i.test(navigator.userAgent)){
+    document.documentElement.classList.add('egp-android-panel');
+  }
+})();
+</script>
+
+<style id="EGP_ANDROID_PANEL_FIX_V1">
+html.egp-android-panel body:not(.live-mode){
+  height:auto !important;
+  min-height:100dvh !important;
+  max-height:none !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  touch-action:pan-y !important;
+  overscroll-behavior-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+}
+
+html.egp-android-panel body:not(.live-mode) .app-shell{
+  height:auto !important;
+  min-height:100dvh !important;
+  max-height:none !important;
+  overflow:visible !important;
+  touch-action:pan-y !important;
+  padding-bottom:max(52px,env(safe-area-inset-bottom,0px)) !important;
+}
+
+html.egp-android-panel body:not(.live-mode)
+#configView.view.is-active{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow:visible !important;
+  touch-action:pan-y !important;
+}
+
+html.egp-android-panel body.live-mode{
+  height:100dvh !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+  touch-action:auto !important;
+}
+
+html.egp-android-panel body.live-mode .app-shell{
+  height:100dvh !important;
+  min-height:0 !important;
+  max-height:100dvh !important;
+  overflow:hidden !important;
+}
+
+html.egp-android-panel body.live-mode
+#liveView.view.is-active{
+  height:100% !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+}
+
+html.egp-android-panel body.live-mode
+.song-table-region{
+  min-height:0 !important;
+  overflow:hidden !important;
+}
+
+html.egp-android-panel body.live-mode
+.song-scroll-region{
+  min-height:0 !important;
+  height:auto !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  touch-action:pan-y !important;
+  overscroll-behavior-y:contain !important;
+  -webkit-overflow-scrolling:touch !important;
+}
+
+@media (orientation:landscape) and (max-width:1400px){
+  html.egp-android-panel
+  body.live-mode
+  #liveView.view.is-active
+  .live-toolbar{
+    display:grid !important;
+    grid-template-columns:
+      auto
+      minmax(0,1fr)
+      max-content !important;
+    align-items:center !important;
+    width:100% !important;
+  }
+
+  html.egp-android-panel
+  body.live-mode
+  #liveView.view.is-active
+  #backConfigBtn{
+    grid-column:1 !important;
+    justify-self:start !important;
+  }
+
+  html.egp-android-panel
+  body.live-mode
+  #liveView.view.is-active
+  .live-repertoire-name{
+    grid-column:2 !important;
+    min-width:0 !important;
+  }
+
+  html.egp-android-panel
+  body.live-mode
+  #liveView.view.is-active
+  .live-toolbar-right{
+    grid-column:3 !important;
+    justify-self:end !important;
+    margin-left:auto !important;
+    margin-right:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    flex-wrap:nowrap !important;
+    width:max-content !important;
+    max-width:none !important;
+    gap:5px !important;
+  }
+}
+</style>
+<!-- EGP_ANDROID_PANEL_FIX_V1_FIN -->
 </head>
 <body data-build="6.36.76">
 
@@ -2198,7 +2326,7 @@ html.egp-desktop-computer body.egp-two-column.live-mode
 </script>
 
 
-  <script src="./pwa.js?v=PRUEBA-SIN-SW-20260819-182530"></script>
+  <script src="./pwa.js?v=6.36.95-panel-ui-scroll"></script>
 
 <script>
 (function(){
@@ -2278,9 +2406,7 @@ html.egp-desktop-computer body.egp-two-column.live-mode
   function cargarUi24SiHaceFalta(){
     if(frame.getAttribute('src')) return;
 
-    frame.src=(location.hostname==='elenagirjoaba.com')
-      ? location.origin+'/__egp_ui/mixer.html'
-      : 'https://ui.elenagirjoaba.com/mixer.html';
+    frame.src='https://ui.elenagirjoaba.com/mixer.html';
   }
 
   btn.addEventListener('click',function(e){
@@ -2551,66 +2677,46 @@ html.egp-desktop-computer body.egp-two-column.live-mode
   type="module"
   src="./gallery-panel-firebase-sync.js?v=20260824-1"
 ></script>
-<!-- EGP_UI24R_AVAILABILITY_V1_INICIO -->
 
-<style id="EGP_UI24R_AVAILABILITY_V1_CSS">
-#ui24rBtn.egp-ui24-offline{
-  background:#3a3d45 !important;
-  color:#8d929c !important;
-  border-color:#4b4f58 !important;
-  box-shadow:none !important;
-  opacity:.78 !important;
-  cursor:not-allowed !important;
-  filter:saturate(.15) !important;
-}
 
+
+<!-- EGP_PANEL_UI24R_HEALTH_V2_INICIO -->
+<style id="EGP_PANEL_UI24R_HEALTH_V2_CSS">
+#ui24rBtn.egp-ui24-offline,
 #ui24rBtn.egp-ui24-checking{
   background:#3a3d45 !important;
-  color:#a7abb3 !important;
+  color:#8d929c !important;
   border-color:#4b4f58 !important;
   box-shadow:none !important;
   opacity:.88 !important;
 }
 </style>
 
-<script id="EGP_UI24R_AVAILABILITY_V1_JS">
+<script id="EGP_PANEL_UI24R_HEALTH_V2_JS">
 (function(){
+  const ORIGIN='https://ui.elenagirjoaba.com';
   const btn=document.getElementById('ui24rBtn');
   if(!btn) return;
 
-  /*
-    El botón NO comprueba nada al hacer clic.
-    Mantiene un estado calculado previamente en segundo plano.
-    Por eso, cuando está azul, abre con el mismo flujo inmediato de siempre.
-  */
-
-  const PROBE_INTERVAL=4000;
-  const PROBE_TIMEOUT=1400;
-  const FAILURES_TO_OFFLINE=2;
-
   let state='checking';
-  let consecutiveFailures=0;
-  let probing=false;
-  let timer=0;
-
-  function probeUrl(){
-    /*
-      En producción, el Local Core/proxy expone la Ui24R por esta ruta.
-      Cuando la consola no está disponible, esa ruta cae en el hosting web
-      y responde como página no encontrada. Una respuesta 2xx significa
-      que la ruta local de Ui24R está realmente disponible.
-    */
-    return location.origin + '/__egp_ui/mixer.html';
-  }
+  let failures=0;
+  let cycleTimer=0;
+  let deadlineTimer=0;
+  let healthFrame=null;
+  let sequence=0;
 
   function applyState(next){
     state=next;
 
-    btn.classList.toggle('egp-ui24-checking',next==='checking');
     btn.classList.toggle('egp-ui24-offline',next==='offline');
+    btn.classList.toggle('egp-ui24-checking',next==='checking');
 
-    const disabled=next!=='online';
-    btn.setAttribute('aria-disabled',disabled?'true':'false');
+    btn.setAttribute(
+      'aria-disabled',
+      next==='online' ? 'false' : 'true'
+    );
+
+    btn.dataset.ui24rState=next;
 
     if(next==='online'){
       btn.title='Abrir consola Ui24R';
@@ -2631,14 +2737,9 @@ html.egp-desktop-computer body.egp-two-column.live-mode
     clearTimeout(notifyUnavailable.timer);
     notifyUnavailable.timer=setTimeout(function(){
       toast.classList.remove('show');
-    },1800);
+    },1700);
   }
 
-  /*
-    Captura el clic ANTES del listener existente que abre el iframe.
-    Solo se bloquea cuando el último estado conocido no es online.
-    Cuando está online, este listener no interfiere en absoluto.
-  */
   btn.addEventListener('click',function(e){
     if(state==='online') return;
 
@@ -2647,127 +2748,141 @@ html.egp-desktop-computer body.egp-two-column.live-mode
     notifyUnavailable();
   },true);
 
-  async function probe(){
-    if(probing) return;
+  function ensureHealthFrame(){
+    if(healthFrame) return healthFrame;
 
-    /*
-      El estado solo importa cuando el documento está visible.
-      Así no se gasta trabajo de red con la app escondida.
-    */
-    if(document.visibilityState==='hidden') return;
+    healthFrame=document.createElement('iframe');
+    healthFrame.id='egpPanelUi24rHealthFrame';
+    healthFrame.setAttribute('aria-hidden','true');
+    healthFrame.tabIndex=-1;
 
-    probing=true;
+    Object.assign(healthFrame.style,{
+      position:'fixed',
+      width:'1px',
+      height:'1px',
+      left:'-10000px',
+      top:'-10000px',
+      border:'0',
+      opacity:'0',
+      pointerEvents:'none'
+    });
 
-    const controller=new AbortController();
-    const timeout=setTimeout(function(){
-      controller.abort();
-    },PROBE_TIMEOUT);
-
-    try{
-      const response=await fetch(
-        probeUrl() + '?egp_probe=' + Date.now(),
-        {
-          method:'GET',
-          cache:'no-store',
-          credentials:'same-origin',
-          redirect:'manual',
-          signal:controller.signal,
-          headers:{
-            'Accept':'text/html,*/*;q=0.1'
-          }
-        }
-      );
-
-      clearTimeout(timeout);
-
-      /*
-        No necesitamos descargar/interpretar mixer.html.
-        En cuanto tenemos status + headers, cancelamos el cuerpo.
-      */
-      try{
-        if(response.body && typeof response.body.cancel==='function'){
-          response.body.cancel();
-        }
-      }catch(_){}
-
-      if(response.status>=200 && response.status<300){
-        consecutiveFailures=0;
-        applyState('online');
-      }else{
-        consecutiveFailures++;
-
-        if(state==='checking' || consecutiveFailures>=FAILURES_TO_OFFLINE){
-          applyState('offline');
-        }
-      }
-    }catch(_){
-      clearTimeout(timeout);
-      consecutiveFailures++;
-
-      if(state==='checking' || consecutiveFailures>=FAILURES_TO_OFFLINE){
-        applyState('offline');
-      }
-    }finally{
-      probing=false;
-    }
+    document.body.appendChild(healthFrame);
+    return healthFrame;
   }
 
-  function start(){
-    clearInterval(timer);
-    probe();
-    timer=setInterval(probe,PROBE_INTERVAL);
+  function scheduleNext(ms){
+    clearTimeout(cycleTimer);
+    cycleTimer=setTimeout(runCheck,ms);
   }
 
-  applyState('checking');
-  start();
-
-  document.addEventListener('visibilitychange',function(){
-    if(document.visibilityState==='visible'){
-      probe();
-    }
-  });
-
-  window.addEventListener('focus',probe);
-  window.addEventListener('online',probe);
-})();
-</script>
-
-<!-- EGP_UI24R_AVAILABILITY_V1_FIN -->
-
-
-<!-- EGP_UI24R_PERSISTENTE_POSTLOAD_V1_INICIO -->
-<script id="EGP_UI24R_PERSISTENTE_POSTLOAD_V1">
-(function(){
-  const frame=document.getElementById('ui24rFrame');
-  if(!frame) return;
-
-  let iniciado=Boolean(frame.getAttribute('src'));
-
-  function iniciarUnaSolaVez(){
-    if(iniciado || frame.getAttribute('src')) {
-      iniciado=true;
+  function runCheck(){
+    if(document.hidden){
+      scheduleNext(1500);
       return;
     }
 
-    iniciado=true;
+    const frame=ensureHealthFrame();
+    const mySequence=++sequence;
 
-    frame.src=(location.hostname==='elenagirjoaba.com')
-      ? location.origin+'/__egp_ui/mixer.html'
-      : 'https://ui.elenagirjoaba.com/mixer.html';
+    clearTimeout(deadlineTimer);
+
+    frame.src=
+      ORIGIN+
+      '/musicos.html?egp_panel_health=1&v='+
+      Date.now();
+
+    deadlineTimer=setTimeout(function(){
+      if(mySequence!==sequence) return;
+
+      failures+=1;
+
+      if(failures>=2){
+        applyState('offline');
+      }
+
+      scheduleNext(2500);
+    },2200);
   }
 
-  function arrancarDespuesDePagina(){
+  window.addEventListener('message',function(event){
+    if(event.origin!==ORIGIN) return;
+
+    const data=event.data || {};
+
+    if(
+      data.type!=='egp-ui24r-launcher-ready' &&
+      data.type!=='egp-ui24r-aux-ready'
+    ){
+      return;
+    }
+
+    failures=0;
+    clearTimeout(deadlineTimer);
+    applyState('online');
+    scheduleNext(4000);
+  });
+
+  window.addEventListener('focus',runCheck);
+
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden){
+      runCheck();
+    }
+  });
+
+  applyState('checking');
+
+  if(document.readyState==='complete'){
+    setTimeout(runCheck,350);
+  }else{
+    window.addEventListener(
+      'load',
+      function(){ setTimeout(runCheck,350); },
+      {once:true}
+    );
+  }
+})();
+</script>
+<!-- EGP_PANEL_UI24R_HEALTH_V2_FIN -->
+
+<!-- EGP_UI24R_PERSISTENTE_POSTLOAD_V1_INICIO -->
+<script id="EGP_UI24R_PERSISTENTE_POSTLOAD_V2">
+(function(){
+  const frame=document.getElementById('ui24rFrame');
+  const btn=document.getElementById('ui24rBtn');
+
+  if(!frame) return;
+
+  const REAL_URL='https://ui.elenagirjoaba.com/mixer.html';
+
+  function iniciarUnaSolaVez(){
+    if(frame.dataset.egpPersistentLoaded==='1') return;
+
+    const actual=frame.getAttribute('src') || '';
+
+    frame.dataset.egpPersistentLoaded='1';
+
+    if(!actual || actual==='about:blank'){
+      frame.setAttribute('src',REAL_URL);
+    }
+  }
+
+  function arrancar(){
     setTimeout(iniciarUnaSolaVez,250);
   }
 
   if(document.readyState==='complete'){
-    arrancarDespuesDePagina();
+    arrancar();
   }else{
-    window.addEventListener('load',arrancarDespuesDePagina,{once:true});
+    window.addEventListener('load',arrancar,{once:true});
   }
 
-  document.getElementById('ui24rBtn')
-    ?.addEventListener('click',iniciarUnaSolaVez,true);
+  btn?.addEventListener(
+    'click',
+    iniciarUnaSolaVez,
+    true
+  );
 })();
 </script>
 <!-- EGP_UI24R_PERSISTENTE_POSTLOAD_V1_FIN -->

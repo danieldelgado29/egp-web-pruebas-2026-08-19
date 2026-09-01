@@ -15,7 +15,7 @@
     return;
   }
 
-  const APP_VERSION = "6.36.100";
+  const APP_VERSION = "6.36.101";
 
   /* EGP REPO PRUEBAS SIN SERVICE WORKER */
   const EGP_TEST_REPO =
@@ -83,7 +83,7 @@
   });
   window.addEventListener("load",async()=>{
     try{
-      const registration=await navigator.serviceWorker.register("./service-worker-6.36.100.js",{scope:"./",updateViaCache:"none"});
+      const registration=await navigator.serviceWorker.register("./service-worker-6.36.101.js",{scope:"./",updateViaCache:"none"});
       registrationRef=registration;
       if(registration.waiting) activate(registration.waiting);
       registration.addEventListener("updatefound",()=>{

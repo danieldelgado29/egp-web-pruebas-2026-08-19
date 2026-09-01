@@ -3,7 +3,7 @@
   "short_name": "Panel off",
   "description": "Panel de control y repertorio de Elena Girjoaba Music, disponible sin conexión.",
   "id": "./panel.html",
-  "start_url": "./panel.html?v=6.36.100",
+  "start_url": "./panel.html",
   "scope": "./",
   "display": "standalone",
   "display_override": [
@@ -44,7 +44,7 @@
     {
       "name": "Abrir panel",
       "short_name": "Panel",
-      "url": "./panel.html?v=6.36.100",
+      "url": "./panel.html",
       "icons": [
         {
           "src": "./assets/app-icon-192.png",

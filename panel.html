@@ -1305,6 +1305,58 @@ html.egp-android-panel body.live-mode
 }
 </style>
 <!-- EGP_ANDROID_PANEL_FIX_V1_FIN -->
+
+
+<!-- EGP_PANEL_UI24R_MOBILE_LAUNCHER_V1_INICIO -->
+<style id="EGP_PANEL_UI24R_MOBILE_LAUNCHER_V1">
+.ui24r-overlay{
+  position:fixed !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  background:#000 !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+  visibility:visible !important;
+  display:block !important;
+}
+
+.ui24r-overlay.is-open{
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+#ui24rFrame{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  border:0 !important;
+  background:#000 !important;
+}
+
+/* Vertical: el launcher móvil adapta la Ui24R. */
+@media (orientation:portrait){
+  #ui24rFrame{
+    left:0 !important;
+    right:0 !important;
+    top:0 !important;
+    bottom:0 !important;
+    width:100% !important;
+    height:100% !important;
+    transform:none !important;
+  }
+
+  #ui24rBackBtn{
+    top:max(8px,env(safe-area-inset-top)) !important;
+  }
+}
+
+#ui24rBackBtn{
+  z-index:1000001 !important;
+}
+</style>
+<!-- EGP_PANEL_UI24R_MOBILE_LAUNCHER_V1_FIN -->
 </head>
 <body data-build="6.36.76">
 
@@ -2326,7 +2378,7 @@ html.egp-android-panel body.live-mode
 </script>
 
 
-  <script src="./pwa.js?v=6.36.95-panel-ui-scroll"></script>
+  <script src="./pwa.js?v=6.36.96-ui24r-mobile-launcher"></script>
 
 <script>
 (function(){
@@ -2390,7 +2442,15 @@ html.egp-android-panel body.live-mode
 
 
 <div id="ui24rOverlay" class="ui24r-overlay" aria-hidden="true">
-  <iframe id="ui24rFrame" title="Soundcraft Ui24R"></iframe>
+  <iframe
+  id="ui24rFrame"
+  src="about:blank"
+  data-src-desktop="https://ui.elenagirjoaba.com/mixer.html"
+  data-src-mobile="https://ui.elenagirjoaba.com/musicos.html?v=1.5.8.14"
+  title="Soundcraft Ui24R"
+  loading="lazy"
+  allow="autoplay"
+></iframe>
   <button id="ui24rBackBtn" type="button">← PANEL</button>
 </div>
 
@@ -2403,10 +2463,20 @@ html.egp-android-panel body.live-mode
 
   if(!btn || !overlay || !frame || !back) return;
 
-  function cargarUi24SiHaceFalta(){
-    if(frame.getAttribute('src')) return;
+  function egpUi24Url(){
+    const mobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    frame.src='https://ui.elenagirjoaba.com/mixer.html';
+    return mobile
+      ? (frame.dataset.srcMobile || 'https://ui.elenagirjoaba.com/musicos.html?v=1.5.8.14')
+      : (frame.dataset.srcDesktop || 'https://ui.elenagirjoaba.com/mixer.html');
+  }
+
+  function cargarUi24SiHaceFalta(){
+    const actual=frame.getAttribute('src') || '';
+
+    if(actual && actual!=='about:blank') return;
+
+    frame.setAttribute('src',egpUi24Url());
   }
 
   btn.addEventListener('click',function(e){
@@ -2847,24 +2917,36 @@ html.egp-android-panel body.live-mode
 <!-- EGP_PANEL_UI24R_HEALTH_V2_FIN -->
 
 <!-- EGP_UI24R_PERSISTENTE_POSTLOAD_V1_INICIO -->
-<script id="EGP_UI24R_PERSISTENTE_POSTLOAD_V2">
+<script id="EGP_UI24R_PERSISTENTE_POSTLOAD_V3">
 (function(){
   const frame=document.getElementById('ui24rFrame');
   const btn=document.getElementById('ui24rBtn');
 
   if(!frame) return;
 
-  const REAL_URL='https://ui.elenagirjoaba.com/mixer.html';
+  function realUrl(){
+    const mobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    return mobile
+      ? (frame.dataset.srcMobile || 'https://ui.elenagirjoaba.com/musicos.html?v=1.5.8.14')
+      : (frame.dataset.srcDesktop || 'https://ui.elenagirjoaba.com/mixer.html');
+  }
 
   function iniciarUnaSolaVez(){
-    if(frame.dataset.egpPersistentLoaded==='1') return;
-
     const actual=frame.getAttribute('src') || '';
+
+    if(
+      frame.dataset.egpPersistentLoaded==='1' &&
+      actual &&
+      actual!=='about:blank'
+    ){
+      return;
+    }
 
     frame.dataset.egpPersistentLoaded='1';
 
     if(!actual || actual==='about:blank'){
-      frame.setAttribute('src',REAL_URL);
+      frame.setAttribute('src',realUrl());
     }
   }
 
@@ -2878,11 +2960,7 @@ html.egp-android-panel body.live-mode
     window.addEventListener('load',arrancar,{once:true});
   }
 
-  btn?.addEventListener(
-    'click',
-    iniciarUnaSolaVez,
-    true
-  );
+  btn?.addEventListener('click',iniciarUnaSolaVez,true);
 })();
 </script>
 <!-- EGP_UI24R_PERSISTENTE_POSTLOAD_V1_FIN -->

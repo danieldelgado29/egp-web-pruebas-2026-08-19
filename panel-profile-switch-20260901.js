@@ -21,65 +21,7 @@
       oldField.setAttribute("aria-hidden","true");
     }
 
-    const existingWrap=document.getElementById("panelUserQuickSwitch");
-
-    if(existingWrap){
-      const toggle=document.getElementById("panelUserToggleQuick");
-      const elena=document.getElementById("panelUserElenaQuick");
-      const daniel=document.getElementById("panelUserDanielQuick");
-
-      if(!toggle || !elena || !daniel) return false;
-
-      function renderExisting(){
-        const isDaniel=select.value==="daniel";
-
-        toggle.checked=isDaniel;
-
-        elena.classList.toggle("is-active",!isDaniel);
-        daniel.classList.toggle("is-active",isDaniel);
-
-        elena.setAttribute("aria-pressed",String(!isDaniel));
-        daniel.setAttribute("aria-pressed",String(isDaniel));
-      }
-
-      function elegirExisting(perfil){
-        const nuevo=perfil==="daniel" ? "daniel" : "elena";
-
-        if(select.value!==nuevo){
-          select.value=nuevo;
-          select.dispatchEvent(
-            new Event("change",{bubbles:true})
-          );
-        }
-
-        renderExisting();
-        requestAnimationFrame(renderExisting);
-      }
-
-      toggle.addEventListener("change",function(){
-        elegirExisting(toggle.checked ? "daniel" : "elena");
-      });
-
-      elena.addEventListener("click",function(){
-        elegirExisting("elena");
-      });
-
-      daniel.addEventListener("click",function(){
-        elegirExisting("daniel");
-      });
-
-      select.addEventListener("change",renderExisting);
-
-      new MutationObserver(renderExisting).observe(
-        document.body,
-        {
-          attributes:true,
-          attributeFilter:["data-panel-user"]
-        }
-      );
-
-      renderExisting();
-
+    if(document.getElementById("panelUserQuickSwitch")){
       return true;
     }
 

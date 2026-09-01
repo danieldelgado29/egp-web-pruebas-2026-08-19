@@ -1132,6 +1132,51 @@ html.egp-desktop-computer body.egp-two-column.live-mode
 
 <!-- EGP_DESKTOP_LECTURA_V2_FIN -->
 
+
+<!-- EGP_MOVIL_HORIZONTAL_DERECHA_V1_INICIO -->
+
+<style id="EGP_MOVIL_HORIZONTAL_DERECHA_V1">
+/*
+  SOLO dispositivos táctiles en horizontal.
+  iPhone / Android.
+  Únicamente distribución visual.
+  No modifica eventos ni funciones.
+*/
+@media (orientation:landscape) and (hover:none) and (pointer:coarse){
+
+  body.egp-two-column.live-mode
+  #liveView.view.is-active
+  .live-toolbar{
+    grid-template-columns:
+      auto
+      minmax(0,1fr)
+      max-content !important;
+    width:100% !important;
+  }
+
+  body.egp-two-column.live-mode
+  #liveView.view.is-active
+  .live-toolbar-right{
+    grid-column:3 !important;
+    justify-self:end !important;
+    margin-left:auto !important;
+    margin-right:0 !important;
+
+    width:max-content !important;
+    min-width:0 !important;
+    max-width:none !important;
+
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    flex-wrap:nowrap !important;
+    gap:4px !important;
+  }
+}
+</style>
+
+<!-- EGP_MOVIL_HORIZONTAL_DERECHA_V1_FIN -->
+
 </head>
 <body data-build="6.36.76">
 

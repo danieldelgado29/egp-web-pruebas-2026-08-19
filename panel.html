@@ -459,38 +459,90 @@
 }
 </style>
 
+<script id="EGP_MAC_DESKTOP_CLASS_V1">
+(function(){
+  const mac=
+    /Macintosh|MacIntel/.test(
+      navigator.platform || navigator.userAgent
+    ) &&
+    Number(navigator.maxTouchPoints||0)===0;
 
-<style id="EGP_MAC_SCROLL_V1">
-@media(min-width:900px){
-
-  html:not(.live-mode),
-  body:not(.live-mode){
-    height:auto !important;
-    min-height:100% !important;
-    overflow-y:auto !important;
+  if(mac){
+    document.documentElement.classList.add(
+      "egp-mac-desktop"
+    );
   }
+})();
+</script>
 
-  body:not(.live-mode) .app-shell{
-    height:auto !important;
-    min-height:100vh !important;
-    overflow:visible !important;
-  }
+<style id="EGP_MAC_NATIVE_SCROLL_V2">
 
-  body:not(.live-mode) #configView{
-    height:auto !important;
-    max-height:none !important;
-    overflow:visible !important;
-  }
-
-  body.live-mode .song-scroll-region{
-    min-height:0 !important;
-    overflow-x:hidden !important;
-    overflow-y:auto !important;
-    scroll-behavior:auto !important;
-    scrollbar-gutter:stable !important;
-  }
-
+.egp-mac-desktop.live-mode,
+.egp-mac-desktop body.live-mode{
+  height:auto !important;
+  min-height:100vh !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  overscroll-behavior-y:auto !important;
 }
+
+.egp-mac-desktop body.live-mode{
+  touch-action:auto !important;
+}
+
+.egp-mac-desktop body.live-mode .app-shell{
+  height:auto !important;
+  min-height:100vh !important;
+  overflow:visible !important;
+}
+
+.egp-mac-desktop body.live-mode .app-shell > main{
+  height:auto !important;
+  min-height:0 !important;
+  overflow:visible !important;
+}
+
+.egp-mac-desktop body.live-mode #liveView.view.is-active{
+  display:block !important;
+  height:auto !important;
+  min-height:100vh !important;
+  overflow:visible !important;
+}
+
+.egp-mac-desktop body.live-mode .live-toolbar{
+  position:sticky !important;
+  top:0 !important;
+  z-index:75 !important;
+}
+
+.egp-mac-desktop body.live-mode .live-sticky-tools{
+  position:sticky !important;
+  top:44px !important;
+  z-index:70 !important;
+}
+
+.egp-mac-desktop body.live-mode .song-table-region{
+  display:block !important;
+  height:auto !important;
+  min-height:0 !important;
+  overflow:visible !important;
+}
+
+.egp-mac-desktop body.live-mode .song-scroll-region{
+  display:block !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow:visible !important;
+  overscroll-behavior:auto !important;
+}
+
+.egp-mac-desktop body.live-mode .song-list{
+  height:auto !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+
 </style>
 
 </head>
@@ -1397,111 +1449,8 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="panel.js?v=arranque-scroll-mac-v4-20260901"></script>
+  <script type="module" src="panel.js?v=mac-scroll-nativo-v5-20260901"></script>
   <script type="module" src="./panel-profile-switch-20260901.js?v=blanco-v2-20260901"></script>
-
-<script id="EGP_MAC_LIVE_SCROLL_V1">
-(function(){
-
-  const isMac=
-    /Macintosh|MacIntel/.test(
-      navigator.platform || navigator.userAgent
-    ) &&
-    Number(navigator.maxTouchPoints||0)===0;
-
-  if(!isMac)return;
-
-  function bind(){
-
-    const live=
-      document.getElementById("liveView");
-
-    const scroller=
-      document.querySelector(
-        ".song-scroll-region"
-      );
-
-    if(!live || !scroller)return;
-
-    if(live.dataset.egpMacScroll==="1")return;
-
-    live.dataset.egpMacScroll="1";
-
-    live.addEventListener(
-      "wheel",
-      function(e){
-
-        if(
-          !document.body.classList.contains(
-            "live-mode"
-          )
-        ){
-          return;
-        }
-
-        if(e.ctrlKey)return;
-
-        if(
-          document.querySelector(
-            "dialog[open]"
-          )
-        ){
-          return;
-        }
-
-        const unit=
-          e.deltaMode===1
-            ? 16
-            : e.deltaMode===2
-              ? Math.max(
-                  1,
-                  scroller.clientHeight
-                )
-              : 1;
-
-        const dy=e.deltaY*unit;
-
-        if(Math.abs(dy)<0.01)return;
-
-        const max=
-          Math.max(
-            0,
-            scroller.scrollHeight-
-            scroller.clientHeight
-          );
-
-        if(max<=0)return;
-
-        const before=
-          scroller.scrollTop;
-
-        scroller.scrollTop+=dy;
-
-        if(
-          scroller.scrollTop!==before
-        ){
-          e.preventDefault();
-        }
-
-      },
-      {passive:false}
-    );
-  }
-
-  if(document.readyState==="loading"){
-    document.addEventListener(
-      "DOMContentLoaded",
-      bind,
-      {once:true}
-    );
-  }else{
-    bind();
-  }
-
-})();
-</script>
-
-
 <script id="EGP_MAC_SWITCH_POSITION_V1">
 (function(){
   if(!window.matchMedia("(min-width:900px)").matches) return;

@@ -282,6 +282,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   let localShowTransitionUntil = 0;
   let localDesiredShowActive = null;
   let showActiveConfirmed=false;
+  let lastCoreShowActive=null;
   let remoteInitPromise = null;
   let activeViewerSongId=null, activeViewerType=null, activeImageOwner='elena', activeImageSongId=null, activeImageMode='image', returnToImageViewer=false, viewerRenderGeneration=0, pendingViewerRefresh=null;
   let applyingRemoteShowState=false;
@@ -775,28 +776,31 @@ document.documentElement.dataset.egmVersion="6.36.92";
       const localActive=
         localPublicConfig.show_active===true;
 
-      if(localActive){
-        showActiveConfirmed=true;
-        setStatus(true);
+      if(lastCoreShowActive!==localActive){
+        lastCoreShowActive=localActive;
+        showActiveConfirmed=localActive;
+        setStatus(localActive);
 
         if(
-          state.config &&
           panelAuthValid() &&
-          $('#panelLogin').hidden &&
-          !configOpenedFromLive &&
-          !document.body.classList.contains('live-mode')
+          $('#panelLogin').hidden
         ){
-          showLive();
-        }
-      }else if(localDesiredShowActive!==true){
-        showActiveConfirmed=false;
-        setStatus(false);
+          if(
+            localActive &&
+            state.config &&
+            !configOpenedFromLive &&
+            !document.body.classList.contains('live-mode')
+          ){
+            showLive();
+          }
 
-        if(
-          document.body.classList.contains('live-mode') &&
-          !configOpenedFromLive
-        ){
-          showConfig(false);
+          if(
+            !localActive &&
+            document.body.classList.contains('live-mode') &&
+            !configOpenedFromLive
+          ){
+            showConfig(false);
+          }
         }
       }
     }

@@ -833,10 +833,50 @@ document.documentElement.dataset.egmVersion="6.36.92";
   function applyLocalQueueSnapshot(snapshot,{force=false}={}){
     if(!snapshot||!Array.isArray(snapshot.queue))return false;
 
-    const localPublicConfig=
+    /*
+     * LOCAL CORE /api/state tiene dos fuentes:
+     *
+     * - snapshot.show.active / snapshot.show.venue
+     *   = estado REAL e inmediato del show en la LAN.
+     *
+     * - snapshot.publicConfig
+     *   = repertorio, pedidos y demás configuración publicada.
+     *
+     * Panel antes miraba solo publicConfig.show_active.
+     * Eso hacía que un Android sin Internet recibiera cola pero
+     * permaneciera en Configuración aunque show.active === true.
+     */
+    const rawLocalPublicConfig=
       snapshot.publicConfig &&
       typeof snapshot.publicConfig==='object'
         ? snapshot.publicConfig
+        : null;
+
+    const localShow=
+      snapshot.show &&
+      typeof snapshot.show==='object'
+        ? snapshot.show
+        : null;
+
+    const localPublicConfig=
+      rawLocalPublicConfig || localShow
+        ? {
+            ...(rawLocalPublicConfig||{}),
+
+            ...(localShow
+              ? {
+                  show_active:
+                    localShow.active===true,
+
+                  lugar:
+                    String(
+                      localShow.venue ??
+                      rawLocalPublicConfig?.lugar ??
+                      ''
+                    )
+                }
+              : {})
+          }
         : null;
 
     if(
@@ -1364,8 +1404,12 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
           if(!egpIntentarEntradaShowActivoV1()){
             const egpAutoEntradaTimerV1=setInterval(()=>{
+              /*
+               * No cancelar si la configuración LAN todavía no llegó.
+               * El Local Core puede responder unos milisegundos después
+               * de que la PWA terminó de abrir.
+               */
               if(!state.config){
-                clearInterval(egpAutoEntradaTimerV1);
                 return;
               }
               if(egpIntentarEntradaShowActivoV1()){
@@ -1373,7 +1417,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
               }
             },250);
 
-            setTimeout(()=>clearInterval(egpAutoEntradaTimerV1),30000);
+            setTimeout(()=>clearInterval(egpAutoEntradaTimerV1),120000);
           }
         }
       }else if(data.show_activo===false){

@@ -1368,6 +1368,75 @@ html.egp-android-panel body.live-mode
 }
 </style>
 <!-- EGP_PANEL_UI24R_DIRECTA_TODOS_V1_FIN -->
+
+
+<!-- EGP_ANDROID_UI24R_KEEPALIVE_V1_INICIO -->
+<style id="EGP_ANDROID_UI24R_KEEPALIVE_V1">
+/*
+ * ANDROID:
+ *
+ * No esconder Ui24R con opacity:0.
+ * Chrome puede suspender/recrear una interfaz pesada dentro
+ * de un iframe totalmente transparente.
+ *
+ * La mantenemos montada y renderizada FUERA de pantalla.
+ * Abrir/cerrar cambia solo transform/pointer-events.
+ * El src nunca se modifica.
+ */
+html.egp-android-panel .ui24r-overlay{
+  opacity:1 !important;
+  visibility:visible !important;
+  display:block !important;
+
+  transform:
+    translate3d(110vw,0,0) !important;
+
+  pointer-events:none !important;
+
+  will-change:transform !important;
+
+  transition:none !important;
+}
+
+html.egp-android-panel .ui24r-overlay.is-open{
+  transform:
+    translate3d(0,0,0) !important;
+
+  opacity:1 !important;
+
+  pointer-events:auto !important;
+}
+
+html.egp-android-panel
+.ui24r-overlay
+#ui24rFrame{
+  opacity:1 !important;
+  visibility:visible !important;
+  display:block !important;
+
+  transform:none !important;
+
+  content-visibility:visible !important;
+}
+
+html.egp-android-panel
+.ui24r-overlay:not(.is-open)
+#ui24rFrame{
+  /*
+   * Sigue renderizado/conectado.
+   * Solo se impiden gestos mientras está fuera de pantalla.
+   */
+  pointer-events:none !important;
+}
+
+html.egp-android-panel
+.ui24r-overlay.is-open
+#ui24rFrame{
+  pointer-events:auto !important;
+  touch-action:auto !important;
+}
+</style>
+<!-- EGP_ANDROID_UI24R_KEEPALIVE_V1_FIN -->
 </head>
 <body data-build="6.36.76">
 
@@ -2389,7 +2458,7 @@ html.egp-android-panel body.live-mode
 </script>
 
 
-  <script src="./pwa.js?v=6.36.97-ui24r-directa-unica"></script>
+  <script src="./pwa.js?v=6.36.98-android-lan-show-ui24r"></script>
 
 <script>
 (function(){

@@ -1307,8 +1307,11 @@ html.egp-android-panel body.live-mode
 <!-- EGP_ANDROID_PANEL_FIX_V1_FIN -->
 
 
-<!-- EGP_PANEL_UI24R_MOBILE_LAUNCHER_V1_INICIO -->
-<style id="EGP_PANEL_UI24R_MOBILE_LAUNCHER_V1">
+
+
+
+<!-- EGP_PANEL_UI24R_DIRECTA_TODOS_V1_INICIO -->
+<style id="EGP_PANEL_UI24R_DIRECTA_TODOS_V1">
 .ui24r-overlay{
   position:fixed !important;
   inset:0 !important;
@@ -1316,9 +1319,9 @@ html.egp-android-panel body.live-mode
   height:100% !important;
   background:#000 !important;
   opacity:0 !important;
-  pointer-events:none !important;
   visibility:visible !important;
   display:block !important;
+  pointer-events:none !important;
 }
 
 .ui24r-overlay.is-open{
@@ -1333,30 +1336,38 @@ html.egp-android-panel body.live-mode
   height:100% !important;
   border:0 !important;
   background:#000 !important;
+  transform:none !important;
+  pointer-events:auto !important;
+  touch-action:auto !important;
 }
 
-/* Vertical: el launcher móvil adapta la Ui24R. */
-@media (orientation:portrait){
+@media (hover:none) and (pointer:coarse){
   #ui24rFrame{
-    left:0 !important;
-    right:0 !important;
-    top:0 !important;
-    bottom:0 !important;
-    width:100% !important;
-    height:100% !important;
+    top:env(safe-area-inset-top,0px) !important;
+    right:env(safe-area-inset-right,0px) !important;
+    bottom:env(safe-area-inset-bottom,0px) !important;
+    left:env(safe-area-inset-left,0px) !important;
+    width:auto !important;
+    height:auto !important;
     transform:none !important;
+    pointer-events:auto !important;
+    touch-action:auto !important;
   }
 
   #ui24rBackBtn{
-    top:max(8px,env(safe-area-inset-top)) !important;
+    top:max(8px,env(safe-area-inset-top,0px)) !important;
   }
 }
 
-#ui24rBackBtn{
-  z-index:1000001 !important;
+.ui24r-overlay:not(.is-open) #ui24rFrame{
+  pointer-events:none !important;
+}
+
+.ui24r-overlay.is-open #ui24rFrame{
+  pointer-events:auto !important;
 }
 </style>
-<!-- EGP_PANEL_UI24R_MOBILE_LAUNCHER_V1_FIN -->
+<!-- EGP_PANEL_UI24R_DIRECTA_TODOS_V1_FIN -->
 </head>
 <body data-build="6.36.76">
 
@@ -2378,7 +2389,7 @@ html.egp-android-panel body.live-mode
 </script>
 
 
-  <script src="./pwa.js?v=6.36.96-ui24r-mobile-launcher"></script>
+  <script src="./pwa.js?v=6.36.97-ui24r-directa-unica"></script>
 
 <script>
 (function(){
@@ -2445,10 +2456,9 @@ html.egp-android-panel body.live-mode
   <iframe
   id="ui24rFrame"
   src="about:blank"
-  data-src-desktop="https://ui.elenagirjoaba.com/mixer.html"
-  data-src-mobile="https://ui.elenagirjoaba.com/musicos.html?v=1.5.8.14"
+  data-src="https://ui.elenagirjoaba.com/mixer.html"
   title="Soundcraft Ui24R"
-  loading="lazy"
+  loading="eager"
   allow="autoplay"
 ></iframe>
   <button id="ui24rBackBtn" type="button">← PANEL</button>
@@ -2463,20 +2473,15 @@ html.egp-android-panel body.live-mode
 
   if(!btn || !overlay || !frame || !back) return;
 
-  function egpUi24Url(){
-    const mobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    return mobile
-      ? (frame.dataset.srcMobile || 'https://ui.elenagirjoaba.com/musicos.html?v=1.5.8.14')
-      : (frame.dataset.srcDesktop || 'https://ui.elenagirjoaba.com/mixer.html');
-  }
-
   function cargarUi24SiHaceFalta(){
     const actual=frame.getAttribute('src') || '';
 
     if(actual && actual!=='about:blank') return;
 
-    frame.setAttribute('src',egpUi24Url());
+    frame.setAttribute(
+      'src',
+      frame.dataset.src || 'https://ui.elenagirjoaba.com/mixer.html'
+    );
   }
 
   btn.addEventListener('click',function(e){
@@ -2582,51 +2587,7 @@ html.egp-android-panel body.live-mode
 
 
 
-<script id="egpUiSafeV26">
-(function(){
-  const frame=document.getElementById('ui24rFrame');
-  if(!frame) return;
 
-  function ajustar(){
-    const landscape=window.innerWidth>window.innerHeight;
-    const iphone=/iPhone/i.test(navigator.userAgent);
-
-    if(!landscape || !iphone){
-      frame.style.setProperty('--egp-ui-sx','1');
-      frame.style.setProperty('--egp-ui-origin','50% 50%');
-      return;
-    }
-
-    let angle=0;
-
-    if(screen.orientation && typeof screen.orientation.angle==='number'){
-      angle=screen.orientation.angle;
-    }else if(typeof window.orientation==='number'){
-      angle=window.orientation;
-    }
-
-    angle=((angle%360)+360)%360;
-
-    const margen=46;
-    const sx=(window.innerWidth-margen)/window.innerWidth;
-
-    frame.style.setProperty('--egp-ui-sx',sx);
-
-    if(angle===90){
-      frame.style.setProperty('--egp-ui-origin','100% 50%');
-    }else{
-      frame.style.setProperty('--egp-ui-origin','0% 50%');
-    }
-  }
-
-  window.addEventListener('resize',ajustar);
-  window.addEventListener('orientationchange',function(){
-    setTimeout(ajustar,200);
-  });
-
-  ajustar();
-})();
-</script>
 
 
 <script id="egpIosMomentumV36">
@@ -2750,8 +2711,10 @@ html.egp-android-panel body.live-mode
 
 
 
-<!-- EGP_PANEL_UI24R_HEALTH_V2_INICIO -->
-<style id="EGP_PANEL_UI24R_HEALTH_V2_CSS">
+
+
+<!-- EGP_PANEL_UI24R_HEALTH_V3_INICIO -->
+<style id="EGP_PANEL_UI24R_HEALTH_V3_CSS">
 #ui24rBtn.egp-ui24-offline,
 #ui24rBtn.egp-ui24-checking{
   background:#3a3d45 !important;
@@ -2762,52 +2725,74 @@ html.egp-android-panel body.live-mode
 }
 </style>
 
-<script id="EGP_PANEL_UI24R_HEALTH_V2_JS">
+<script id="EGP_PANEL_UI24R_HEALTH_V3_JS">
 (function(){
-  const ORIGIN='https://ui.elenagirjoaba.com';
+  const URL='https://ui.elenagirjoaba.com/mixer.html';
   const btn=document.getElementById('ui24rBtn');
+
   if(!btn) return;
 
   let state='checking';
-  let failures=0;
-  let cycleTimer=0;
-  let deadlineTimer=0;
-  let healthFrame=null;
-  let sequence=0;
+  let timer=0;
+  let busy=false;
 
-  function applyState(next){
+  function paint(next){
     state=next;
 
     btn.classList.toggle('egp-ui24-offline',next==='offline');
     btn.classList.toggle('egp-ui24-checking',next==='checking');
 
+    btn.dataset.ui24rState=next;
     btn.setAttribute(
       'aria-disabled',
       next==='online' ? 'false' : 'true'
     );
-
-    btn.dataset.ui24rState=next;
-
-    if(next==='online'){
-      btn.title='Abrir consola Ui24R';
-    }else if(next==='checking'){
-      btn.title='Comprobando Ui24R';
-    }else{
-      btn.title='Ui24R no disponible';
-    }
   }
 
-  function notifyUnavailable(){
-    const toast=document.getElementById('toast');
-    if(!toast) return;
+  function schedule(ms){
+    clearTimeout(timer);
+    timer=setTimeout(check,ms);
+  }
 
-    toast.textContent='Ui24R no disponible';
-    toast.classList.add('show');
+  async function check(){
+    if(busy){
+      schedule(1500);
+      return;
+    }
 
-    clearTimeout(notifyUnavailable.timer);
-    notifyUnavailable.timer=setTimeout(function(){
-      toast.classList.remove('show');
-    },1700);
+    if(document.hidden){
+      schedule(1500);
+      return;
+    }
+
+    busy=true;
+
+    const controller=new AbortController();
+    const timeout=setTimeout(
+      ()=>controller.abort(),
+      1400
+    );
+
+    try{
+      await fetch(
+        URL+'?egp_health='+Date.now(),
+        {
+          mode:'no-cors',
+          cache:'no-store',
+          signal:controller.signal
+        }
+      );
+
+      paint('online');
+
+    }catch(_){
+      paint('offline');
+
+    }finally{
+      clearTimeout(timeout);
+      busy=false;
+      schedule(state==='online' ? 4000 : 1800);
+    }
   }
 
   btn.addEventListener('click',function(e){
@@ -2815,122 +2800,47 @@ html.egp-android-panel body.live-mode
 
     e.preventDefault();
     e.stopImmediatePropagation();
-    notifyUnavailable();
+
+    const toast=document.getElementById('toast');
+    if(toast){
+      toast.textContent='Ui24R no disponible';
+      toast.classList.add('show');
+      setTimeout(()=>toast.classList.remove('show'),1600);
+    }
+
+    check();
   },true);
 
-  function ensureHealthFrame(){
-    if(healthFrame) return healthFrame;
-
-    healthFrame=document.createElement('iframe');
-    healthFrame.id='egpPanelUi24rHealthFrame';
-    healthFrame.setAttribute('aria-hidden','true');
-    healthFrame.tabIndex=-1;
-
-    Object.assign(healthFrame.style,{
-      position:'fixed',
-      width:'1px',
-      height:'1px',
-      left:'-10000px',
-      top:'-10000px',
-      border:'0',
-      opacity:'0',
-      pointerEvents:'none'
-    });
-
-    document.body.appendChild(healthFrame);
-    return healthFrame;
-  }
-
-  function scheduleNext(ms){
-    clearTimeout(cycleTimer);
-    cycleTimer=setTimeout(runCheck,ms);
-  }
-
-  function runCheck(){
-    if(document.hidden){
-      scheduleNext(1500);
-      return;
-    }
-
-    const frame=ensureHealthFrame();
-    const mySequence=++sequence;
-
-    clearTimeout(deadlineTimer);
-
-    frame.src=
-      ORIGIN+
-      '/musicos.html?egp_panel_health=1&v='+
-      Date.now();
-
-    deadlineTimer=setTimeout(function(){
-      if(mySequence!==sequence) return;
-
-      failures+=1;
-
-      if(failures>=2){
-        applyState('offline');
-      }
-
-      scheduleNext(2500);
-    },2200);
-  }
-
-  window.addEventListener('message',function(event){
-    if(event.origin!==ORIGIN) return;
-
-    const data=event.data || {};
-
-    if(
-      data.type!=='egp-ui24r-launcher-ready' &&
-      data.type!=='egp-ui24r-aux-ready'
-    ){
-      return;
-    }
-
-    failures=0;
-    clearTimeout(deadlineTimer);
-    applyState('online');
-    scheduleNext(4000);
-  });
-
-  window.addEventListener('focus',runCheck);
+  window.addEventListener('focus',check);
 
   document.addEventListener('visibilitychange',function(){
-    if(!document.hidden){
-      runCheck();
-    }
+    if(!document.hidden) check();
   });
 
-  applyState('checking');
+  paint('checking');
 
   if(document.readyState==='complete'){
-    setTimeout(runCheck,350);
+    setTimeout(check,300);
   }else{
     window.addEventListener(
       'load',
-      function(){ setTimeout(runCheck,350); },
+      ()=>setTimeout(check,300),
       {once:true}
     );
   }
 })();
 </script>
-<!-- EGP_PANEL_UI24R_HEALTH_V2_FIN -->
+<!-- EGP_PANEL_UI24R_HEALTH_V3_FIN -->
 
 <!-- EGP_UI24R_PERSISTENTE_POSTLOAD_V1_INICIO -->
-<script id="EGP_UI24R_PERSISTENTE_POSTLOAD_V3">
+<script id="EGP_UI24R_PERSISTENTE_POSTLOAD_V4">
 (function(){
   const frame=document.getElementById('ui24rFrame');
   const btn=document.getElementById('ui24rBtn');
 
   if(!frame) return;
 
-  function realUrl(){
-    const mobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    return mobile
-      ? (frame.dataset.srcMobile || 'https://ui.elenagirjoaba.com/musicos.html?v=1.5.8.14')
-      : (frame.dataset.srcDesktop || 'https://ui.elenagirjoaba.com/mixer.html');
-  }
+  const REAL_URL='https://ui.elenagirjoaba.com/mixer.html';
 
   function iniciarUnaSolaVez(){
     const actual=frame.getAttribute('src') || '';
@@ -2946,7 +2856,7 @@ html.egp-android-panel body.live-mode
     frame.dataset.egpPersistentLoaded='1';
 
     if(!actual || actual==='about:blank'){
-      frame.setAttribute('src',realUrl());
+      frame.setAttribute('src',REAL_URL);
     }
   }
 

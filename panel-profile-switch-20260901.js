@@ -173,10 +173,8 @@
       .panel-profile-switch input:checked
       + .panel-profile-switch__track::after{
         transform:translateX(22px);
-        background:#ffe7a3;
-        box-shadow:
-          0 0 11px rgba(242,201,109,.48),
-          0 2px 7px rgba(0,0,0,.42);
+        background:#f5f6f8;
+        box-shadow:0 2px 7px rgba(0,0,0,.42);
       }
 
       @media(max-width:520px){

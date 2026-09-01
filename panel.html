@@ -850,6 +850,276 @@
 }
 </style>
 
+
+<!-- EGP_DESKTOP_LECTURA_V1_INICIO -->
+
+<script id="EGP_DESKTOP_COMPUTER_CLASS_V1">
+(function(){
+  const ua=String(navigator.userAgent||'');
+  const platform=String(navigator.platform||'');
+  const maxTouch=Number(navigator.maxTouchPoints||0);
+
+  const mac=
+    /Macintosh|MacIntel|Mac OS X/i.test(ua+' '+platform) &&
+    maxTouch===0;
+
+  const windows=
+    /Windows|Win32|Win64|WinNT/i.test(ua+' '+platform);
+
+  if(mac || windows){
+    document.documentElement.classList.add('egp-desktop-computer');
+  }
+})();
+</script>
+
+<style id="EGP_DESKTOP_LECTURA_V1">
+
+/*
+  SOLO COMPUTADORA:
+  - Mac
+  - Windows
+
+  No afecta iPhone, Android ni tablets.
+  No cambia listeners, eventos ni lógica.
+*/
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .live-toolbar{
+  min-height:52px !important;
+  padding:5px 0 7px !important;
+  gap:8px !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .live-toolbar .toolbar-btn{
+  min-height:42px !important;
+  height:42px !important;
+  padding:0 13px !important;
+  border-radius:10px !important;
+  font-size:13px !important;
+  line-height:1 !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .live-repertoire-name{
+  font-size:15px !important;
+  font-weight:800 !important;
+  line-height:1.1 !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .live-toolbar-right{
+  gap:7px !important;
+}
+
+
+/* BUSCADOR — aproximadamente 1 cm más alto visualmente */
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .search-wrap{
+  box-sizing:border-box !important;
+  min-height:72px !important;
+  height:72px !important;
+  padding:0 18px !important;
+  gap:12px !important;
+  border-radius:16px !important;
+  margin-bottom:8px !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .search-wrap input{
+  height:100% !important;
+  min-height:0 !important;
+  font-size:19px !important;
+  font-weight:500 !important;
+  line-height:1.2 !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .search-wrap > span{
+  font-size:27px !important;
+  line-height:1 !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .search-wrap kbd{
+  font-size:13px !important;
+  font-weight:650 !important;
+}
+
+
+/* COLA — aprovechar mejor el espacio de escritorio */
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .queue-panel{
+  padding:14px !important;
+  border-radius:16px !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .queue-heading{
+  min-height:30px !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .queue-heading,
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .queue-active-label,
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .queue-repertoire-name,
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active #panelProfileLabel{
+  font-size:14px !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .queue-heading small{
+  font-size:13px !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .show-timer-display{
+  font-size:15px !important;
+  font-weight:800 !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .queue-item{
+  min-height:44px !important;
+  padding:10px 11px !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .queue-item .queue-name{
+  font-size:14px !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .queue-item .mini-btn{
+  min-height:34px !important;
+  padding:7px 10px !important;
+  font-size:12px !important;
+}
+
+
+/* CANCIONES — más aire y mayor lectura */
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .song-list{
+  gap:9px !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .song-card{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
+  align-items:center !important;
+  justify-content:stretch !important;
+  min-height:60px !important;
+  padding:10px 11px !important;
+  column-gap:14px !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .song-info{
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .song-title-row{
+  display:flex !important;
+  grid-template-columns:none !important;
+  grid-template-rows:none !important;
+  align-items:baseline !important;
+  gap:8px !important;
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+}
+
+
+/* NÚMERO + NOMBRE EN LA MISMA LÍNEA */
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .song-number{
+  display:inline-flex !important;
+  grid-row:auto !important;
+  flex:0 0 auto !important;
+  margin:0 !important;
+  font-size:19px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  text-align:left !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .song-title{
+  display:block !important;
+  grid-row:auto !important;
+  flex:1 1 auto !important;
+  width:auto !important;
+  min-width:0 !important;
+  font-size:16px !important;
+  font-weight:800 !important;
+  line-height:1.15 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  text-align:left !important;
+}
+
+
+/* En esta vista de escritorio dejamos el artista oculto como estaba */
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .song-artist{
+  display:none !important;
+}
+
+
+/* BOTONES DE CADA CANCIÓN — más grandes sin cambiar funciones */
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .song-actions{
+  grid-column:2 !important;
+  justify-self:end !important;
+  width:auto !important;
+  max-width:none !important;
+  min-width:0 !important;
+  display:flex !important;
+  flex-wrap:nowrap !important;
+  align-items:center !important;
+  gap:6px !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .song-action,
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .song-action.notes,
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .song-action.lyrics,
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .song-action.daniel{
+  width:auto !important;
+  min-width:auto !important;
+  max-width:none !important;
+  min-height:40px !important;
+  padding:0 11px !important;
+  border-radius:10px !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  line-height:1 !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+}
+
+html.egp-desktop-computer body.egp-two-column.live-mode
+#liveView.view.is-active .song-table-head{
+  font-size:12px !important;
+}
+
+</style>
+
+<!-- EGP_DESKTOP_LECTURA_V1_FIN -->
+
 </head>
 <body data-build="6.36.76">
 

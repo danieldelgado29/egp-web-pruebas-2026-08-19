@@ -621,6 +621,39 @@
 
   </style>
 
+
+
+  <style id="EGP_CONFIG_DESKTOP_VERTICAL_V1">
+    @media(min-width:900px){
+
+      #configView .config-grid{
+        display:grid !important;
+        grid-template-columns:1fr !important;
+        gap:14px !important;
+      }
+
+      #configView .egp-config-field-inline{
+        grid-column:1 !important;
+        width:100% !important;
+      }
+
+      #configView .egp-config-field-inline input,
+      #configView .egp-config-field-inline select{
+        width:100% !important;
+        height:64px !important;
+        min-height:64px !important;
+      }
+
+      #pedidosConfigGroup,
+      #configView .egp-config-muted-title,
+      #continueShowBtn,
+      #configView .start-btn{
+        grid-column:1 !important;
+        width:100% !important;
+      }
+    }
+  </style>
+
 </head>
 <body data-build="6.36.76">
 

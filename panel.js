@@ -776,31 +776,193 @@ document.documentElement.dataset.egmVersion="6.36.92";
       const localActive=
         localPublicConfig.show_active===true;
 
-      if(lastCoreShowActive!==localActive){
-        lastCoreShowActive=localActive;
-        showActiveConfirmed=localActive;
-        setStatus(localActive);
+      const localChanged=
+        lastCoreShowActive!==localActive;
+
+      lastCoreShowActive=localActive;
+      showActiveConfirmed=localActive;
+      setStatus(localActive);
+
+      if(localActive){
+        const oldConfig=state.config||{};
+
+        const repertoire=String(
+          localPublicConfig.lista_activa ||
+          localPublicConfig.listaActiva ||
+          oldConfig.repertoire ||
+          'todas'
+        );
+
+        const select=$('#repertoireSelect');
+
+        const option=select
+          ? [...select.options].find(
+              o=>o.value===repertoire
+            )
+          : null;
+
+        const repertoireName=String(
+          localPublicConfig.repertorio_nombre ||
+          option?.dataset?.name ||
+          option?.textContent?.replace(/ · .*$/,'') ||
+          oldConfig.repertoireName ||
+          titleFromId(repertoire)
+        );
+
+        const requests=
+          localPublicConfig.pedidos_panel===true;
+
+        const whatsapp=requests
+          ? false
+          : localPublicConfig.pedidos_whatsapp===true;
+
+        const startedRaw=Number(
+          localPublicConfig.inicio_show ||
+          localPublicConfig.show_id ||
+          0
+        );
+
+        const nextConfig={
+          ...oldConfig,
+          venue:String(
+            localPublicConfig.lugar ??
+            oldConfig.venue ??
+            ''
+          ),
+          repertoire,
+          repertoireName,
+          profile:String(
+            localPublicConfig.perfil_clientes ||
+            oldConfig.profile ||
+            'medio'
+          ),
+          whatsapp,
+          requests,
+          requestsMode:
+            localPublicConfig.pedidos_modo==='uno_por_turno'
+              ? 'uno_por_turno'
+              : 'libre',
+          publicQueue:
+            localPublicConfig.mostrar_cola!==false,
+          advertising:
+            localPublicConfig.uso_publicidad===true,
+          startedAt:
+            startedRaw>0
+              ? new Date(startedRaw).toISOString()
+              : (
+                  oldConfig.startedAt ||
+                  new Date().toISOString()
+                )
+        };
+
+        const configChanged=
+          !state.config ||
+          oldConfig.venue!==nextConfig.venue ||
+          oldConfig.repertoire!==nextConfig.repertoire ||
+          oldConfig.repertoireName!==nextConfig.repertoireName ||
+          oldConfig.profile!==nextConfig.profile ||
+          oldConfig.whatsapp!==nextConfig.whatsapp ||
+          oldConfig.requests!==nextConfig.requests ||
+          oldConfig.requestsMode!==nextConfig.requestsMode ||
+          oldConfig.publicQueue!==nextConfig.publicQueue ||
+          oldConfig.advertising!==nextConfig.advertising ||
+          oldConfig.startedAt!==nextConfig.startedAt;
+
+        if(configChanged){
+          state.config=nextConfig;
+
+          $('#venueInput').value=
+            state.config.venue;
+
+          $('#profileSelect').value=
+            state.config.profile;
+
+          $('#whatsappToggle').checked=
+            state.config.whatsapp===true;
+
+          const requestsToggle=
+            document.getElementById(
+              'requestsToggle'
+            );
+
+          if(requestsToggle){
+            requestsToggle.checked=
+              state.config.requests===true;
+          }
+
+          const requestsMode=
+            document.getElementById(
+              'requestsModeSelect'
+            );
+
+          if(requestsMode){
+            requestsMode.value=
+              state.config.requestsMode;
+          }
+
+          $('#publicQueueToggle').checked=
+            state.config.publicQueue!==false;
+
+          $('#advertisingToggle').checked=
+            state.config.advertising===true;
+
+          if(
+            select &&
+            [...select.options].some(
+              o=>o.value===repertoire
+            )
+          ){
+            select.value=repertoire;
+          }
+
+          $('#liveRepertoireName').textContent=
+            repertoireName;
+
+          invalidateRepertoireCache();
+          saveStateLocalOnly();
+        }
 
         if(
           panelAuthValid() &&
           $('#panelLogin').hidden
         ){
-          if(
-            localActive &&
-            state.config &&
-            !configOpenedFromLive &&
-            !document.body.classList.contains('live-mode')
+          const continueBtn=
+            $('#continueShowBtn');
+
+          if(configOpenedFromLive){
+            if(continueBtn){
+              continueBtn.hidden=false;
+            }
+          }else if(
+            !document.body.classList.contains(
+              'live-mode'
+            )
           ){
             showLive();
           }
+        }
 
-          if(
-            !localActive &&
-            document.body.classList.contains('live-mode') &&
-            !configOpenedFromLive
-          ){
-            showConfig(false);
-          }
+      }else if(
+        localDesiredShowActive!==true
+      ){
+        if(
+          localChanged &&
+          document.body.classList.contains(
+            'live-mode'
+          ) &&
+          !configOpenedFromLive
+        ){
+          showConfig(false);
+        }
+
+        const continueBtn=
+          $('#continueShowBtn');
+
+        if(
+          continueBtn &&
+          !configOpenedFromLive
+        ){
+          continueBtn.hidden=true;
         }
       }
     }
@@ -6972,8 +7134,17 @@ document.documentElement.dataset.egmVersion="6.36.92";
       loginError.hidden=true;
       loginPassword.value='';
 
-      if(latestRemoteState)applyRemotePanelState(latestRemoteState);
-      else showConfig();
+      if(
+        LOCAL_QUEUE_MODE &&
+        showActiveConfirmed &&
+        state.config
+      ){
+        showLive();
+      }else if(latestRemoteState){
+        applyRemotePanelState(latestRemoteState);
+      }else{
+        showConfig();
+      }
     }else{
       loginError.hidden=false;
     }

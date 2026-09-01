@@ -667,6 +667,112 @@
 
 </style>
 
+
+<style id="EGP_MAC_SHOW_COMPACTO_V2">
+
+@media(min-width:900px){
+
+  .egp-mac-desktop body.live-mode .live-toolbar{
+    display:grid !important;
+    grid-template-columns:
+      auto
+      auto
+      auto
+      minmax(20px,1fr)
+      auto
+      auto
+      auto !important;
+    align-items:center !important;
+    gap:7px !important;
+    width:100% !important;
+  }
+
+  .egp-mac-desktop body.live-mode #backConfigBtn{
+    grid-column:1 !important;
+    justify-self:start !important;
+  }
+
+  .egp-mac-desktop body.live-mode .live-repertoire-name{
+    grid-column:2 !important;
+    justify-self:start !important;
+    width:auto !important;
+    max-width:280px !important;
+  }
+
+  .egp-mac-desktop body.live-mode .live-toolbar-right{
+    display:contents !important;
+  }
+
+  .egp-mac-desktop body.live-mode #egpPedidosBtn{
+    grid-column:3 !important;
+    justify-self:start !important;
+  }
+
+  .egp-mac-desktop body.live-mode #ui24rBtn{
+    grid-column:5 !important;
+    justify-self:end !important;
+  }
+
+  .egp-mac-desktop body.live-mode #finishShowBtn{
+    grid-column:6 !important;
+    justify-self:end !important;
+  }
+
+  .egp-mac-desktop body.live-mode #closePanelBtn{
+    grid-column:7 !important;
+    justify-self:end !important;
+  }
+
+  .egp-mac-desktop body.live-mode .song-card{
+    display:grid !important;
+    grid-template-columns:
+      minmax(220px,42%)
+      max-content
+      minmax(0,1fr) !important;
+    align-items:center !important;
+    justify-content:start !important;
+    column-gap:10px !important;
+  }
+
+  .egp-mac-desktop body.live-mode .song-info{
+    grid-column:1 !important;
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+
+  .egp-mac-desktop body.live-mode .song-title-row{
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+
+  .egp-mac-desktop body.live-mode .song-actions{
+    grid-column:2 !important;
+    display:flex !important;
+    align-items:center !important;
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    gap:5px !important;
+    flex:0 0 auto !important;
+  }
+
+  .egp-mac-desktop body.live-mode .song-action,
+  .egp-mac-desktop body.live-mode .song-action.notes,
+  .egp-mac-desktop body.live-mode .song-action.lyrics,
+  .egp-mac-desktop body.live-mode .song-action.daniel{
+    width:auto !important;
+    min-width:auto !important;
+    max-width:none !important;
+    padding:9px 10px !important;
+    flex:0 0 auto !important;
+  }
+
+}
+
+</style>
+
 </head>
 <body data-build="6.36.76">
 

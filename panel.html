@@ -2551,46 +2551,6 @@ html.egp-desktop-computer body.egp-two-column.live-mode
   type="module"
   src="./gallery-panel-firebase-sync.js?v=20260824-1"
 ></script>
-
-
-<script id="EGP_UI24_SOLO_AL_PULSAR_V1">
-(function(){
-  const overlay=document.getElementById('ui24rOverlay');
-  const frame=document.getElementById('ui24rFrame');
-  const back=document.getElementById('ui24rBackBtn');
-  if(!overlay || !frame) return;
-
-  function descargarSiPanelVisible(){
-    if(!overlay.classList.contains('is-open')){
-      try{ frame.removeAttribute('src'); }catch(_){}
-    }
-  }
-
-  /*
-    La Ui24R solo existe mientras el usuario la tiene abierta.
-    Al regresar al Panel se destruye su iframe para que mixer.html
-    no pueda seguir comprobando una consola apagada en segundo plano.
-  */
-  if(back){
-    back.addEventListener('click',function(){
-      setTimeout(descargarSiPanelVisible,0);
-    },true);
-  }
-
-  new MutationObserver(descargarSiPanelVisible).observe(
-    overlay,
-    {attributes:true,attributeFilter:['class','aria-hidden']}
-  );
-
-  window.addEventListener('pagehide',function(){
-    try{ frame.removeAttribute('src'); }catch(_){}
-  });
-
-  setTimeout(descargarSiPanelVisible,0);
-})();
-</script>
-
-
 <!-- EGP_UI24R_AVAILABILITY_V1_INICIO -->
 
 <style id="EGP_UI24R_AVAILABILITY_V1_CSS">
@@ -2773,6 +2733,44 @@ html.egp-desktop-computer body.egp-two-column.live-mode
 </script>
 
 <!-- EGP_UI24R_AVAILABILITY_V1_FIN -->
+
+
+<!-- EGP_UI24R_PERSISTENTE_POSTLOAD_V1_INICIO -->
+<script id="EGP_UI24R_PERSISTENTE_POSTLOAD_V1">
+(function(){
+  const frame=document.getElementById('ui24rFrame');
+  if(!frame) return;
+
+  let iniciado=Boolean(frame.getAttribute('src'));
+
+  function iniciarUnaSolaVez(){
+    if(iniciado || frame.getAttribute('src')) {
+      iniciado=true;
+      return;
+    }
+
+    iniciado=true;
+
+    frame.src=(location.hostname==='elenagirjoaba.com')
+      ? location.origin+'/__egp_ui/mixer.html'
+      : 'https://ui.elenagirjoaba.com/mixer.html';
+  }
+
+  function arrancarDespuesDePagina(){
+    setTimeout(iniciarUnaSolaVez,250);
+  }
+
+  if(document.readyState==='complete'){
+    arrancarDespuesDePagina();
+  }else{
+    window.addEventListener('load',arrancarDespuesDePagina,{once:true});
+  }
+
+  document.getElementById('ui24rBtn')
+    ?.addEventListener('click',iniciarUnaSolaVez,true);
+})();
+</script>
+<!-- EGP_UI24R_PERSISTENTE_POSTLOAD_V1_FIN -->
 
 </body>
 </html>

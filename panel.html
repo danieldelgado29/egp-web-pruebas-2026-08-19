@@ -255,32 +255,6 @@
     }
   </style>
 
-
-
-  <style id="EGP_SCROLL_NATIVO_V1">
-    /*
-      Scroll normal del navegador.
-      Debe poder iniciarse tocando prácticamente cualquier parte
-      de Configuración o Control en vivo.
-    */
-    #configView,
-    #liveView,
-    #showForm,
-    .config-grid,
-    .live-sticky-tools,
-    .queue-panel,
-    .song-table-region,
-    .song-scroll-region,
-    .song-list{
-      touch-action:pan-y !important;
-    }
-
-    #configView,
-    #liveView{
-      -webkit-overflow-scrolling:touch;
-    }
-  </style>
-
 </head>
 <body data-build="6.36.76">
 
@@ -1508,6 +1482,117 @@
 </script>
 
 
+<script id="egpIosMomentumV36">
+(function(){
+  if(!/iPhone|iPod/i.test(navigator.userAgent)) return;
+
+  document.body.classList.add('egp-ios');
+
+  function bindMomentum(el){
+    if(!el || el.dataset.egpMomentum==='1') return;
+    el.dataset.egpMomentum='1';
+
+    let active=false;
+    let lastY=0;
+    let lastT=0;
+    let velocity=0;
+    let frame=0;
+
+    function stop(){
+      if(frame){
+        cancelAnimationFrame(frame);
+        frame=0;
+      }
+    }
+
+    el.addEventListener('touchstart',function(e){
+      if(e.touches.length!==1) return;
+
+      /*
+       * EGP_SCROLL_CUALQUIER_ZONA_V36
+       * El gesto puede comenzar también encima de campos,
+       * selects, botones o tarjetas.
+       * Un toque normal sigue funcionando; al mover el dedo,
+       * el gesto se convierte en desplazamiento.
+       */
+
+      stop();
+      active=true;
+      lastY=e.touches[0].clientY;
+      lastT=performance.now();
+      velocity=0;
+    },{passive:true});
+
+    el.addEventListener('touchmove',function(e){
+      if(!active || e.touches.length!==1) return;
+
+      const now=performance.now();
+      const y=e.touches[0].clientY;
+      const dt=Math.max(1,now-lastT);
+      const delta=lastY-y;
+
+      el.scrollTop+=delta;
+
+      const instant=delta/dt;
+      velocity=velocity*.60 + instant*.40;
+
+      lastY=y;
+      lastT=now;
+
+      e.preventDefault();
+    },{passive:false});
+
+    function momentum(){
+      if(Math.abs(velocity)<0.01){
+        frame=0;
+        return;
+      }
+
+      const max=Math.max(0,el.scrollHeight-el.clientHeight);
+      const before=el.scrollTop;
+
+      el.scrollTop+=velocity*16;
+
+      if(el.scrollTop<=0 || el.scrollTop>=max || el.scrollTop===before){
+        velocity=0;
+        frame=0;
+        return;
+      }
+
+      velocity*=0.96;
+      frame=requestAnimationFrame(momentum);
+    }
+
+    function end(){
+      if(!active) return;
+      active=false;
+      stop();
+      frame=requestAnimationFrame(momentum);
+    }
+
+    el.addEventListener('touchend',end,{passive:true});
+    el.addEventListener('touchcancel',function(){
+      active=false;
+      stop();
+    },{passive:true});
+  }
+
+  function preparar(){
+    bindMomentum(document.getElementById('configView'));
+    bindMomentum(document.getElementById('queuePanel'));
+    bindMomentum(document.querySelector('.song-scroll-region'));
+  }
+
+  preparar();
+
+  new MutationObserver(preparar).observe(document.body,{
+    childList:true,
+    subtree:true,
+    attributes:true,
+    attributeFilter:['class']
+  });
+})();
+</script>
 
 
 <!-- EGP-GALERIA-FIREBASE-SYNC-V1 -->

@@ -154,7 +154,7 @@
         left:2px;
         top:2px;
         border-radius:50%;
-        background:#f5f6f8;
+        background:#ffffff;
         box-shadow:0 2px 7px rgba(0,0,0,.42);
         transition:.18s ease;
       }
@@ -162,18 +162,16 @@
       #panelUserQuickSwitch
       .panel-profile-switch input:checked
       + .panel-profile-switch__track{
-        background:rgba(242,201,109,.26);
-        border-color:rgba(242,201,109,.7);
-        box-shadow:
-          0 0 14px rgba(242,201,109,.17),
-          inset 0 1px 3px rgba(0,0,0,.42);
+        background:#20232a;
+        border-color:#3b404a;
+        box-shadow:inset 0 1px 3px rgba(0,0,0,.48);
       }
 
       #panelUserQuickSwitch
       .panel-profile-switch input:checked
       + .panel-profile-switch__track::after{
         transform:translateX(22px);
-        background:#f5f6f8;
+        background:#ffffff;
         box-shadow:0 2px 7px rgba(0,0,0,.42);
       }
 

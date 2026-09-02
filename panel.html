@@ -2882,11 +2882,14 @@ html.egp-android-panel body:not(.live-mode)
   kb.setAttribute('aria-label','Teclado del buscador');
 
   const numberKeys=['1','2','3','4','5','6','7','8','9'];
-  const letterKeys=[
-    'A','B','C','D','E','F','G',
-    'H','I','J','K','L','M','N',
-    'Ñ','O','P','Q','R','S','T',
-    'U','V','W','X','Y','Z'
+  /*
+   * EGP_SEARCH_KEYBOARD_QWERTY_V1
+   * Distribución española tipo Apple / WhatsApp.
+   */
+  const letterRows=[
+    ['Q','W','E','R','T','Y','U','I','O','P'],
+    ['A','S','D','F','G','H','J','K','L','Ñ'],
+    ['Z','X','C','V','B','N','M']
   ];
 
   let mode='numbers';
@@ -2969,22 +2972,27 @@ html.egp-android-panel body:not(.live-mode)
         </div>`;
     }else{
       kb.innerHTML=
-        `<div class="egp-kb-grid egp-kb-grid-letters">
-          ${letterKeys.map(
-            key=>`<button type="button" data-kb-key="${key}">${key}</button>`
-          ).join('')}
-          <button
-            type="button"
-            class="egp-kb-wide egp-kb-switch"
-            data-kb-action="numbers"
-            style="grid-column:span 3"
-          >123</button>
-          <button
-            type="button"
-            class="egp-kb-wide egp-kb-delete"
-            data-kb-action="delete"
-            style="grid-column:span 4"
-           aria-label="Borrar">⌫</button>
+        `<div class="egp-kb-letters-layout">
+          ${letterRows.map((row,index)=>`
+            <div class="egp-kb-letter-row egp-kb-letter-row-${index+1}">
+              ${row.map(
+                key=>`<button type="button" data-kb-key="${key}">${key}</button>`
+              ).join('')}
+            </div>
+          `).join('')}
+          <div class="egp-kb-letter-functions">
+            <button
+              type="button"
+              class="egp-kb-wide egp-kb-switch"
+              data-kb-action="numbers"
+            >123</button>
+            <button
+              type="button"
+              class="egp-kb-wide egp-kb-delete"
+              data-kb-action="delete"
+              aria-label="Borrar"
+            >⌫</button>
+          </div>
         </div>`;
     }
 
@@ -3362,6 +3370,53 @@ html.egp-android-panel body:not(.live-mode)
 }
 </style>
 <!-- EGP_SEARCH_KEYBOARD_ROOMIER_V1_FIN -->
+
+<!-- EGP_SEARCH_KEYBOARD_QWERTY_V1_STYLE_INICIO -->
+<style id="EGP_SEARCH_KEYBOARD_QWERTY_V1_STYLE">
+#egpSearchKeyboard .egp-kb-letters-layout{
+  display:grid !important;
+  gap:8px !important;
+  width:100% !important;
+}
+
+#egpSearchKeyboard .egp-kb-letter-row{
+  display:grid !important;
+  gap:8px !important;
+  width:100% !important;
+}
+
+#egpSearchKeyboard .egp-kb-letter-row-1,
+#egpSearchKeyboard .egp-kb-letter-row-2{
+  grid-template-columns:repeat(10,minmax(0,1fr)) !important;
+}
+
+#egpSearchKeyboard .egp-kb-letter-row-3{
+  grid-template-columns:repeat(7,minmax(0,1fr)) !important;
+  width:76% !important;
+  margin-inline:auto !important;
+}
+
+#egpSearchKeyboard .egp-kb-letter-functions{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:8px !important;
+  width:100% !important;
+}
+
+@media (orientation:landscape) and (hover:none) and (pointer:coarse){
+  #egpSearchKeyboard .egp-kb-letters-layout,
+  #egpSearchKeyboard .egp-kb-letter-row,
+  #egpSearchKeyboard .egp-kb-letter-functions{
+    gap:7px !important;
+  }
+
+  #egpSearchKeyboard .egp-kb-letter-row-3{
+    width:76% !important;
+  }
+}
+</style>
+<!-- EGP_SEARCH_KEYBOARD_QWERTY_V1_STYLE_FIN -->
+
 
 
 

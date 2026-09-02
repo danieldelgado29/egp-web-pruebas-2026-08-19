@@ -2811,6 +2811,15 @@ html.egp-android-panel body:not(.live-mode)
   let maxGestureDistance=0;
   let suppressBackClickUntil=0;
 
+  /*
+   * EGP_UI24R_ANDROID_GHOST_CLICK_GUARD_V1
+   * Chrome puede emitir un click DESPUES del pointerup que cerró Ui24R.
+   */
+  let panelGhostClickUntil=0;
+  let panelGhostClickX=0;
+  let panelGhostClickY=0;
+  let panelGhostClickArmed=false;
+
   /* EGP_UI24R_ANDROID_GRAB_INMEDIATO_V1 */
   const androidGrabDirecto=/Android/i.test(navigator.userAgent);
 
@@ -2915,12 +2924,37 @@ html.egp-android-panel body:not(.live-mode)
     );
   }
 
-  function cerrarUi24rInmediato(){
+  function armarGhostClickGuard(x,y){
+    if(!androidGrabDirecto) return;
+
+    panelGhostClickX=Number.isFinite(Number(x))
+      ? Number(x)
+      : 0;
+
+    panelGhostClickY=Number.isFinite(Number(y))
+      ? Number(y)
+      : 0;
+
+    /*
+     * Ventana amplia para Android lento, pero el bloqueo es espacial
+     * y se consume con UN solo click.
+     */
+    panelGhostClickUntil=performance.now()+900;
+    panelGhostClickArmed=true;
+  }
+
+  function cerrarUi24rInmediato(x,y){
+    /*
+     * IMPORTANTE: armar antes de quitar is-open.
+     * Así el click posterior nunca puede alcanzar el Panel de abajo.
+     */
+    armarGhostClickGuard(x,y);
+
     overlay.classList.remove('is-open');
     overlay.setAttribute('aria-hidden','true');
   }
 
-  function finalizarArrastre(cerrarSiFueToque){
+  function finalizarArrastre(cerrarSiFueToque,endX=NaN,endY=NaN){
     if(!dragging) return;
 
     dragging=false;
@@ -2932,7 +2966,7 @@ html.egp-android-panel body:not(.live-mode)
      */
     if(cerrarSiFueToque && !moved){
       suppressBackClickUntil=performance.now()+450;
-      cerrarUi24rInmediato();
+      cerrarUi24rInmediato(endX,endY);
       return;
     }
 
@@ -2990,7 +3024,12 @@ html.egp-android-panel body:not(.live-mode)
     if(androidGrabDirecto) return;
     if(!dragging) return;
 
-    finalizarArrastre(true);
+    const t=e.changedTouches && e.changedTouches[0];
+    finalizarArrastre(
+      true,
+      t ? t.clientX : NaN,
+      t ? t.clientY : NaN
+    );
 
     e.preventDefault();
     e.stopPropagation();
@@ -3068,7 +3107,11 @@ html.egp-android-panel body:not(.live-mode)
       (pointerId!==null && e.pointerId!==pointerId)
     ) return;
 
-    finalizarArrastre(true);
+    finalizarArrastre(
+      true,
+      e.clientX,
+      e.clientY
+    );
     pointerId=null;
 
     e.preventDefault();
@@ -3100,9 +3143,73 @@ html.egp-android-panel body:not(.live-mode)
     if(performance.now()<suppressBackClickUntil) return;
 
     if(overlay.classList.contains('is-open')){
-      cerrarUi24rInmediato();
+      cerrarUi24rInmediato(
+        e.clientX,
+        e.clientY
+      );
     }
   },true);
+
+  /*
+   * GHOST CLICK GUARD GLOBAL
+   *
+   * Debe vivir en document/capture porque cuando Chrome genera el click,
+   * el overlay puede haberse retirado y el target ya ser un botón del Panel.
+   */
+  document.addEventListener(
+    'click',
+    function(e){
+      if(
+        !androidGrabDirecto ||
+        !panelGhostClickArmed
+      ){
+        return;
+      }
+
+      const now=performance.now();
+
+      if(now>panelGhostClickUntil){
+        panelGhostClickArmed=false;
+        return;
+      }
+
+      const x=Number(e.clientX);
+      const y=Number(e.clientY);
+
+      const dx=
+        Number.isFinite(x)
+          ? x-panelGhostClickX
+          : 0;
+
+      const dy=
+        Number.isFinite(y)
+          ? y-panelGhostClickY
+          : 0;
+
+      const near=
+        Math.hypot(dx,dy)<=72;
+
+      if(!near){
+        /*
+         * Un toque intencional en otra zona NO debe quedar bloqueado.
+         */
+        return;
+      }
+
+      /*
+       * Consumir una sola vez.
+       */
+      panelGhostClickArmed=false;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if(typeof e.stopImmediatePropagation==='function'){
+        e.stopImmediatePropagation();
+      }
+    },
+    true
+  );
 
   back.addEventListener('contextmenu',function(e){
     e.preventDefault();

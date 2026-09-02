@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-mobile-lan-local-v1";
+const VERSION = "egm-v6.36.103-android-repertorio-131-v1";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [

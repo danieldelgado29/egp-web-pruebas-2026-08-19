@@ -442,7 +442,26 @@ document.documentElement.dataset.egmVersion="6.36.92";
           if(Array.isArray(b.customSongs)) mergeRemoteCustomSongs(b.customSongs);
           if(state.songs.length){
             state.songs=state.songs.map(song=>state.songEdits[song.id]?{...song,...state.songEdits[song.id]}:song);
-            renderSongs();
+
+            /*
+             * EGP_REMOTE_CUSTOM_SONGS_VISIBLE_REFRESH_V1
+             *
+             * loadData() termina antes de iniciar Firebase.
+             * Cuando biblioteca.customSongs llega después:
+             * - mergeRemoteCustomSongs() ya la incorpora a state.songs;
+             * - ahora también reconstruimos el selector/conteo;
+             * - y recalculamos state.filtered para que Control en vivo
+             *   muestre inmediatamente la misma cantidad.
+             */
+            invalidateRepertoireCache();
+            buildRepertoires();
+
+            if(state.config){
+              filterSongs();
+            }else{
+              renderSongs();
+            }
+
             renderSongbookList();
             saveStateLocalOnly();
           }

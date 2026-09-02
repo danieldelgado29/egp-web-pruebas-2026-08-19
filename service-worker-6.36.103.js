@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-customsongs-local-core-v1";
+const VERSION = "egm-v6.36.103-repertorios-local-core-v1";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [

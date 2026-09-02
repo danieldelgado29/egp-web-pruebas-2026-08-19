@@ -672,9 +672,53 @@ document.documentElement.dataset.egmVersion="6.36.92";
     });
   }
 
+  /*
+   * EGP_LIBRARY_CUSTOM_LOCAL_WRITE_V1
+   *
+   * Las customSongs que se editan desde Repertorios / Editar canciones
+   * deben guardarse también en la SQLite del Local Core.
+   * Firebase sigue siendo la copia remota cuando Internet está disponible.
+   */
+  async function syncLocalCustomSongs(){
+    return localQueueRequest('/api/custom-songs',{
+      customSongs:Array.isArray(state.customSongs)
+        ? state.customSongs
+        : []
+    });
+  }
+
   function saveLibraryState(immediate=false){
     saveStateLocalOnly();
-    return syncRemoteLibrary(immediate);
+
+    const localTask=syncLocalCustomSongs()
+      .catch(err=>{
+        console.warn(
+          'Biblioteca custom pendiente en Local Core:',
+          err
+        );
+        throw err;
+      });
+
+    const remoteTask=syncRemoteLibrary(immediate)
+      .catch(err=>{
+        console.warn(
+          'Biblioteca pendiente en Firebase:',
+          err
+        );
+        throw err;
+      });
+
+    return Promise.allSettled([
+      localTask,
+      remoteTask
+    ]).then(results=>{
+      if(results.some(r=>r.status==='fulfilled')){
+        return true;
+      }
+      throw new Error(
+        'No se pudo guardar la biblioteca ni en Local Core ni en Firebase'
+      );
+    });
   }
 
 
@@ -5181,19 +5225,33 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   let activeRepertoireId = null;
 
+  /*
+   * EGP_REPERTOIRE_DRAFT_SELECTION_V1
+   *
+   * La selección se conserva aunque el usuario busque/filtre canciones.
+   * El contador representa TODO el repertorio en edición, no solo
+   * los checkboxes actualmente visibles.
+   */
+  let repertoireDraftIds=null;
+
+  function repertoireSongIds(repId){
+    if(repId==='todas') return new Set(state.songs.map(song=>song.id));
+    return new Set(state.songs.filter(song=>(song.listas||[]).includes(repId)).map(song=>song.id));
+  }
+
+  function resetRepertoireDraft(repId=activeRepertoireId){
+    repertoireDraftIds=repertoireSongIds(repId);
+  }
+
   function openRepertoires(){
     const reps=allRepertoires();
     activeRepertoireId = reps.find(r=>r.id!=='todas')?.id || 'todas';
+    resetRepertoireDraft();
     $('#newRepertoireName').value='';
     $('#repertoireSongSearch').value='';
     renderRepertoireManager();
     $('#repertoiresDialog').showModal();
     rememberDialogState($('#repertoiresDialog'));
-  }
-
-  function repertoireSongIds(repId){
-    if(repId==='todas') return new Set(state.songs.map(song=>song.id));
-    return new Set(state.songs.filter(song=>(song.listas||[]).includes(repId)).map(song=>song.id));
   }
 
   function renderRepertoireManager(){
@@ -5209,8 +5267,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
       button.innerHTML=`<span><strong>${esc(rep.name)}</strong><small>${count} ${count===1?'canción':'canciones'}</small></span><b>›</b>`;
       button.addEventListener('click',()=>{
         if(dialogHasUnsavedChanges($('#repertoiresDialog'))){
-          askConfirm('Cambios sin guardar','Se perderán los cambios del repertorio actual.',()=>{activeRepertoireId=rep.id;renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));},'Continuar');
-        }else{activeRepertoireId=rep.id;renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));}
+          askConfirm('Cambios sin guardar','Se perderán los cambios del repertorio actual.',()=>{activeRepertoireId=rep.id;resetRepertoireDraft();renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));},'Continuar');
+        }else{activeRepertoireId=rep.id;resetRepertoireDraft();renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));}
       });
       box.append(button);
     });
@@ -5234,7 +5292,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   function renderRepertoireSongs(){
     const rep=allRepertoires().find(r=>r.id===activeRepertoireId);if(!rep)return;
-    const selected=repertoireSongIds(rep.id), q=norm($('#repertoireSongSearch').value);
+
+    if(!(repertoireDraftIds instanceof Set)){
+      resetRepertoireDraft(rep.id);
+    }
+
+    const selected=repertoireDraftIds;
+    const q=norm($('#repertoireSongSearch').value);
     const songs=state.songs.filter(song=>!q||norm(song.titulo).includes(q)||norm(song.artista).includes(q));
     $('#selectedRepertoireCount').textContent=selected.size;
     $('#repertoireSongsVisibleCount').textContent=`${songs.length} visibles`;
@@ -5242,9 +5306,19 @@ document.documentElement.dataset.egmVersion="6.36.92";
     songs.forEach(song=>{
       const label=document.createElement('label');label.className='repertoire-song-item';
       label.innerHTML=`<input type="checkbox" value="${esc(song.id)}" ${selected.has(song.id)?'checked':''} ${rep.id==='todas'?'disabled':''}><span class="repertoire-song-copy"><strong>${esc(song.titulo)}</strong><small>${esc(song.artista||'Artista no indicado')}</small></span><em>${String(song.numero||'').padStart(2,'0')}</em>`;
-      label.querySelector('input').addEventListener('change',()=>{
-        const count=$$('#repertoireSongsList input:checked').length;
-        $('#selectedRepertoireCount').textContent=count;
+      label.querySelector('input').addEventListener('change',event=>{
+        if(rep.id==='todas')return;
+
+        const input=event.currentTarget;
+
+        if(input.checked){
+          repertoireDraftIds.add(song.id);
+        }else{
+          repertoireDraftIds.delete(song.id);
+        }
+
+        $('#selectedRepertoireCount').textContent=
+          repertoireDraftIds.size;
       });
       list.append(label);
     });
@@ -5258,7 +5332,9 @@ document.documentElement.dataset.egmVersion="6.36.92";
     if(allRepertoires().some(r=>norm(r.name)===norm(name)))return toast('Ese repertorio ya existe');
     const id=`rep-${slug(name)}-${Date.now().toString().slice(-5)}`;
     state.customRepertoires.push({id,name});
-    activeRepertoireId=id;$('#newRepertoireName').value='';
+    activeRepertoireId=id;
+    repertoireDraftIds=new Set();
+    $('#newRepertoireName').value='';
     saveLibraryState();buildRepertoires();renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));toast('Guardado exitosamente');
   });
 
@@ -5266,7 +5342,11 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const rep=allRepertoires().find(r=>r.id===activeRepertoireId);if(!rep||rep.id==='todas')return;
     const name=$('#selectedRepertoireName').value.trim();if(!name)return toast('Escribe un nombre');
     if(allRepertoires().some(r=>r.id!==rep.id&&norm(r.name)===norm(name)))return toast('Ese repertorio ya existe');
-    const checked=new Set($$('#repertoireSongsList input:checked').map(x=>x.value));
+    const checked=new Set(
+      repertoireDraftIds instanceof Set
+        ? repertoireDraftIds
+        : repertoireSongIds(rep.id)
+    );
     askConfirm('Guardar repertorio',`Se actualizará “${name}” con ${checked.size} canciones.`,()=>{
       let item=state.customRepertoires.find(r=>r.id===rep.id);
       if(!item){item={id:rep.id,name:rep.name};state.customRepertoires.push(item);}
@@ -5279,7 +5359,14 @@ document.documentElement.dataset.egmVersion="6.36.92";
         if(ci>=0)state.customSongs[ci]={...song};else state.songEdits[song.id]={...song};
       });
       if(state.config?.repertoire===rep.id)state.config.repertoireName=name;
-      saveLibraryState();buildRepertoires();renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));if(state.config)filterSongs();toast('Guardado exitosamente');
+      invalidateRepertoireCache();
+      saveLibraryState(true);
+      buildRepertoires();
+      resetRepertoireDraft(rep.id);
+      renderRepertoireManager();
+      rememberDialogState($('#repertoiresDialog'));
+      if(state.config)filterSongs();
+      toast('Guardado exitosamente');
     },'Guardar');
   });
 
@@ -5301,7 +5388,9 @@ document.documentElement.dataset.egmVersion="6.36.92";
         if(ci>=0)state.customSongs[ci]={...song};else state.songEdits[song.id]={...song};
       });
       activeRepertoireId=id;
-      saveLibraryState();buildRepertoires();renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));toast('Guardado exitosamente');
+      resetRepertoireDraft(id);
+      invalidateRepertoireCache();
+      saveLibraryState(true);buildRepertoires();renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));toast('Guardado exitosamente');
     },'Duplicar');
   });
 

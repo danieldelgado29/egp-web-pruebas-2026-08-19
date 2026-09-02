@@ -433,7 +433,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
           const b=data.biblioteca;
           pendingRemoteLibrary=b;
           if(b.songEdits&&typeof b.songEdits==='object') state.songEdits={...state.songEdits,...b.songEdits};
-          if(Array.isArray(b.customSongs)) state.customSongs=b.customSongs;
+          if(Array.isArray(b.customSongs)) mergeRemoteCustomSongs(b.customSongs);
           if(state.songs.length){
             state.songs=state.songs.map(song=>state.songEdits[song.id]?{...song,...state.songEdits[song.id]}:song);
             renderSongs();
@@ -684,12 +684,82 @@ document.documentElement.dataset.egmVersion="6.36.92";
     if(pendingRemoteLibrary){
       const b=pendingRemoteLibrary;
       if(b.songEdits&&typeof b.songEdits==='object') state.songEdits={...state.songEdits,...b.songEdits};
-      if(Array.isArray(b.customSongs)) state.customSongs=b.customSongs;
+      if(Array.isArray(b.customSongs)) mergeRemoteCustomSongs(b.customSongs);
       state.songs=state.songs.map(song=>state.songEdits[song.id]?{...song,...state.songEdits[song.id]}:song);
       saveStateLocalOnly();
     }
     buildRepertoires();
     if(latestRemoteState)applyRemotePanelState(latestRemoteState);
+  }
+
+  /*
+   * EGP_REMOTE_CUSTOM_SONGS_MERGE_V1
+   *
+   * Firebase biblioteca.customSongs debe formar parte REAL de state.songs.
+   *
+   * Antes:
+   *   state.customSongs = remoto
+   * pero state.songs seguía dependiendo del localStorage de cada dispositivo.
+   *
+   * Ahora:
+   * - conserva custom locales todavía no sincronizadas;
+   * - remoto gana cuando existe el mismo id;
+   * - elimina duplicados;
+   * - reconstruye state.songs con base + custom.
+   */
+  function mergeRemoteCustomSongs(remoteSongs){
+    if(!Array.isArray(remoteSongs))return;
+
+    const byId=new Map();
+
+    (Array.isArray(state.customSongs)?state.customSongs:[])
+      .forEach(song=>{
+        const id=String(song?.id||'');
+        if(id)byId.set(id,{...song});
+      });
+
+    state.songs
+      .filter(song=>
+        String(song?.id||'').startsWith('custom-')
+      )
+      .forEach(song=>{
+        const id=String(song?.id||'');
+        if(id&&!byId.has(id))byId.set(id,{...song});
+      });
+
+    remoteSongs.forEach(song=>{
+      const id=String(song?.id||'');
+      if(id)byId.set(id,{...song});
+    });
+
+    state.customSongs=[...byId.values()];
+
+    const baseSongs=state.songs.filter(song=>
+      !String(song?.id||'').startsWith('custom-')
+    );
+
+    state.songs=[
+      ...baseSongs,
+      ...state.customSongs
+    ];
+
+    const unique=new Map();
+
+    state.songs.forEach(song=>{
+      const id=String(song?.id||'');
+      if(!id)return;
+      unique.set(id,song);
+    });
+
+    state.songs=[...unique.values()];
+
+    state.songs.forEach((song,index)=>{
+      if(!Number.isFinite(song._sourceIndex)){
+        song._sourceIndex=index;
+      }
+    });
+
+    sortMasterSongs();
   }
 
   function hydrateSavedState(){

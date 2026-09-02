@@ -1107,13 +1107,89 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const playedChanged=
       beforePlayed.join('|')!==played.join('|');
 
-    if(queueChanged || playedChanged || force){
+    /*
+     * EGP_QUEUE_DOM_INTEGRITY_V1
+     *
+     * La cola puede seguir CORRECTA en state/Core pero Android puede
+     * perder visualmente los nodos al destapar el Panel desde Ui24R.
+     *
+     * Antes, si ids/played no cambiaban, NO se llamaba renderQueue().
+     * Resultado: DOM vacio hasta que una mutacion real cambiaba la cola.
+     *
+     * Ahora comprobamos también que el DOM represente exactamente
+     * los pendientes que YA existen en memoria.
+     */
+    const expectedPending=
+      ids.filter(id=>!state.played.has(id));
+
+    const queueListEl=
+      document.getElementById('queueList');
+
+    const domPending=
+      queueListEl
+        ? [...queueListEl.querySelectorAll(
+            '.queue-item[data-song-id]'
+          )].map(
+            el=>String(el.dataset.songId||'')
+          ).filter(Boolean)
+        : [];
+
+    const queueDomOutOfSync=
+      Boolean(queueListEl) &&
+      document.body.classList.contains('live-mode') &&
+      !queueDragState.active &&
+      !queueDragState.saving &&
+      expectedPending.join('|')!==domPending.join('|');
+
+    if(queueDomOutOfSync){
+      const diagnostic={
+        at:new Date().toISOString(),
+        expectedPending,
+        domPending,
+        queue:[...ids],
+        played:[...played],
+        coreUnchanged:
+          !queueChanged && !playedChanged,
+        ui24rOpen:
+          document.getElementById('ui24rOverlay')
+            ?.classList.contains('is-open')===true
+      };
+
+      console.warn(
+        'EGP QUEUE DOM INTEGRITY: repintando cola',
+        diagnostic
+      );
+
+      try{
+        localStorage.setItem(
+          'egp-panel-queue-dom-integrity-last-v1',
+          JSON.stringify(diagnostic)
+        );
+      }catch(_){}
+    }
+
+    if(
+      queueChanged ||
+      playedChanged ||
+      force ||
+      queueDomOutOfSync
+    ){
       renderQueue();
-      renderSongs();
+
+      /*
+       * Las tarjetas de canciones solo necesitan repintarse si cambió
+       * el ESTADO real de cola/tocadas. Un fallo puramente visual de
+       * #queueList no debe reconstruir toda la lista de canciones.
+       */
+      if(queueChanged || playedChanged || force){
+        renderSongs();
+      }
 
       /*
        * Si el cambio vino por LAN desde otro Panel o Bridge,
        * reflejarlo tambien en Firebase sin frenar la LAN.
+       *
+       * Una reparación DOM nunca se publica: no cambió ningún dato.
        */
       if(LOCAL_QUEUE_MODE && (queueChanged || playedChanged)){
         egpMirrorQueueLanToFirebase();

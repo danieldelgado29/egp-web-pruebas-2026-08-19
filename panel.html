@@ -4413,19 +4413,10 @@ html.egp-android-panel body:not(.live-mode)
 
       e.preventDefault();
       e.stopImmediatePropagation();
-
-      const toast=document.getElementById('toast');
-
-      if(toast){
-        toast.textContent='Ui24R esperando señal…';
-        toast.classList.add('show');
-
-        setTimeout(
-          ()=>toast.classList.remove('show'),
-          1300
-        );
-      }
-
+      /*
+       * EGP_UI24R_SILENT_STATUS_V2
+       * El único estado visible es el color del botón.
+       */
       check();
     },
     true

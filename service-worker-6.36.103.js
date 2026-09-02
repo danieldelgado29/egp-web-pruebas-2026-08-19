@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-ui24r-hot-reconnect-v1";
+const VERSION = "egm-v6.36.103-ui24r-silent-real-v2";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [
@@ -234,7 +234,8 @@ self.addEventListener("fetch",event=>{
     url.origin===self.location.origin &&
     (
       url.pathname.includes("/__egp_core/") ||
-      url.pathname.includes("/__egp_lan/")
+      url.pathname.includes("/__egp_lan/") ||
+      url.pathname.includes("/__egp_ui/")
     )
   ){
     event.respondWith(

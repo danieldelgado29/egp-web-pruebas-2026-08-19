@@ -1387,26 +1387,39 @@ html.egp-android-panel body.live-mode
  * El src nunca se modifica.
  */
 html.egp-android-panel .ui24r-overlay{
+  /*
+   * EGP_UI24R_ANDROID_SIN_TRANSFORM_PADRE_V1
+   * Mantiene el iframe vivo fuera de pantalla sin dejar
+   * toda la consola dentro de una capa transformada.
+   */
   opacity:1 !important;
   visibility:visible !important;
   display:block !important;
 
-  transform:
-    translate3d(110vw,0,0) !important;
+  left:110vw !important;
+  right:auto !important;
+  top:0 !important;
+  bottom:0 !important;
+  width:100% !important;
+  height:100% !important;
+
+  transform:none !important;
+  will-change:auto !important;
 
   pointer-events:none !important;
-
-  will-change:transform !important;
-
   transition:none !important;
 }
 
 html.egp-android-panel .ui24r-overlay.is-open{
-  transform:
-    translate3d(0,0,0) !important;
+  left:0 !important;
+  right:0 !important;
+  top:0 !important;
+  bottom:0 !important;
+
+  transform:none !important;
+  will-change:auto !important;
 
   opacity:1 !important;
-
   pointer-events:auto !important;
 }
 
@@ -2725,25 +2738,77 @@ html.egp-android-panel body:not(.live-mode)
     cargarUi24SiHaceFalta();
     overlay.classList.add('is-open');
     overlay.setAttribute('aria-hidden','false');
+
+    requestAnimationFrame(function(){
+      if(typeof mantenerDentro==='function') mantenerDentro();
+    });
   });
 
+  /*
+   * EGP_UI24R_BACK_SIEMPRE_VISIBLE_Y_DRAG_RAPIDO_V1
+   */
   let dragging=false;
   let moved=false;
   let startX=0;
   let startY=0;
   let baseX=0;
   let baseY=0;
+  let dragW=0;
+  let dragH=0;
+  let lastX=0;
+  let lastY=0;
 
-  function poner(x,y){
-    const maxX=Math.max(0,window.innerWidth-back.offsetWidth);
-    const maxY=Math.max(0,window.innerHeight-back.offsetHeight);
+  function viewportSize(){
+    const vv=window.visualViewport;
+    return {
+      width:Math.max(1,Math.round((vv && vv.width) || window.innerWidth || 1)),
+      height:Math.max(1,Math.round((vv && vv.height) || window.innerHeight || 1))
+    };
+  }
 
-    x=Math.max(0,Math.min(x,maxX));
-    y=Math.max(0,Math.min(y,maxY));
+  function limitar(x,y,w,h){
+    const vp=viewportSize();
+    const margen=8;
+    const minX=margen;
+    const minY=margen;
+    const maxX=Math.max(minX,vp.width-w-margen);
+    const maxY=Math.max(minY,vp.height-h-margen);
 
-    back.style.setProperty('left',x+'px','important');
-    back.style.setProperty('top',y+'px','important');
+    return {
+      x:Math.max(minX,Math.min(Number(x)||0,maxX)),
+      y:Math.max(minY,Math.min(Number(y)||0,maxY))
+    };
+  }
+
+  function poner(x,y,w,h){
+    const width=Math.max(1,Number(w)||back.offsetWidth||1);
+    const height=Math.max(1,Number(h)||back.offsetHeight||1);
+    const pos=limitar(x,y,width,height);
+
+    back.style.setProperty('transform','none','important');
+    back.style.setProperty('will-change','auto','important');
+    back.style.setProperty('left',pos.x+'px','important');
+    back.style.setProperty('top',pos.y+'px','important');
     back.style.setProperty('right','auto','important');
+
+    return pos;
+  }
+
+  function guardarPos(x,y){
+    try{
+      localStorage.setItem(
+        'egpUi24BackPos',
+        JSON.stringify({x:x,y:y})
+      );
+    }catch(err){}
+  }
+
+  function mantenerDentro(){
+    if(dragging || !overlay.classList.contains('is-open')) return;
+
+    const r=back.getBoundingClientRect();
+    const pos=poner(r.left,r.top,r.width,r.height);
+    guardarPos(pos.x,pos.y);
   }
 
   try{
@@ -2751,7 +2816,8 @@ html.egp-android-panel body:not(.live-mode)
 
     if(pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)){
       requestAnimationFrame(function(){
-        poner(pos.x,pos.y);
+        const r=back.getBoundingClientRect();
+        poner(pos.x,pos.y,r.width,r.height);
       });
     }
   }catch(e){}
@@ -2768,6 +2834,12 @@ html.egp-android-panel body:not(.live-mode)
     startY=e.clientY;
     baseX=r.left;
     baseY=r.top;
+    dragW=r.width;
+    dragH=r.height;
+    lastX=baseX;
+    lastY=baseY;
+
+    back.style.setProperty('will-change','transform','important');
 
     try{
       back.setPointerCapture(e.pointerId);
@@ -2787,25 +2859,27 @@ html.egp-android-panel body:not(.live-mode)
       moved=true;
     }
 
-    poner(baseX+dx,baseY+dy);
+    const pos=limitar(baseX+dx,baseY+dy,dragW,dragH);
+    lastX=pos.x;
+    lastY=pos.y;
+
+    back.style.setProperty(
+      'transform',
+      'translate3d('+(pos.x-baseX)+'px,'+(pos.y-baseY)+'px,0)',
+      'important'
+    );
 
     e.preventDefault();
     e.stopPropagation();
   });
 
-  back.addEventListener('pointerup',function(e){
+  function terminarArrastre(e){
     if(!dragging) return;
 
     dragging=false;
 
-    const r=back.getBoundingClientRect();
-
-    try{
-      localStorage.setItem(
-        'egpUi24BackPos',
-        JSON.stringify({x:r.left,y:r.top})
-      );
-    }catch(err){}
+    const pos=poner(lastX,lastY,dragW,dragH);
+    guardarPos(pos.x,pos.y);
 
     if(!moved){
       overlay.classList.remove('is-open');
@@ -2814,7 +2888,34 @@ html.egp-android-panel body:not(.live-mode)
 
     e.preventDefault();
     e.stopPropagation();
+  }
+
+  back.addEventListener('pointerup',terminarArrastre);
+
+  back.addEventListener('pointercancel',function(e){
+    if(!dragging) return;
+
+    dragging=false;
+
+    const pos=poner(lastX,lastY,dragW,dragH);
+    guardarPos(pos.x,pos.y);
+
+    e.preventDefault();
+    e.stopPropagation();
   });
+
+  function reencuadrarPronto(){
+    requestAnimationFrame(mantenerDentro);
+    setTimeout(mantenerDentro,80);
+    setTimeout(mantenerDentro,250);
+  }
+
+  window.addEventListener('resize',reencuadrarPronto);
+  window.addEventListener('orientationchange',reencuadrarPronto);
+
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',reencuadrarPronto);
+  }
 
 })();
 </script>

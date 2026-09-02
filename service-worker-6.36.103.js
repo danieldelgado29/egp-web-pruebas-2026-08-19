@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-panel-canonico";
+const VERSION = "egm-v6.36.103-core-nocache-v1";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [
@@ -217,6 +217,36 @@ self.addEventListener("fetch",event=>{
   const request=event.request;
   if(request.method!=="GET") return;
   const url=new URL(request.url);
+
+  /*
+   * EGP_ANDROID_CORE_NOCACHE_V1
+   *
+   * Local Core y Pedidos LAN son APIs en tiempo real.
+   * Nunca deben pasar por Cache Storage.
+   *
+   * Si /__egp_core/api/state se cachea, Android puede:
+   * 1. guardar una canción correctamente en Core;
+   * 2. mostrarla durante un instante;
+   * 3. leer después un /api/state viejo desde cache;
+   * 4. borrar visualmente la cola y el estado "A la cola".
+   */
+  if(
+    url.origin===self.location.origin &&
+    (
+      url.pathname.includes("/__egp_core/") ||
+      url.pathname.includes("/__egp_lan/")
+    )
+  ){
+    event.respondWith(
+      fetch(
+        new Request(request,{
+          cache:"no-store"
+        })
+      )
+    );
+    return;
+  }
+
   if(request.mode==="navigate"){
     /*
      * PANEL:

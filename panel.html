@@ -1437,6 +1437,71 @@ html.egp-android-panel
 }
 </style>
 <!-- EGP_ANDROID_UI24R_KEEPALIVE_V1_FIN -->
+
+<!-- EGP_ANDROID_CONFIG_SCROLL_AISLADO_V1_INICIO -->
+<style id="EGP_ANDROID_CONFIG_SCROLL_AISLADO_V1">
+/*
+ * Android / Configuración:
+ * no depender del scroll del body de la PWA.
+ * Solo Configuración obtiene su propio viewport desplazable.
+ * Control en vivo NO entra en estas reglas.
+ */
+html.egp-android-panel body:not(.live-mode){
+  height:100dvh !important;
+  min-height:100dvh !important;
+  max-height:100dvh !important;
+  overflow:hidden !important;
+}
+
+html.egp-android-panel body:not(.live-mode) .app-shell{
+  box-sizing:border-box !important;
+  height:100dvh !important;
+  min-height:0 !important;
+  max-height:100dvh !important;
+  overflow:hidden !important;
+  display:flex !important;
+  flex-direction:column !important;
+}
+
+html.egp-android-panel body:not(.live-mode) .brandbar{
+  flex:0 0 auto !important;
+}
+
+html.egp-android-panel body:not(.live-mode) main{
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  height:auto !important;
+  overflow:hidden !important;
+}
+
+html.egp-android-panel body:not(.live-mode)
+#configView.view.is-active{
+  box-sizing:border-box !important;
+  display:block !important;
+  height:100% !important;
+  min-height:0 !important;
+  max-height:100% !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  touch-action:pan-y !important;
+  overscroll-behavior-y:contain !important;
+  -webkit-overflow-scrolling:touch !important;
+  padding-bottom:max(
+    56px,
+    calc(env(safe-area-inset-bottom,0px) + 32px)
+  ) !important;
+}
+
+html.egp-android-panel body:not(.live-mode)
+#configView .config-grid{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+</style>
+<!-- EGP_ANDROID_CONFIG_SCROLL_AISLADO_V1_FIN -->
+
 </head>
 <body data-build="6.36.100">
 

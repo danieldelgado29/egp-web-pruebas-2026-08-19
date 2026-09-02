@@ -4277,8 +4277,26 @@ html.egp-android-panel body:not(.live-mode)
    * /__egp_ui/ sí atraviesa Caddy -> 10.10.10.10:80.
    * Solo se considera ONLINE cuando el upstream físico responde.
    */
+  /*
+   * EGP_MAC_UI24R_HEALTH_ROUTE_V4
+   *
+   * Regla igual en todos los dispositivos:
+   *   sin señal = gris
+   *   señal = azul
+   *
+   * Android/iPhone conservan EXACTAMENTE su ruta actual.
+   * Solo Mac de escritorio usa el health del dominio UI local.
+   */
+  const EGP_UI24R_DESKTOP_MAC=
+    /Macintosh|MacIntel/.test(
+      navigator.platform||navigator.userAgent
+    ) &&
+    Number(navigator.maxTouchPoints||0)===0;
+
   const HEALTH_URL=
-    location.origin + '/__egp_ui/?egp_health=';
+    EGP_UI24R_DESKTOP_MAC
+      ? 'https://ui.elenagirjoaba.com/__egp_health?egp_health='
+      : location.origin + '/__egp_ui/?egp_health=';
 
   const REAL_URL=
     'https://ui.elenagirjoaba.com/mixer.html';

@@ -2928,14 +2928,28 @@ html.egp-android-panel body:not(.live-mode)
      * Mantener visible el título "Cola activa" y colocar
      * el teclado sobre el espacio de la cola, no sobre resultados.
      */
-    const left=Math.max(6,rect.left+6);
-    const width=Math.max(260,rect.width-12);
+    /*
+     * EGP_SEARCH_KEYBOARD_NO_TOP_ROW_V1
+     * Recalcular con visualViewport para iPhone horizontal.
+     */
+    const vv=window.visualViewport;
+    const ox=Number(vv?.offsetLeft||0);
+    const oy=Number(vv?.offsetTop||0);
+    const vw=Number(vv?.width||window.innerWidth||0);
+
+    let left=rect.left+6+ox;
+    let width=Math.max(240,rect.width-12);
     const top=Math.max(
-      6,
-      headingRect
-        ? headingRect.bottom+5
-        : rect.top+6
+      6+oy,
+      (headingRect ? headingRect.bottom+4 : rect.top+6)+oy
     );
+
+    left=Math.max(ox+6,left);
+    const maxRight=ox+vw-6;
+
+    if(left+width>maxRight){
+      width=Math.max(220,maxRight-left);
+    }
 
     kb.style.setProperty('--egp-search-kb-left',`${left}px`);
     kb.style.setProperty('--egp-search-kb-width',`${width}px`);
@@ -2943,36 +2957,18 @@ html.egp-android-panel body:not(.live-mode)
   }
 
   function render(){
-    const title=
-      mode==='numbers'
-        ? 'NUMEROS'
-        : 'LETRAS';
-
-    const top=`
-      <div class="egp-kb-top">
-        <span class="egp-kb-mode-title">${title}</span>
-        <button
-          type="button"
-          class="egp-kb-close"
-          data-kb-action="close"
-        >CERRAR</button>
-      </div>
-    `;
-
     if(mode==='numbers'){
       kb.innerHTML=
-        top +
         `<div class="egp-kb-grid egp-kb-grid-numbers">
           ${numberKeys.map(
             key=>`<button type="button" data-kb-key="${key}">${key}</button>`
           ).join('')}
           <button type="button" class="egp-kb-wide egp-kb-switch" data-kb-action="letters">ABC</button>
           <button type="button" data-kb-key="0">0</button>
-          <button type="button" class="egp-kb-wide egp-kb-delete" data-kb-action="delete">BORRAR</button>
+          <button type="button" class="egp-kb-wide egp-kb-delete" data-kb-action="delete" aria-label="Borrar">⌫</button>
         </div>`;
     }else{
       kb.innerHTML=
-        top +
         `<div class="egp-kb-grid egp-kb-grid-letters">
           ${letterKeys.map(
             key=>`<button type="button" data-kb-key="${key}">${key}</button>`
@@ -2988,7 +2984,7 @@ html.egp-android-panel body:not(.live-mode)
             class="egp-kb-wide egp-kb-delete"
             data-kb-action="delete"
             style="grid-column:span 4"
-          >BORRAR</button>
+           aria-label="Borrar">⌫</button>
         </div>`;
     }
 
@@ -3011,6 +3007,10 @@ html.egp-android-panel body:not(.live-mode)
     document.body.classList.add('egp-search-keyboard-open');
 
     render();
+
+    requestAnimationFrame(positionLandscape);
+    setTimeout(positionLandscape,60);
+    setTimeout(positionLandscape,180);
 
     /*
      * Evitar que el SO intente sacar su teclado.
@@ -3280,6 +3280,41 @@ html.egp-android-panel body:not(.live-mode)
 }
 </style>
 <!-- EGP_SEARCH_CUSTOM_KEYBOARD_APPLE_V1_FIN -->
+
+<!-- EGP_SEARCH_KEYBOARD_NO_TOP_ROW_V1_STYLE_INICIO -->
+<style id="EGP_SEARCH_KEYBOARD_NO_TOP_ROW_V1_STYLE">
+#egpSearchKeyboard .egp-kb-top,
+#egpSearchKeyboard .egp-kb-mode-title,
+#egpSearchKeyboard .egp-kb-close{
+  display:none !important;
+}
+
+#egpSearchKeyboard .egp-kb-delete{
+  font-size:22px !important;
+  font-weight:500 !important;
+}
+
+@media (orientation:landscape) and (hover:none) and (pointer:coarse){
+  #egpSearchKeyboard{
+    padding:5px !important;
+    border-radius:10px !important;
+  }
+
+  #egpSearchKeyboard .egp-kb-grid{
+    gap:4px !important;
+  }
+
+  #egpSearchKeyboard button{
+    min-height:clamp(30px,6.8dvh,38px) !important;
+  }
+
+  #egpSearchKeyboard .egp-kb-delete{
+    font-size:19px !important;
+  }
+}
+</style>
+<!-- EGP_SEARCH_KEYBOARD_NO_TOP_ROW_V1_STYLE_FIN -->
+
 
 
 

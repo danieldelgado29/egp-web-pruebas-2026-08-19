@@ -4356,8 +4356,12 @@ html.egp-android-panel body:not(.live-mode)
     ) &&
     Number(navigator.maxTouchPoints||0)===0;
 
+  /* EGP_IPHONE_UI24R_HEALTH_ROUTE_V1 */
+  const EGP_UI24R_IPHONE=
+    /iPhone|iPod/i.test(navigator.userAgent);
+
   const HEALTH_URL=
-    EGP_UI24R_DESKTOP_MAC
+    (EGP_UI24R_DESKTOP_MAC || EGP_UI24R_IPHONE)
       ? 'https://ui.elenagirjoaba.com/__egp_health?egp_health='
       : location.origin + '/__egp_ui/?egp_health=';
 

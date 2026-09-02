@@ -1479,6 +1479,29 @@ html.egp-android-panel
 </style>
 <!-- EGP_UI24R_BACK_VISIBILIDAD_Y_TOUCH_DIRECTO_V1_FIN -->
 
+<!-- EGP_UI24R_ANDROID_TAP_PRIORITARIO_V1_INICIO -->
+<style id="EGP_UI24R_ANDROID_TAP_PRIORITARIO_V1">
+/*
+ * Android: el boton conserva exactamente su aspecto.
+ * ::before amplía solo el área de toque.
+ */
+html.egp-android-panel #ui24rBackBtn{
+  transition:none !important;
+  animation:none !important;
+  touch-action:none !important;
+  -webkit-tap-highlight-color:transparent !important;
+}
+
+html.egp-android-panel #ui24rBackBtn::before{
+  content:"";
+  position:absolute;
+  inset:-12px;
+  display:block;
+  pointer-events:auto;
+}
+</style>
+<!-- EGP_UI24R_ANDROID_TAP_PRIORITARIO_V1_FIN -->
+
 <!-- EGP_ANDROID_CONFIG_SCROLL_AISLADO_V1_INICIO -->
 <style id="EGP_ANDROID_CONFIG_SCROLL_AISLADO_V1">
 /*
@@ -2785,6 +2808,8 @@ html.egp-android-panel body:not(.live-mode)
   let lastX=0;
   let lastY=0;
   let pointerId=null;
+  let maxGestureDistance=0;
+  let suppressBackClickUntil=0;
 
   /* EGP_UI24R_ANDROID_GRAB_INMEDIATO_V1 */
   const androidGrabDirecto=/Android/i.test(navigator.userAgent);
@@ -2855,6 +2880,7 @@ html.egp-android-panel body:not(.live-mode)
     dragH=r.height;
     lastX=baseX;
     lastY=baseY;
+    maxGestureDistance=0;
 
     back.style.setProperty('transition','none','important');
     back.style.setProperty('will-change','transform','important');
@@ -2867,7 +2893,14 @@ html.egp-android-panel body:not(.live-mode)
     const dx=x-startX;
     const dy=y-startY;
 
-    if(Math.abs(dx)>2 || Math.abs(dy)>2){
+    /*
+     * El boton sigue el dedo desde el primer pixel.
+     * Pero un toque humano normal puede temblar algunos px:
+     * solo a partir de 10px se considera arrastre real.
+     */
+    const distance=Math.hypot(dx,dy);
+    if(distance>maxGestureDistance) maxGestureDistance=distance;
+    if(maxGestureDistance>=10){
       moved=true;
     }
 
@@ -2882,18 +2915,33 @@ html.egp-android-panel body:not(.live-mode)
     );
   }
 
+  function cerrarUi24rInmediato(){
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden','true');
+  }
+
   function finalizarArrastre(cerrarSiFueToque){
     if(!dragging) return;
 
     dragging=false;
 
+    /*
+     * TAP:
+     * cerrar primero. No forzar layout, no escribir localStorage,
+     * no esperar nada antes de volver al Panel.
+     */
+    if(cerrarSiFueToque && !moved){
+      suppressBackClickUntil=performance.now()+450;
+      cerrarUi24rInmediato();
+      return;
+    }
+
+    /*
+     * DRAG:
+     * aquí sí consolidamos y guardamos la nueva posición.
+     */
     const pos=aplicarBase(lastX,lastY,dragW,dragH);
     guardarPos(pos.x,pos.y);
-
-    if(cerrarSiFueToque && !moved){
-      overlay.classList.remove('is-open');
-      overlay.setAttribute('aria-hidden','true');
-    }
   }
 
   function mantenerDentro(){
@@ -3036,6 +3084,25 @@ html.egp-android-panel body:not(.live-mode)
     e.preventDefault();
     e.stopPropagation();
   });
+
+  /*
+   * Fallback de toque corto Android:
+   * si por cualquier motivo el pointerup no cerró, el click lo hace.
+   * Un click sintético inmediatamente posterior a un gesto ya procesado
+   * queda suprimido.
+   */
+  back.addEventListener('click',function(e){
+    if(!androidGrabDirecto) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if(performance.now()<suppressBackClickUntil) return;
+
+    if(overlay.classList.contains('is-open')){
+      cerrarUi24rInmediato();
+    }
+  },true);
 
   back.addEventListener('contextmenu',function(e){
     e.preventDefault();

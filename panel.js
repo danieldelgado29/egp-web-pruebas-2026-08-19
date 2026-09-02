@@ -744,6 +744,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
     }
     state.songs.forEach((song,index)=>{ if(!Number.isFinite(song._sourceIndex)) song._sourceIndex=index; });
     hydrateSavedState();
+    purgeRetiredCustomSongsV1();
+    saveStateLocalOnly();
 
     /*
      * EGP_LOCAL_CORE_CUSTOM_SONGS_V1
@@ -792,8 +794,40 @@ document.documentElement.dataset.egmVersion="6.36.92";
    * - elimina duplicados;
    * - reconstruye state.songs con base + custom.
    */
+  /*
+   * EGP_RETIRED_CUSTOM_SONG_I_WILL_SURVIVE_V1
+   *
+   * Eliminación explícita solicitada:
+   * custom-1787178395533
+   *
+   * Evita que una copia vieja de localStorage o un snapshot remoto
+   * atrasado vuelva a insertar esta canción.
+   */
+  const EGP_RETIRED_CUSTOM_SONG_IDS_V1=new Set([
+    'custom-1787178395533'
+  ]);
+
+  function purgeRetiredCustomSongsV1(){
+    state.customSongs=(Array.isArray(state.customSongs)?state.customSongs:[])
+      .filter(song=>!EGP_RETIRED_CUSTOM_SONG_IDS_V1.has(String(song?.id||'')));
+
+    state.songs=(Array.isArray(state.songs)?state.songs:[])
+      .filter(song=>!EGP_RETIRED_CUSTOM_SONG_IDS_V1.has(String(song?.id||'')));
+
+    state.queue=(Array.isArray(state.queue)?state.queue:[])
+      .filter(id=>!EGP_RETIRED_CUSTOM_SONG_IDS_V1.has(String(id)));
+
+    for(const id of EGP_RETIRED_CUSTOM_SONG_IDS_V1){
+      state.played?.delete?.(id);
+    }
+  }
+
   function mergeRemoteCustomSongs(remoteSongs){
     if(!Array.isArray(remoteSongs))return;
+
+    remoteSongs=remoteSongs.filter(
+      song=>!EGP_RETIRED_CUSTOM_SONG_IDS_V1.has(String(song?.id||''))
+    );
 
     const byId=new Map();
 
@@ -844,6 +878,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       }
     });
 
+    purgeRetiredCustomSongsV1();
     sortMasterSongs();
   }
 

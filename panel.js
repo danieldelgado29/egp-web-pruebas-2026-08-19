@@ -296,7 +296,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
   sessionStorage.setItem('egm-device-id',DEVICE_ID);
 
   const EGP_AUDIT_LOCAL=new URL(location.href).searchParams.get('audit_local')==='1';
-  const LOCAL_CORE_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':(location.hostname==='elenagirjoaba.com'?location.origin+'/__egp_core':'https://core.elenagirjoaba.com');
+  /* EGP_MOBILE_LAN_DEDICATED_CORE_V1
+   * iPhone/Android con datos moviles NO deben resolver el dominio publico
+   * elenagirjoaba.com para alcanzar el Core local.
+   */
+  const LOCAL_CORE_URL=EGP_AUDIT_LOCAL
+    ? 'http://10.10.10.2:8796'
+    : 'https://core.elenagirjoaba.com';
   const CORE_TEST_MODE=new URL(location.href).searchParams.get('core_test')==='1';
 
   /*
@@ -7087,7 +7093,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
 
   /* EGP CONFIG LAN CONSOLIDADA V85 */
-  const EGP_REQUESTS_LAN_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':(location.hostname==='elenagirjoaba.com'?location.origin+'/__egp_lan':'http://10.10.10.2:8790');
+  /* EGP_MOBILE_LAN_DEDICATED_8790_V1
+   * 8790 via HTTPS local dedicado; evita que datos moviles manden
+   * elenagirjoaba.com/__egp_lan hacia GitHub Pages.
+   */
+  const EGP_REQUESTS_LAN_URL=EGP_AUDIT_LOCAL
+    ? 'http://10.10.10.2:8796'
+    : 'https://core.elenagirjoaba.com/__egp_lan';
 
   async function egpPublicarConfigLan(data={}){
     try{

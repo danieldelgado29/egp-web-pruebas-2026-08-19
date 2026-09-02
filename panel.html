@@ -2756,6 +2756,49 @@ html.egp-android-panel body:not(.live-mode)
 </style>
 <!-- EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1_FIN -->
 
+<!-- EGP_UI24R_BACK_INDEPENDENT_LAYER_V1_INICIO -->
+<style id="EGP_UI24R_BACK_INDEPENDENT_LAYER_V1">
+/*
+ * ← PANEL vive FUERA del overlay/iframe.
+ * Chrome puede recomponer Ui24R sin afectar el hit-test del control.
+ */
+#ui24rBackBtn{
+  display:block !important;
+  position:fixed !important;
+  z-index:2147483000 !important;
+
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+
+  transition:none !important;
+  animation:none !important;
+
+  touch-action:none !important;
+  -webkit-tap-highlight-color:transparent !important;
+  -webkit-user-select:none !important;
+  user-select:none !important;
+  -webkit-touch-callout:none !important;
+
+  /*
+   * Capa propia del compositor.
+   * No usar contain:paint porque el hitbox invisible ::before
+   * debe poder extenderse fuera del rectángulo visual.
+   */
+  isolation:isolate !important;
+  backface-visibility:hidden !important;
+  -webkit-backface-visibility:hidden !important;
+  will-change:transform !important;
+}
+
+#ui24rBackBtn.egp-ui24r-back-open{
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+</style>
+<!-- EGP_UI24R_BACK_INDEPENDENT_LAYER_V1_FIN -->
+
 <div id="ui24rOverlay" class="ui24r-overlay" aria-hidden="true">
   <iframe
   id="ui24rFrame"
@@ -2765,8 +2808,8 @@ html.egp-android-panel body:not(.live-mode)
   loading="eager"
   allow="autoplay"
 ></iframe>
-  <button id="ui24rBackBtn" type="button">← PANEL</button>
 </div>
+<button id="ui24rBackBtn" type="button" aria-hidden="true">← PANEL</button>
 
 <script>
 (function(){
@@ -2797,6 +2840,12 @@ html.egp-android-panel body:not(.live-mode)
     cargarUi24SiHaceFalta();
     overlay.classList.add('is-open');
     overlay.setAttribute('aria-hidden','false');
+
+    /*
+     * Botón independiente: visible sin depender del árbol del iframe.
+     */
+    back.classList.add('egp-ui24r-back-open');
+    back.setAttribute('aria-hidden','false');
 
     requestAnimationFrame(function(){
       if(typeof mantenerDentro==='function') mantenerDentro();
@@ -2960,6 +3009,13 @@ html.egp-android-panel body:not(.live-mode)
      * Así el click posterior nunca puede alcanzar el Panel de abajo.
      */
     armarGhostClickGuard(x,y);
+
+    /*
+     * Ocultar primero el control superior; el guard de ghost-click
+     * ya quedó armado arriba de esta función.
+     */
+    back.classList.remove('egp-ui24r-back-open');
+    back.setAttribute('aria-hidden','true');
 
     overlay.classList.remove('is-open');
     overlay.setAttribute('aria-hidden','true');

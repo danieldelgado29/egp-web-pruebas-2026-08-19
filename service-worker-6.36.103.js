@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-ui24r-silent-real-v2";
+const VERSION = "egm-v6.36.103-android-repertoire-stay-v1";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [

@@ -1322,7 +1322,45 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const o=document.createElement('option');o.value=value;$('#venueHistory').append(o);
   }
   $('#venueInput').addEventListener('input',()=>sessionStorage.setItem('egm-venue-draft',$('#venueInput').value));
+
+  /*
+   * EGP_ANDROID_REPERTOIRE_STAY_CONFIG_V1
+   *
+   * En Android, mientras el usuario esta eligiendo repertorio dentro
+   * de Configuracion, una confirmacion LAN de show_activo=true no debe
+   * interpretar esa interaccion como permiso para volver a Control en vivo.
+   *
+   * Seleccionar repertorio = quedarse en Configuracion.
+   * Solo el boton Continuar vuelve al show.
+   */
+  const egpRepertoireSelect=$('#repertoireSelect');
+
+  const egpKeepConfigWhileChoosingRepertoire=()=>{
+    if(
+      state.config &&
+      $('#configView')?.classList.contains('is-active')
+    ){
+      configOpenedFromLive=true;
+
+      const continueBtn=$('#continueShowBtn');
+      if(continueBtn) continueBtn.hidden=false;
+    }
+  };
+
+  egpRepertoireSelect?.addEventListener(
+    'pointerdown',
+    egpKeepConfigWhileChoosingRepertoire,
+    {passive:true}
+  );
+
+  egpRepertoireSelect?.addEventListener(
+    'touchstart',
+    egpKeepConfigWhileChoosingRepertoire,
+    {passive:true}
+  );
+
   $('#repertoireSelect').addEventListener('change',()=>{
+    egpKeepConfigWhileChoosingRepertoire();
     sessionStorage.setItem('egm-venue-draft',$('#venueInput').value);
     // Si el show ya está activo, el cambio de repertorio se publica sin reiniciar
     // cola, cronómetro ni canciones tocadas.

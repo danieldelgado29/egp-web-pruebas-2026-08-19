@@ -296,7 +296,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   sessionStorage.setItem('egm-device-id',DEVICE_ID);
 
   const EGP_AUDIT_LOCAL=new URL(location.href).searchParams.get('audit_local')==='1';
-  const LOCAL_CORE_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':'https://core.elenagirjoaba.com';
+  const LOCAL_CORE_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':(location.hostname==='elenagirjoaba.com'?location.origin+'/__egp_core':'https://core.elenagirjoaba.com');
   const CORE_TEST_MODE=new URL(location.href).searchParams.get('core_test')==='1';
 
   /*
@@ -760,7 +760,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   async function localQueueRequest(path,body){
     const controller=new AbortController();
-    const timeoutMs=body===undefined?500:900;
+    const timeoutMs=body===undefined?2500:8000;
     const timer=setTimeout(()=>controller.abort(),timeoutMs);
     try{
       const options={

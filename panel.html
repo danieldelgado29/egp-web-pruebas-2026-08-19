@@ -2598,6 +2598,90 @@ html.egp-android-panel body:not(.live-mode)
 </script>
 
 
+
+<!-- EGP_ANDROID_PWA_BACK_GUARD_V1_INICIO -->
+<script id="EGP_ANDROID_PWA_BACK_GUARD_V1">
+(function(){
+  'use strict';
+
+  const isAndroid=/Android/i.test(navigator.userAgent);
+
+  const isStandalone=
+    window.matchMedia?.('(display-mode: standalone)')?.matches===true ||
+    window.matchMedia?.('(display-mode: fullscreen)')?.matches===true ||
+    String(document.referrer||'').startsWith('android-app://');
+
+  if(!isAndroid || !isStandalone) return;
+
+  const KEY='__egpAndroidPwaBackGuardV1';
+  let repairing=false;
+
+  function currentState(){
+    return history.state && typeof history.state==='object'
+      ? history.state
+      : {};
+  }
+
+  function ensureGuard(){
+    const state=currentState();
+
+    if(state[KEY]==='guard') return;
+
+    const base={
+      ...state,
+      [KEY]:'base'
+    };
+
+    history.replaceState(
+      base,
+      '',
+      location.href
+    );
+
+    history.pushState(
+      {
+        ...base,
+        [KEY]:'guard'
+      },
+      '',
+      location.href
+    );
+  }
+
+  ensureGuard();
+
+  window.addEventListener('popstate',function(){
+    if(repairing) return;
+
+    repairing=true;
+
+    history.pushState(
+      {
+        ...currentState(),
+        [KEY]:'guard'
+      },
+      '',
+      location.href
+    );
+
+    queueMicrotask(()=>{
+      repairing=false;
+    });
+  });
+
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden){
+      setTimeout(ensureGuard,0);
+    }
+  });
+
+  window.addEventListener('pageshow',function(){
+    setTimeout(ensureGuard,0);
+  });
+})();
+</script>
+<!-- EGP_ANDROID_PWA_BACK_GUARD_V1_FIN -->
+
   <script src="./pwa.js?v=6.36.103-arranque-canonico"></script>
 
 <script>

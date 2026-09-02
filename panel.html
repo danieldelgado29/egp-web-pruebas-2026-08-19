@@ -4448,6 +4448,388 @@ html.egp-android-panel body:not(.live-mode)
 </script>
 <!-- EGP_PANEL_UI24R_HEALTH_V3_FIN -->
 
+
+<!-- EGP_CONFIG_CUSTOM_KEYBOARD_QWERTY_V1_INICIO -->
+<style id="EGP_CONFIG_CUSTOM_KEYBOARD_QWERTY_V1_STYLE">
+#egpConfigKeyboard{
+  display:none;
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  width:100%;
+  z-index:2147482600;
+  box-sizing:border-box;
+  background:#d1d5db;
+  border:0;
+  box-shadow:
+    0 -1px 0 rgba(0,0,0,.16),
+    0 -10px 26px rgba(0,0,0,.18);
+  padding:
+    10px 8px
+    max(10px,env(safe-area-inset-bottom,0px));
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+  touch-action:none;
+}
+
+#egpConfigKeyboard.is-open{
+  display:block;
+}
+
+#egpConfigKeyboard .egp-config-kb-layout{
+  display:grid;
+  gap:8px;
+  width:min(680px,100%);
+  margin-inline:auto;
+}
+
+#egpConfigKeyboard .egp-config-kb-row{
+  display:grid;
+  gap:8px;
+  width:100%;
+}
+
+#egpConfigKeyboard .egp-config-kb-row-1,
+#egpConfigKeyboard .egp-config-kb-row-2{
+  grid-template-columns:repeat(10,minmax(0,1fr));
+}
+
+#egpConfigKeyboard .egp-config-kb-row-3{
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  width:76%;
+  margin-inline:auto;
+}
+
+#egpConfigKeyboard .egp-config-kb-functions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  width:100%;
+}
+
+#egpConfigKeyboard .egp-config-kb-numbers{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  width:min(560px,100%);
+  margin-inline:auto;
+}
+
+#egpConfigKeyboard button{
+  appearance:none;
+  -webkit-appearance:none;
+  min-width:0;
+  min-height:52px;
+  padding:0 4px;
+  border:0;
+  border-radius:7px;
+  background:#fff;
+  color:#111;
+  box-shadow:
+    0 1px 0 rgba(0,0,0,.34),
+    0 1px 2px rgba(0,0,0,.18);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Text",
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  font-size:19px;
+  font-weight:500;
+  line-height:1;
+  text-transform:uppercase;
+  touch-action:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+#egpConfigKeyboard button:active{
+  transform:scale(.97);
+}
+
+#egpConfigKeyboard .egp-config-kb-function{
+  background:#aeb3bd;
+  font-weight:600;
+  font-size:13px;
+}
+
+#egpConfigKeyboard .egp-config-kb-delete{
+  font-size:24px;
+  font-weight:500;
+}
+
+#venueInput.egp-config-kb-enabled{
+  caret-color:transparent !important;
+}
+
+body.egp-config-keyboard-open #configView.view.is-active{
+  padding-bottom:330px !important;
+}
+
+@media (orientation:landscape) and (hover:none) and (pointer:coarse){
+  #egpConfigKeyboard{
+    padding:7px;
+    max-height:52dvh;
+    overflow:auto;
+  }
+
+  #egpConfigKeyboard .egp-config-kb-layout,
+  #egpConfigKeyboard .egp-config-kb-row,
+  #egpConfigKeyboard .egp-config-kb-functions,
+  #egpConfigKeyboard .egp-config-kb-numbers{
+    gap:7px;
+  }
+
+  #egpConfigKeyboard button{
+    min-height:clamp(36px,8.2dvh,44px);
+    font-size:16px;
+  }
+
+  #egpConfigKeyboard .egp-config-kb-function{
+    font-size:11px;
+  }
+
+  #egpConfigKeyboard .egp-config-kb-delete{
+    font-size:21px;
+  }
+
+  body.egp-config-keyboard-open #configView.view.is-active{
+    padding-bottom:230px !important;
+  }
+}
+</style>
+
+<script id="EGP_CONFIG_CUSTOM_KEYBOARD_QWERTY_V1">
+(function(){
+  'use strict';
+
+  const coarse=
+    window.matchMedia?.('(hover:none) and (pointer:coarse)');
+
+  if(!coarse?.matches) return;
+
+  const venue=document.getElementById('venueInput');
+
+  if(!venue) return;
+
+  venue.classList.add('egp-config-kb-enabled');
+  venue.setAttribute('inputmode','none');
+  venue.setAttribute('autocomplete','off');
+  venue.setAttribute('autocorrect','off');
+  venue.setAttribute('spellcheck','false');
+  venue.readOnly=true;
+
+  const kb=document.createElement('div');
+  kb.id='egpConfigKeyboard';
+  kb.setAttribute('role','application');
+  kb.setAttribute('aria-label','Teclado de Lugar');
+
+  const letterRows=[
+    ['Q','W','E','R','T','Y','U','I','O','P'],
+    ['A','S','D','F','G','H','J','K','L','Ñ'],
+    ['Z','X','C','V','B','N','M']
+  ];
+
+  const numberKeys=[
+    '1','2','3',
+    '4','5','6',
+    '7','8','9'
+  ];
+
+  let mode='letters';
+
+  function emitInput(){
+    venue.dispatchEvent(
+      new Event('input',{bubbles:true})
+    );
+  }
+
+  function appendValue(value){
+    venue.value=String(venue.value||'') + value;
+    emitInput();
+  }
+
+  function deleteOne(){
+    venue.value=
+      Array.from(String(venue.value||''))
+        .slice(0,-1)
+        .join('');
+
+    emitInput();
+  }
+
+  function renderLetters(){
+    kb.innerHTML=
+      `<div class="egp-config-kb-layout">
+        ${letterRows.map((row,index)=>`
+          <div class="egp-config-kb-row egp-config-kb-row-${index+1}">
+            ${row.map(
+              key=>`<button type="button" data-config-kb-key="${key}">${key}</button>`
+            ).join('')}
+          </div>
+        `).join('')}
+
+        <div class="egp-config-kb-functions">
+          <button
+            type="button"
+            class="egp-config-kb-function"
+            data-config-kb-action="numbers"
+          >123</button>
+
+          <button
+            type="button"
+            class="egp-config-kb-function egp-config-kb-delete"
+            data-config-kb-action="delete"
+            aria-label="Borrar"
+          >⌫</button>
+        </div>
+      </div>`;
+  }
+
+  function renderNumbers(){
+    kb.innerHTML=
+      `<div class="egp-config-kb-numbers">
+        ${numberKeys.map(
+          key=>`<button type="button" data-config-kb-key="${key}">${key}</button>`
+        ).join('')}
+
+        <button
+          type="button"
+          class="egp-config-kb-function"
+          data-config-kb-action="letters"
+        >ABC</button>
+
+        <button
+          type="button"
+          data-config-kb-key="0"
+        >0</button>
+
+        <button
+          type="button"
+          class="egp-config-kb-function egp-config-kb-delete"
+          data-config-kb-action="delete"
+          aria-label="Borrar"
+        >⌫</button>
+      </div>`;
+  }
+
+  function render(){
+    if(mode==='numbers'){
+      renderNumbers();
+    }else{
+      renderLetters();
+    }
+  }
+
+  function openKeyboard(){
+    mode='letters';
+    render();
+
+    kb.classList.add('is-open');
+    document.body.classList.add(
+      'egp-config-keyboard-open'
+    );
+
+    venue.blur();
+  }
+
+  function closeKeyboard(){
+    kb.classList.remove('is-open');
+    document.body.classList.remove(
+      'egp-config-keyboard-open'
+    );
+  }
+
+  function handlePress(target,event){
+    const button=target.closest?.(
+      '#egpConfigKeyboard button'
+    );
+
+    if(!button) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const key=button.dataset.configKbKey;
+    const action=button.dataset.configKbAction;
+
+    if(key){
+      appendValue(key);
+      return;
+    }
+
+    if(action==='delete'){
+      deleteOne();
+      return;
+    }
+
+    if(action==='numbers'){
+      mode='numbers';
+      render();
+      return;
+    }
+
+    if(action==='letters'){
+      mode='letters';
+      render();
+    }
+  }
+
+  kb.addEventListener(
+    'pointerdown',
+    event=>handlePress(event.target,event)
+  );
+
+  venue.addEventListener(
+    'pointerdown',
+    function(event){
+      event.preventDefault();
+      event.stopPropagation();
+      openKeyboard();
+    }
+  );
+
+  venue.addEventListener(
+    'click',
+    function(event){
+      event.preventDefault();
+      event.stopPropagation();
+      openKeyboard();
+    }
+  );
+
+  document.addEventListener(
+    'pointerdown',
+    function(event){
+      if(!kb.classList.contains('is-open')){
+        return;
+      }
+
+      if(
+        event.target===venue ||
+        kb.contains(event.target)
+      ){
+        return;
+      }
+
+      closeKeyboard();
+    },
+    true
+  );
+
+  window.addEventListener(
+    'orientationchange',
+    closeKeyboard
+  );
+
+  document.body.appendChild(kb);
+})();
+</script>
+<!-- EGP_CONFIG_CUSTOM_KEYBOARD_QWERTY_V1_FIN -->
+
+
 <!-- EGP_UI24R_PERSISTENTE_POSTLOAD_V1_INICIO -->
 <script id="EGP_UI24R_PERSISTENTE_POSTLOAD_V4">
 (function(){

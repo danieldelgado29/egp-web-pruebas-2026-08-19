@@ -3315,6 +3315,55 @@ html.egp-android-panel body:not(.live-mode)
 </style>
 <!-- EGP_SEARCH_KEYBOARD_NO_TOP_ROW_V1_STYLE_FIN -->
 
+<!-- EGP_SEARCH_KEYBOARD_ROOMIER_V1_INICIO -->
+<style id="EGP_SEARCH_KEYBOARD_ROOMIER_V1">
+#egpSearchKeyboard{
+  padding:10px 8px max(10px,env(safe-area-inset-bottom,0px)) !important;
+}
+
+#egpSearchKeyboard .egp-kb-grid{
+  gap:8px !important;
+}
+
+#egpSearchKeyboard button{
+  min-height:52px !important;
+  font-size:19px !important;
+}
+
+#egpSearchKeyboard .egp-kb-wide{
+  font-size:13px !important;
+}
+
+#egpSearchKeyboard .egp-kb-delete{
+  font-size:24px !important;
+}
+
+@media (orientation:landscape) and (hover:none) and (pointer:coarse){
+  #egpSearchKeyboard{
+    padding:7px !important;
+  }
+
+  #egpSearchKeyboard .egp-kb-grid{
+    gap:7px !important;
+  }
+
+  #egpSearchKeyboard button{
+    min-height:clamp(36px,8.2dvh,44px) !important;
+    font-size:16px !important;
+  }
+
+  #egpSearchKeyboard .egp-kb-wide{
+    font-size:11px !important;
+  }
+
+  #egpSearchKeyboard .egp-kb-delete{
+    font-size:21px !important;
+  }
+}
+</style>
+<!-- EGP_SEARCH_KEYBOARD_ROOMIER_V1_FIN -->
+
+
 
 
 

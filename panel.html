@@ -2682,6 +2682,440 @@ html.egp-android-panel body:not(.live-mode)
 </script>
 <!-- EGP_ANDROID_PWA_BACK_GUARD_V1_FIN -->
 
+
+<!-- EGP_SEARCH_CUSTOM_KEYBOARD_V1_INICIO -->
+<style id="EGP_SEARCH_CUSTOM_KEYBOARD_V1">
+/*
+ * Teclado propio para #songSearch.
+ * Solo se activa en dispositivos tactiles.
+ */
+#egpSearchKeyboard{
+  display:none;
+  position:fixed;
+  z-index:2147482500;
+  box-sizing:border-box;
+  background:#111318;
+  border:1px solid #343945;
+  box-shadow:0 -12px 36px rgba(0,0,0,.42);
+  padding:10px;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+  touch-action:none;
+}
+
+#egpSearchKeyboard.is-open{
+  display:block;
+}
+
+#egpSearchKeyboard .egp-kb-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin:0 0 8px;
+}
+
+#egpSearchKeyboard .egp-kb-mode-title{
+  color:#f2c96d;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+
+#egpSearchKeyboard button{
+  appearance:none;
+  -webkit-appearance:none;
+  border:0;
+  border-radius:10px;
+  background:#2a2e37;
+  color:#fff;
+  min-width:0;
+  min-height:46px;
+  padding:0 4px;
+  font:900 16px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  text-transform:uppercase;
+  touch-action:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+#egpSearchKeyboard button:active{
+  background:#4a505c;
+  transform:scale(.97);
+}
+
+#egpSearchKeyboard .egp-kb-close{
+  min-height:32px;
+  height:32px;
+  padding:0 12px;
+  font-size:11px;
+  background:#3a3e47;
+}
+
+#egpSearchKeyboard .egp-kb-grid{
+  display:grid;
+  gap:6px;
+}
+
+#egpSearchKeyboard .egp-kb-grid-numbers{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+
+#egpSearchKeyboard .egp-kb-grid-letters{
+  grid-template-columns:repeat(7,minmax(0,1fr));
+}
+
+#egpSearchKeyboard .egp-kb-wide{
+  font-size:12px;
+  background:#3a3e47;
+}
+
+#egpSearchKeyboard .egp-kb-switch{
+  background:#6d5426;
+  color:#fff4d1;
+}
+
+#egpSearchKeyboard .egp-kb-delete{
+  background:#4a2a2f;
+}
+
+#songSearch.egp-custom-kb-enabled{
+  text-transform:uppercase !important;
+  caret-color:transparent !important;
+}
+
+/*
+ * VERTICAL:
+ * teclado inferior a todo el ancho.
+ */
+@media (orientation:portrait) and (hover:none) and (pointer:coarse){
+  #egpSearchKeyboard{
+    left:0;
+    right:0;
+    bottom:0;
+    width:100%;
+    max-height:48dvh;
+    border-radius:18px 18px 0 0;
+    padding-bottom:max(10px,env(safe-area-inset-bottom,0px));
+  }
+
+  #egpSearchKeyboard .egp-kb-grid{
+    width:min(560px,100%);
+    margin-inline:auto;
+  }
+
+  #egpSearchKeyboard .egp-kb-top{
+    width:min(560px,100%);
+    margin-left:auto;
+    margin-right:auto;
+    margin-bottom:8px;
+  }
+
+  body.egp-search-keyboard-open .song-table-region{
+    padding-bottom:300px !important;
+  }
+}
+
+/*
+ * HORIZONTAL:
+ * el JS lo ancla al rectángulo de Cola activa.
+ * Así NO invade la columna de resultados/buscador.
+ */
+@media (orientation:landscape) and (hover:none) and (pointer:coarse){
+  #egpSearchKeyboard{
+    left:var(--egp-search-kb-left,50vw);
+    top:var(--egp-search-kb-top,88px);
+    width:var(--egp-search-kb-width,46vw);
+    max-height:calc(100dvh - var(--egp-search-kb-top,88px) - 8px);
+    overflow:auto;
+    border-radius:14px;
+    padding:8px;
+  }
+
+  #egpSearchKeyboard button{
+    min-height:clamp(34px,8dvh,44px);
+    font-size:14px;
+  }
+
+  #egpSearchKeyboard .egp-kb-wide{
+    font-size:10px;
+  }
+
+  #egpSearchKeyboard .egp-kb-grid{
+    gap:4px;
+  }
+
+  #egpSearchKeyboard .egp-kb-top{
+    margin-bottom:5px;
+  }
+}
+</style>
+
+<script>
+(function(){
+  'use strict';
+
+  const coarse=
+    window.matchMedia?.('(hover:none) and (pointer:coarse)');
+
+  if(!coarse?.matches) return;
+
+  const search=document.getElementById('songSearch');
+  const queuePanel=document.getElementById('queuePanel');
+
+  if(!search || !queuePanel) return;
+
+  /*
+   * No abrir teclado nativo de iPhone/Android.
+   * La búsqueda sigue ocurriendo mediante el listener input original.
+   */
+  search.classList.add('egp-custom-kb-enabled');
+  search.setAttribute('inputmode','none');
+  search.setAttribute('autocomplete','off');
+  search.setAttribute('autocapitalize','characters');
+  search.setAttribute('spellcheck','false');
+  search.readOnly=true;
+
+  const kb=document.createElement('div');
+  kb.id='egpSearchKeyboard';
+  kb.setAttribute('role','application');
+  kb.setAttribute('aria-label','Teclado del buscador');
+
+  const numberKeys=['1','2','3','4','5','6','7','8','9'];
+  const letterKeys=[
+    'A','B','C','D','E','F','G',
+    'H','I','J','K','L','M','N',
+    'Ñ','O','P','Q','R','S','T',
+    'U','V','W','X','Y','Z'
+  ];
+
+  let mode='numbers';
+
+  function emitInput(){
+    search.dispatchEvent(
+      new Event('input',{bubbles:true})
+    );
+  }
+
+  function setValue(value){
+    search.value=String(value||'').toUpperCase();
+    emitInput();
+  }
+
+  function appendValue(value){
+    setValue(search.value + value);
+  }
+
+  function deleteOne(){
+    setValue(
+      Array.from(search.value).slice(0,-1).join('')
+    );
+  }
+
+  function isLandscape(){
+    return window.matchMedia?.('(orientation:landscape)')?.matches===true;
+  }
+
+  function positionLandscape(){
+    if(!kb.classList.contains('is-open')) return;
+    if(!isLandscape()) return;
+
+    const rect=queuePanel.getBoundingClientRect();
+    const heading=queuePanel.querySelector('.queue-heading');
+    const headingRect=heading?.getBoundingClientRect();
+
+    /*
+     * Mantener visible el título "Cola activa" y colocar
+     * el teclado sobre el espacio de la cola, no sobre resultados.
+     */
+    const left=Math.max(6,rect.left+6);
+    const width=Math.max(260,rect.width-12);
+    const top=Math.max(
+      6,
+      headingRect
+        ? headingRect.bottom+5
+        : rect.top+6
+    );
+
+    kb.style.setProperty('--egp-search-kb-left',`${left}px`);
+    kb.style.setProperty('--egp-search-kb-width',`${width}px`);
+    kb.style.setProperty('--egp-search-kb-top',`${top}px`);
+  }
+
+  function render(){
+    const title=
+      mode==='numbers'
+        ? 'NUMEROS'
+        : 'LETRAS';
+
+    const top=`
+      <div class="egp-kb-top">
+        <span class="egp-kb-mode-title">${title}</span>
+        <button
+          type="button"
+          class="egp-kb-close"
+          data-kb-action="close"
+        >CERRAR</button>
+      </div>
+    `;
+
+    if(mode==='numbers'){
+      kb.innerHTML=
+        top +
+        `<div class="egp-kb-grid egp-kb-grid-numbers">
+          ${numberKeys.map(
+            key=>`<button type="button" data-kb-key="${key}">${key}</button>`
+          ).join('')}
+          <button type="button" class="egp-kb-wide egp-kb-switch" data-kb-action="letters">ABC</button>
+          <button type="button" data-kb-key="0">0</button>
+          <button type="button" class="egp-kb-wide egp-kb-delete" data-kb-action="delete">BORRAR</button>
+        </div>`;
+    }else{
+      kb.innerHTML=
+        top +
+        `<div class="egp-kb-grid egp-kb-grid-letters">
+          ${letterKeys.map(
+            key=>`<button type="button" data-kb-key="${key}">${key}</button>`
+          ).join('')}
+          <button
+            type="button"
+            class="egp-kb-wide egp-kb-switch"
+            data-kb-action="numbers"
+            style="grid-column:span 3"
+          >123</button>
+          <button
+            type="button"
+            class="egp-kb-wide egp-kb-delete"
+            data-kb-action="delete"
+            style="grid-column:span 4"
+          >BORRAR</button>
+        </div>`;
+    }
+
+    requestAnimationFrame(positionLandscape);
+  }
+
+  function openKeyboard(){
+    /*
+     * Vacío = NUMEROS por defecto.
+     * Si ya existe una consulta, mantener el modo lógico de esa consulta.
+     */
+    const current=String(search.value||'');
+
+    mode=
+      current && /[A-ZÑ]/i.test(current)
+        ? 'letters'
+        : 'numbers';
+
+    kb.classList.add('is-open');
+    document.body.classList.add('egp-search-keyboard-open');
+
+    render();
+
+    /*
+     * Evitar que el SO intente sacar su teclado.
+     */
+    search.blur();
+
+    requestAnimationFrame(positionLandscape);
+  }
+
+  function closeKeyboard(){
+    kb.classList.remove('is-open');
+    document.body.classList.remove('egp-search-keyboard-open');
+  }
+
+  function switchMode(next){
+    mode=next;
+
+    /*
+     * Número y letras son caminos separados:
+     * no permitir mezclas como "A12".
+     */
+    setValue('');
+    render();
+  }
+
+  /*
+   * Respuesta inmediata: pointerdown, sin esperar click sintetizado.
+   */
+  kb.addEventListener('pointerdown',function(e){
+    const button=e.target.closest('button');
+    if(!button) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const key=button.dataset.kbKey;
+    const action=button.dataset.kbAction;
+
+    if(key){
+      appendValue(key);
+      return;
+    }
+
+    if(action==='delete'){
+      deleteOne();
+      return;
+    }
+
+    if(action==='letters'){
+      switchMode('letters');
+      return;
+    }
+
+    if(action==='numbers'){
+      switchMode('numbers');
+      return;
+    }
+
+    if(action==='close'){
+      closeKeyboard();
+    }
+  },{passive:false});
+
+  /*
+   * Tocar el buscador abre teclado propio.
+   */
+  search.addEventListener('pointerdown',function(e){
+    e.preventDefault();
+    openKeyboard();
+  },{passive:false});
+
+  search.addEventListener('click',function(e){
+    e.preventDefault();
+    openKeyboard();
+  });
+
+  /*
+   * Tocar fuera del buscador/teclado lo cierra sin bloquear
+   * la acción que el usuario quiso hacer.
+   */
+  document.addEventListener('pointerdown',function(e){
+    if(!kb.classList.contains('is-open')) return;
+    if(kb.contains(e.target)) return;
+    if(e.target===search || e.target.closest('.search-wrap')) return;
+
+    closeKeyboard();
+  },true);
+
+  window.addEventListener('resize',function(){
+    requestAnimationFrame(positionLandscape);
+  });
+
+  window.addEventListener('orientationchange',function(){
+    setTimeout(positionLandscape,80);
+  });
+
+  window.visualViewport?.addEventListener('resize',function(){
+    requestAnimationFrame(positionLandscape);
+  });
+
+  document.body.appendChild(kb);
+})();
+</script>
+<!-- EGP_SEARCH_CUSTOM_KEYBOARD_V1_FIN -->
+
   <script src="./pwa.js?v=6.36.103-arranque-canonico"></script>
 
 <script>

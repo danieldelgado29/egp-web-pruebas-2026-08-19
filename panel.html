@@ -4266,24 +4266,48 @@ html.egp-android-panel body:not(.live-mode)
 }
 </style>
 
-<script id="EGP_PANEL_UI24R_HEALTH_V3_JS">
+<script id="EGP_PANEL_UI24R_HEALTH_V4_JS">
 (function(){
-  const URL='https://ui.elenagirjoaba.com/mixer.html';
+  /*
+   * EGP_UI24R_HOT_RECONNECT_V1
+   *
+   * mixer.html NO sirve como health check porque Caddy lo entrega
+   * desde la Mac aunque la consola física esté apagada.
+   *
+   * /__egp_ui/ sí atraviesa Caddy -> 10.10.10.10:80.
+   * Solo se considera ONLINE cuando el upstream físico responde.
+   */
+  const HEALTH_URL=
+    location.origin + '/__egp_ui/?egp_health=';
+
+  const REAL_URL=
+    'https://ui.elenagirjoaba.com/mixer.html';
+
   const btn=document.getElementById('ui24rBtn');
+  const frame=document.getElementById('ui24rFrame');
 
   if(!btn) return;
 
   let state='checking';
   let timer=0;
   let busy=false;
+  let reconnecting=false;
 
   function paint(next){
     state=next;
 
-    btn.classList.toggle('egp-ui24-offline',next==='offline');
-    btn.classList.toggle('egp-ui24-checking',next==='checking');
+    btn.classList.toggle(
+      'egp-ui24-offline',
+      next==='offline'
+    );
+
+    btn.classList.toggle(
+      'egp-ui24-checking',
+      next==='checking'
+    );
 
     btn.dataset.ui24rState=next;
+
     btn.setAttribute(
       'aria-disabled',
       next==='online' ? 'false' : 'true'
@@ -4295,36 +4319,77 @@ html.egp-android-panel body:not(.live-mode)
     timer=setTimeout(check,ms);
   }
 
+  function reloadOnlyUi24r(){
+    if(!frame || reconnecting) return;
+
+    reconnecting=true;
+    const stamp=Date.now();
+
+    try{
+      frame.dataset.egpPersistentLoaded='1';
+      frame.dataset.egpHotReconnectAt=String(stamp);
+
+      if(
+        typeof window.egpUi24rSyncIntrinsicSize==='function'
+      ){
+        window.egpUi24rSyncIntrinsicSize(frame);
+      }
+
+      frame.setAttribute(
+        'src',
+        REAL_URL + '?egp_reconnect=' + stamp
+      );
+
+      console.info(
+        'EGP Ui24R: señal restaurada; iframe reconectado.'
+      );
+    }finally{
+      setTimeout(()=>{
+        reconnecting=false;
+      },1200);
+    }
+  }
+
   async function check(){
     if(busy){
-      schedule(1500);
+      schedule(400);
       return;
     }
 
     if(document.hidden){
-      schedule(1500);
+      schedule(700);
       return;
     }
 
     busy=true;
+    const previous=state;
 
     const controller=new AbortController();
     const timeout=setTimeout(
       ()=>controller.abort(),
-      1400
+      900
     );
 
     try{
-      await fetch(
-        URL+'?egp_health='+Date.now(),
+      const response=await fetch(
+        HEALTH_URL + Date.now(),
         {
-          mode:'no-cors',
           cache:'no-store',
           signal:controller.signal
         }
       );
 
+      if(!response.ok){
+        throw new Error(
+          'Ui24R upstream HTTP ' + response.status
+        );
+      }
+
       paint('online');
+
+      if(previous==='offline'){
+        reloadOnlyUi24r();
+      }
 
     }catch(_){
       paint('offline');
@@ -4332,40 +4397,59 @@ html.egp-android-panel body:not(.live-mode)
     }finally{
       clearTimeout(timeout);
       busy=false;
-      schedule(state==='online' ? 4000 : 1800);
+
+      schedule(
+        state==='online'
+          ? 2500
+          : 400
+      );
     }
   }
 
-  btn.addEventListener('click',function(e){
-    if(state==='online') return;
+  btn.addEventListener(
+    'click',
+    function(e){
+      if(state==='online') return;
 
-    e.preventDefault();
-    e.stopImmediatePropagation();
+      e.preventDefault();
+      e.stopImmediatePropagation();
 
-    const toast=document.getElementById('toast');
-    if(toast){
-      toast.textContent='Ui24R no disponible';
-      toast.classList.add('show');
-      setTimeout(()=>toast.classList.remove('show'),1600);
-    }
+      const toast=document.getElementById('toast');
 
-    check();
-  },true);
+      if(toast){
+        toast.textContent='Ui24R esperando señal…';
+        toast.classList.add('show');
+
+        setTimeout(
+          ()=>toast.classList.remove('show'),
+          1300
+        );
+      }
+
+      check();
+    },
+    true
+  );
 
   window.addEventListener('focus',check);
+  window.addEventListener('online',check);
+  window.addEventListener('pageshow',check);
 
-  document.addEventListener('visibilitychange',function(){
-    if(!document.hidden) check();
-  });
+  document.addEventListener(
+    'visibilitychange',
+    function(){
+      if(!document.hidden) check();
+    }
+  );
 
   paint('checking');
 
   if(document.readyState==='complete'){
-    setTimeout(check,300);
+    setTimeout(check,250);
   }else{
     window.addEventListener(
       'load',
-      ()=>setTimeout(check,300),
+      ()=>setTimeout(check,250),
       {once:true}
     );
   }

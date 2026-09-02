@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-search-qwerty-v1";
+const VERSION = "egm-v6.36.103-ui24r-hot-reconnect-v1";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [

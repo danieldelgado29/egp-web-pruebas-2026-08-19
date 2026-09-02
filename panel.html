@@ -2786,6 +2786,9 @@ html.egp-android-panel body:not(.live-mode)
   let lastY=0;
   let pointerId=null;
 
+  /* EGP_UI24R_ANDROID_GRAB_INMEDIATO_V1 */
+  const androidGrabDirecto=/Android/i.test(navigator.userAgent);
+
   function viewportSize(){
     const vv=window.visualViewport;
     return {
@@ -2816,8 +2819,12 @@ html.egp-android-panel body:not(.live-mode)
     const pos=limitar(x,y,width,height);
 
     back.style.setProperty('transition','none','important');
-    back.style.setProperty('transform','none','important');
-    back.style.setProperty('will-change','auto','important');
+    /*
+     * Mantener la capa GPU ya creada incluso antes del primer arrastre.
+     * Evita que Android tenga que promocionar el boton justo al tocarlo.
+     */
+    back.style.setProperty('transform','translate3d(0,0,0)','important');
+    back.style.setProperty('will-change','transform','important');
     back.style.setProperty('left',pos.x+'px','important');
     back.style.setProperty('top',pos.y+'px','important');
     back.style.setProperty('right','auto','important');
@@ -2909,6 +2916,7 @@ html.egp-android-panel body:not(.live-mode)
   }catch(_){}
 
   back.addEventListener('touchstart',function(e){
+    if(androidGrabDirecto) return;
     if(e.touches.length!==1) return;
 
     const t=e.touches[0];
@@ -2920,6 +2928,7 @@ html.egp-android-panel body:not(.live-mode)
   },{passive:false});
 
   back.addEventListener('touchmove',function(e){
+    if(androidGrabDirecto) return;
     if(!dragging || e.touches.length!==1) return;
 
     const t=e.touches[0];
@@ -2930,6 +2939,7 @@ html.egp-android-panel body:not(.live-mode)
   },{passive:false});
 
   back.addEventListener('touchend',function(e){
+    if(androidGrabDirecto) return;
     if(!dragging) return;
 
     finalizarArrastre(true);
@@ -2939,6 +2949,7 @@ html.egp-android-panel body:not(.live-mode)
   },{passive:false});
 
   back.addEventListener('touchcancel',function(e){
+    if(androidGrabDirecto) return;
     if(!dragging) return;
 
     finalizarArrastre(false);
@@ -2948,7 +2959,7 @@ html.egp-android-panel body:not(.live-mode)
   },{passive:false});
 
   back.addEventListener('pointerdown',function(e){
-    if(e.pointerType==='touch') return;
+    if(e.pointerType==='touch' && !androidGrabDirecto) return;
 
     pointerId=e.pointerId;
     comenzarArrastre(e.clientX,e.clientY);
@@ -2964,7 +2975,7 @@ html.egp-android-panel body:not(.live-mode)
   back.addEventListener('pointermove',function(e){
     if(
       !dragging ||
-      e.pointerType==='touch' ||
+      (e.pointerType==='touch' && !androidGrabDirecto) ||
       (pointerId!==null && e.pointerId!==pointerId)
     ) return;
 
@@ -2974,10 +2985,38 @@ html.egp-android-panel body:not(.live-mode)
     e.stopPropagation();
   });
 
+  /*
+   * Chrome Android: recibir el movimiento de hardware antes del
+   * pointermove normal/coalescido cuando el navegador lo permite.
+   */
+  back.addEventListener('pointerrawupdate',function(e){
+    if(
+      !androidGrabDirecto ||
+      !dragging ||
+      e.pointerType!=='touch' ||
+      (pointerId!==null && e.pointerId!==pointerId)
+    ) return;
+
+    let sample=e;
+
+    try{
+      const list=typeof e.getCoalescedEvents==='function'
+        ? e.getCoalescedEvents()
+        : [];
+
+      if(list && list.length){
+        sample=list[list.length-1];
+      }
+    }catch(_){}
+
+    moverArrastre(sample.clientX,sample.clientY);
+    e.stopPropagation();
+  },{passive:true});
+
   back.addEventListener('pointerup',function(e){
     if(
       !dragging ||
-      e.pointerType==='touch' ||
+      (e.pointerType==='touch' && !androidGrabDirecto) ||
       (pointerId!==null && e.pointerId!==pointerId)
     ) return;
 
@@ -2989,11 +3028,16 @@ html.egp-android-panel body:not(.live-mode)
   });
 
   back.addEventListener('pointercancel',function(e){
-    if(!dragging || e.pointerType==='touch') return;
+    if(!dragging || (e.pointerType==='touch' && !androidGrabDirecto)) return;
 
     finalizarArrastre(false);
     pointerId=null;
 
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  back.addEventListener('contextmenu',function(e){
     e.preventDefault();
     e.stopPropagation();
   });

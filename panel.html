@@ -1388,22 +1388,28 @@ html.egp-android-panel body.live-mode
  */
 html.egp-android-panel .ui24r-overlay{
   /*
-   * EGP_UI24R_ANDROID_SIN_TRANSFORM_PADRE_V1
-   * Mantiene el iframe vivo fuera de pantalla sin dejar
-   * toda la consola dentro de una capa transformada.
+   * EGP_UI24R_ANDROID_CLOSE_GPU_OPEN_NONE_V1
+   *
+   * CERRADA:
+   * sacar la consola con compositor/GPU, SIN cambiar left y SIN
+   * recalcular el layout de un iframe de pantalla completa.
+   *
+   * ABIERTA:
+   * transform:none para que la consola NO viva dentro de un
+   * padre transformado mientras se usa el tactil.
    */
   opacity:1 !important;
   visibility:visible !important;
   display:block !important;
 
-  left:110vw !important;
-  right:auto !important;
+  left:0 !important;
+  right:0 !important;
   top:0 !important;
   bottom:0 !important;
   width:100% !important;
   height:100% !important;
 
-  transform:none !important;
+  transform:translate3d(110vw,0,0) !important;
   will-change:auto !important;
 
   pointer-events:none !important;
@@ -1416,6 +1422,11 @@ html.egp-android-panel .ui24r-overlay.is-open{
   top:0 !important;
   bottom:0 !important;
 
+  /*
+   * CRITICO:
+   * abierta NO queda transformada.
+   * Conserva la mejora tactil ya aprobada.
+   */
   transform:none !important;
   will-change:auto !important;
 

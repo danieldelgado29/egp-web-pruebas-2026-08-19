@@ -2323,6 +2323,22 @@ document.documentElement.dataset.egmVersion="6.36.92";
     if(kind==='add'){
       state.played.delete(id);
       state.queue=insertAtEndOfPending(state.queue,id,state.played);
+
+      /*
+       * EGP_CLEAR_SEARCH_AFTER_QUEUE_ADD_V1
+       *
+       * Al encontrar una canción y ponerla en cola, dejar el buscador
+       * listo para la siguiente búsqueda y restaurar inmediatamente
+       * la lista completa del repertorio.
+       *
+       * No altera la cola; solo limpia el filtro visual.
+       */
+      const searchInput=$('#songSearch');
+
+      if(searchInput && searchInput.value){
+        searchInput.value='';
+        filterSongs();
+      }
     }else if(kind==='remove'){
       state.queue=state.queue.filter(x=>String(x)!==id);
       state.played.delete(id);

@@ -3643,39 +3643,6 @@ html.egp-android-panel body:not(.live-mode)
 </style>
 <!-- EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1_FIN -->
 
-
-<!-- EGP_IPHONE_UI24R_ISLAND_FRAME_ONLY_V1_INICIO -->
-<style id="EGP_IPHONE_UI24R_ISLAND_FRAME_ONLY_V1">
-/*
- * SOLO la interfaz Ui24R en iPhone.
- *
- * V23 intentó proteger la Isla Dinamica, pero V24/V26
- * volvieron a forzar left:0 / right:0 / width:100%.
- *
- * Esta regla final restaura la zona segura exclusivamente
- * sobre el iframe de la consola. No toca ninguna pagina del Panel.
- */
-@supports (-webkit-touch-callout:none){
-  body.egp-ios #ui24rOverlay #ui24rFrame{
-    top:env(safe-area-inset-top,0px) !important;
-    right:env(safe-area-inset-right,0px) !important;
-    bottom:env(safe-area-inset-bottom,0px) !important;
-    left:env(safe-area-inset-left,0px) !important;
-
-    width:auto !important;
-    height:auto !important;
-
-    /*
-     * Las versiones antiguas aplicaban scaleX al iframe.
-     * Con el viewport fisico ya recortado a safe-area no se escala.
-     */
-    transform:none !important;
-    -webkit-transform:none !important;
-  }
-}
-</style>
-<!-- EGP_IPHONE_UI24R_ISLAND_FRAME_ONLY_V1_FIN -->
-
 <!-- EGP_UI24R_BACK_INDEPENDENT_LAYER_V1_INICIO -->
 <style id="EGP_UI24R_BACK_INDEPENDENT_LAYER_V1">
 /*

@@ -2876,10 +2876,17 @@ html.egp-android-panel body:not(.live-mode)
   search.setAttribute('spellcheck','false');
   search.readOnly=true;
 
+  const isiPhone=
+    /iPhone|iPod/i.test(navigator.userAgent);
+
   const kb=document.createElement('div');
   kb.id='egpSearchKeyboard';
   kb.setAttribute('role','application');
   kb.setAttribute('aria-label','Teclado del buscador');
+
+  if(isiPhone){
+    kb.classList.add('egp-iphone-kb');
+  }
 
   const numberKeys=['1','2','3','4','5','6','7','8','9'];
   /*
@@ -2940,18 +2947,57 @@ html.egp-android-panel body:not(.live-mode)
     const oy=Number(vv?.offsetTop||0);
     const vw=Number(vv?.width||window.innerWidth||0);
 
-    let left=rect.left+6+ox;
-    let width=Math.max(240,rect.width-12);
-    const top=Math.max(
-      6+oy,
-      (headingRect ? headingRect.bottom+4 : rect.top+6)+oy
-    );
+    let left;
+    let width;
+    let top;
 
-    left=Math.max(ox+6,left);
-    const maxRight=ox+vw-6;
+    if(isiPhone){
+      /*
+       * EGP_IPHONE_KEYBOARDS_SPACE_LANDSCAPE_V1
+       *
+       * getBoundingClientRect() ya entrega coordenadas del rectángulo
+       * visible. En iPhone horizontal NO volver a sumar ox/oy al rect.
+       * Solo usar visualViewport para limitar los bordes visibles.
+       */
+      const viewportLeft=ox;
+      const viewportTop=oy;
+      const viewportRight=viewportLeft+vw;
 
-    if(left+width>maxRight){
-      width=Math.max(220,maxRight-left);
+      left=Math.max(
+        viewportLeft+6,
+        Number(rect.left||0)+6
+      );
+
+      const right=Math.min(
+        viewportRight-6,
+        Number(rect.right||0)-6
+      );
+
+      width=Math.max(200,right-left);
+
+      top=Math.max(
+        viewportTop+6,
+        headingRect
+          ? Number(headingRect.bottom||0)+4
+          : Number(rect.top||0)+6
+      );
+    }else{
+      /*
+       * Android conserva exactamente el cálculo previo.
+       */
+      left=rect.left+6+ox;
+      width=Math.max(240,rect.width-12);
+      top=Math.max(
+        6+oy,
+        (headingRect ? headingRect.bottom+4 : rect.top+6)+oy
+      );
+
+      left=Math.max(ox+6,left);
+      const maxRight=ox+vw-6;
+
+      if(left+width>maxRight){
+        width=Math.max(220,maxRight-left);
+      }
     }
 
     kb.style.setProperty('--egp-search-kb-left',`${left}px`);
@@ -2986,6 +3032,14 @@ html.egp-android-panel body:not(.live-mode)
               class="egp-kb-wide egp-kb-switch"
               data-kb-action="numbers"
             >123</button>
+            ${isiPhone ? `
+              <button
+                type="button"
+                class="egp-kb-space"
+                data-kb-key=" "
+                aria-label="Espacio"
+              >espacio</button>
+            ` : ''}
             <button
               type="button"
               class="egp-kb-wide egp-kb-delete"
@@ -3113,11 +3167,22 @@ html.egp-android-panel body:not(.live-mode)
 
   window.addEventListener('orientationchange',function(){
     setTimeout(positionLandscape,80);
+
+    if(isiPhone){
+      setTimeout(positionLandscape,220);
+      setTimeout(positionLandscape,500);
+    }
   });
 
   window.visualViewport?.addEventListener('resize',function(){
     requestAnimationFrame(positionLandscape);
   });
+
+  if(isiPhone){
+    window.visualViewport?.addEventListener('scroll',function(){
+      requestAnimationFrame(positionLandscape);
+    });
+  }
 
   document.body.appendChild(kb);
 })();
@@ -4619,6 +4684,77 @@ body.egp-config-keyboard-open #configView.view.is-active{
 }
 </style>
 
+<!-- EGP_IPHONE_KEYBOARDS_SPACE_LANDSCAPE_V1_INICIO -->
+<style id="EGP_IPHONE_KEYBOARDS_SPACE_LANDSCAPE_V1_STYLE">
+/*
+ * Solo se activa cuando JS añade .egp-iphone-kb.
+ * Android mantiene el layout previo.
+ */
+#egpSearchKeyboard.egp-iphone-kb .egp-kb-letter-functions,
+#egpConfigKeyboard.egp-iphone-kb .egp-config-kb-functions{
+  grid-template-columns:
+    minmax(58px,.8fr)
+    minmax(120px,2.2fr)
+    minmax(58px,.8fr) !important;
+}
+
+#egpSearchKeyboard.egp-iphone-kb .egp-kb-space,
+#egpConfigKeyboard.egp-iphone-kb .egp-config-kb-space{
+  text-transform:none !important;
+  font-size:12px !important;
+  font-weight:500 !important;
+  letter-spacing:0 !important;
+}
+
+@media (orientation:landscape) and (hover:none) and (pointer:coarse){
+  /*
+   * Buscador:
+   * la posición left/top/width la calcula JS contra visualViewport.
+   * Evitar anchos o scroll horizontal residuales.
+   */
+  #egpSearchKeyboard.egp-iphone-kb{
+    box-sizing:border-box !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    overscroll-behavior:contain !important;
+  }
+
+  #egpSearchKeyboard.egp-iphone-kb .egp-kb-letters-layout,
+  #egpSearchKeyboard.egp-iphone-kb .egp-kb-letter-row,
+  #egpSearchKeyboard.egp-iphone-kb .egp-kb-letter-functions{
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  /*
+   * Configuracion:
+   * en iPhone horizontal dejar fuera notch/Dynamic Island/home safe areas.
+   */
+  #egpConfigKeyboard.egp-iphone-kb{
+    left:env(safe-area-inset-left,0px) !important;
+    right:env(safe-area-inset-right,0px) !important;
+    width:auto !important;
+    box-sizing:border-box !important;
+    padding:
+      6px
+      max(8px,env(safe-area-inset-right,0px))
+      max(6px,env(safe-area-inset-bottom,0px))
+      max(8px,env(safe-area-inset-left,0px)) !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+  }
+
+  #egpConfigKeyboard.egp-iphone-kb .egp-config-kb-layout,
+  #egpConfigKeyboard.egp-iphone-kb .egp-config-kb-row,
+  #egpConfigKeyboard.egp-iphone-kb .egp-config-kb-functions,
+  #egpConfigKeyboard.egp-iphone-kb .egp-config-kb-numbers{
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+}
+</style>
+<!-- EGP_IPHONE_KEYBOARDS_SPACE_LANDSCAPE_V1_FIN -->
+
 <script id="EGP_CONFIG_CUSTOM_KEYBOARD_QWERTY_V1">
 (function(){
   'use strict';
@@ -4639,10 +4775,17 @@ body.egp-config-keyboard-open #configView.view.is-active{
   venue.setAttribute('spellcheck','false');
   venue.readOnly=true;
 
+  const isiPhone=
+    /iPhone|iPod/i.test(navigator.userAgent);
+
   const kb=document.createElement('div');
   kb.id='egpConfigKeyboard';
   kb.setAttribute('role','application');
   kb.setAttribute('aria-label','Teclado de Lugar');
+
+  if(isiPhone){
+    kb.classList.add('egp-iphone-kb');
+  }
 
   const letterRows=[
     ['Q','W','E','R','T','Y','U','I','O','P'],
@@ -4695,6 +4838,15 @@ body.egp-config-keyboard-open #configView.view.is-active{
             class="egp-config-kb-function"
             data-config-kb-action="numbers"
           >123</button>
+
+          ${isiPhone ? `
+            <button
+              type="button"
+              class="egp-config-kb-space"
+              data-config-kb-key=" "
+              aria-label="Espacio"
+            >espacio</button>
+          ` : ''}
 
           <button
             type="button"

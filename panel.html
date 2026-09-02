@@ -1454,6 +1454,31 @@ html.egp-android-panel
 </style>
 <!-- EGP_ANDROID_UI24R_KEEPALIVE_V1_FIN -->
 
+<!-- EGP_UI24R_BACK_VISIBILIDAD_Y_TOUCH_DIRECTO_V1_INICIO -->
+<style id="EGP_UI24R_BACK_VISIBILIDAD_Y_TOUCH_DIRECTO_V1">
+#ui24rBackBtn{
+  transition:none !important;
+  animation:none !important;
+  touch-action:none !important;
+  -webkit-user-select:none !important;
+  user-select:none !important;
+  -webkit-tap-highlight-color:transparent !important;
+}
+
+.ui24r-overlay:not(.is-open) #ui24rBackBtn{
+  display:none !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
+.ui24r-overlay.is-open #ui24rBackBtn{
+  display:block !important;
+  visibility:visible !important;
+  pointer-events:auto !important;
+}
+</style>
+<!-- EGP_UI24R_BACK_VISIBILIDAD_Y_TOUCH_DIRECTO_V1_FIN -->
+
 <!-- EGP_ANDROID_CONFIG_SCROLL_AISLADO_V1_INICIO -->
 <style id="EGP_ANDROID_CONFIG_SCROLL_AISLADO_V1">
 /*
@@ -2745,7 +2770,9 @@ html.egp-android-panel body:not(.live-mode)
   });
 
   /*
-   * EGP_UI24R_BACK_SIEMPRE_VISIBLE_Y_DRAG_RAPIDO_V1
+   * EGP_UI24R_BACK_TOUCH_DIRECTO_V2
+   * Movil usa touchstart/touchmove directo.
+   * Mouse/trackpad siguen usando Pointer Events.
    */
   let dragging=false;
   let moved=false;
@@ -2757,10 +2784,13 @@ html.egp-android-panel body:not(.live-mode)
   let dragH=0;
   let lastX=0;
   let lastY=0;
+  let pointerId=null;
 
   function viewportSize(){
     const vv=window.visualViewport;
     return {
+      left:Math.round((vv && vv.offsetLeft) || 0),
+      top:Math.round((vv && vv.offsetTop) || 0),
       width:Math.max(1,Math.round((vv && vv.width) || window.innerWidth || 1)),
       height:Math.max(1,Math.round((vv && vv.height) || window.innerHeight || 1))
     };
@@ -2769,10 +2799,10 @@ html.egp-android-panel body:not(.live-mode)
   function limitar(x,y,w,h){
     const vp=viewportSize();
     const margen=8;
-    const minX=margen;
-    const minY=margen;
-    const maxX=Math.max(minX,vp.width-w-margen);
-    const maxY=Math.max(minY,vp.height-h-margen);
+    const minX=vp.left+margen;
+    const minY=vp.top+margen;
+    const maxX=Math.max(minX,vp.left+vp.width-w-margen);
+    const maxY=Math.max(minY,vp.top+vp.height-h-margen);
 
     return {
       x:Math.max(minX,Math.min(Number(x)||0,maxX)),
@@ -2780,11 +2810,12 @@ html.egp-android-panel body:not(.live-mode)
     };
   }
 
-  function poner(x,y,w,h){
+  function aplicarBase(x,y,w,h){
     const width=Math.max(1,Number(w)||back.offsetWidth||1);
     const height=Math.max(1,Number(h)||back.offsetHeight||1);
     const pos=limitar(x,y,width,height);
 
+    back.style.setProperty('transition','none','important');
     back.style.setProperty('transform','none','important');
     back.style.setProperty('will-change','auto','important');
     back.style.setProperty('left',pos.x+'px','important');
@@ -2800,38 +2831,17 @@ html.egp-android-panel body:not(.live-mode)
         'egpUi24BackPos',
         JSON.stringify({x:x,y:y})
       );
-    }catch(err){}
+    }catch(_){}
   }
 
-  function mantenerDentro(){
-    if(dragging || !overlay.classList.contains('is-open')) return;
-
-    const r=back.getBoundingClientRect();
-    const pos=poner(r.left,r.top,r.width,r.height);
-    guardarPos(pos.x,pos.y);
-  }
-
-  try{
-    const pos=JSON.parse(localStorage.getItem('egpUi24BackPos')||'null');
-
-    if(pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)){
-      requestAnimationFrame(function(){
-        const r=back.getBoundingClientRect();
-        poner(pos.x,pos.y,r.width,r.height);
-      });
-    }
-  }catch(e){}
-
-  back.style.touchAction='none';
-
-  back.addEventListener('pointerdown',function(e){
+  function comenzarArrastre(x,y){
     dragging=true;
     moved=false;
 
     const r=back.getBoundingClientRect();
 
-    startX=e.clientX;
-    startY=e.clientY;
+    startX=x;
+    startY=y;
     baseX=r.left;
     baseY=r.top;
     dragW=r.width;
@@ -2839,23 +2849,18 @@ html.egp-android-panel body:not(.live-mode)
     lastX=baseX;
     lastY=baseY;
 
+    back.style.setProperty('transition','none','important');
     back.style.setProperty('will-change','transform','important');
+    back.style.setProperty('transform','translate3d(0,0,0)','important');
+  }
 
-    try{
-      back.setPointerCapture(e.pointerId);
-    }catch(err){}
-
-    e.preventDefault();
-    e.stopPropagation();
-  });
-
-  back.addEventListener('pointermove',function(e){
+  function moverArrastre(x,y){
     if(!dragging) return;
 
-    const dx=e.clientX-startX;
-    const dy=e.clientY-startY;
+    const dx=x-startX;
+    const dy=y-startY;
 
-    if(Math.abs(dx)>4 || Math.abs(dy)>4){
+    if(Math.abs(dx)>2 || Math.abs(dy)>2){
       moved=true;
     }
 
@@ -2868,37 +2873,126 @@ html.egp-android-panel body:not(.live-mode)
       'translate3d('+(pos.x-baseX)+'px,'+(pos.y-baseY)+'px,0)',
       'important'
     );
+  }
+
+  function finalizarArrastre(cerrarSiFueToque){
+    if(!dragging) return;
+
+    dragging=false;
+
+    const pos=aplicarBase(lastX,lastY,dragW,dragH);
+    guardarPos(pos.x,pos.y);
+
+    if(cerrarSiFueToque && !moved){
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden','true');
+    }
+  }
+
+  function mantenerDentro(){
+    if(dragging || !overlay.classList.contains('is-open')) return;
+
+    const r=back.getBoundingClientRect();
+    const pos=aplicarBase(r.left,r.top,r.width,r.height);
+    guardarPos(pos.x,pos.y);
+  }
+
+  try{
+    const pos=JSON.parse(localStorage.getItem('egpUi24BackPos')||'null');
+
+    if(pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)){
+      requestAnimationFrame(function(){
+        const r=back.getBoundingClientRect();
+        aplicarBase(pos.x,pos.y,r.width,r.height);
+      });
+    }
+  }catch(_){}
+
+  back.addEventListener('touchstart',function(e){
+    if(e.touches.length!==1) return;
+
+    const t=e.touches[0];
+    pointerId=null;
+    comenzarArrastre(t.clientX,t.clientY);
+
+    e.preventDefault();
+    e.stopPropagation();
+  },{passive:false});
+
+  back.addEventListener('touchmove',function(e){
+    if(!dragging || e.touches.length!==1) return;
+
+    const t=e.touches[0];
+    moverArrastre(t.clientX,t.clientY);
+
+    e.preventDefault();
+    e.stopPropagation();
+  },{passive:false});
+
+  back.addEventListener('touchend',function(e){
+    if(!dragging) return;
+
+    finalizarArrastre(true);
+
+    e.preventDefault();
+    e.stopPropagation();
+  },{passive:false});
+
+  back.addEventListener('touchcancel',function(e){
+    if(!dragging) return;
+
+    finalizarArrastre(false);
+
+    e.preventDefault();
+    e.stopPropagation();
+  },{passive:false});
+
+  back.addEventListener('pointerdown',function(e){
+    if(e.pointerType==='touch') return;
+
+    pointerId=e.pointerId;
+    comenzarArrastre(e.clientX,e.clientY);
+
+    try{
+      back.setPointerCapture(e.pointerId);
+    }catch(_){}
 
     e.preventDefault();
     e.stopPropagation();
   });
 
-  function terminarArrastre(e){
-    if(!dragging) return;
+  back.addEventListener('pointermove',function(e){
+    if(
+      !dragging ||
+      e.pointerType==='touch' ||
+      (pointerId!==null && e.pointerId!==pointerId)
+    ) return;
 
-    dragging=false;
-
-    const pos=poner(lastX,lastY,dragW,dragH);
-    guardarPos(pos.x,pos.y);
-
-    if(!moved){
-      overlay.classList.remove('is-open');
-      overlay.setAttribute('aria-hidden','true');
-    }
+    moverArrastre(e.clientX,e.clientY);
 
     e.preventDefault();
     e.stopPropagation();
-  }
+  });
 
-  back.addEventListener('pointerup',terminarArrastre);
+  back.addEventListener('pointerup',function(e){
+    if(
+      !dragging ||
+      e.pointerType==='touch' ||
+      (pointerId!==null && e.pointerId!==pointerId)
+    ) return;
+
+    finalizarArrastre(true);
+    pointerId=null;
+
+    e.preventDefault();
+    e.stopPropagation();
+  });
 
   back.addEventListener('pointercancel',function(e){
-    if(!dragging) return;
+    if(!dragging || e.pointerType==='touch') return;
 
-    dragging=false;
-
-    const pos=poner(lastX,lastY,dragW,dragH);
-    guardarPos(pos.x,pos.y);
+    finalizarArrastre(false);
+    pointerId=null;
 
     e.preventDefault();
     e.stopPropagation();
@@ -2906,8 +3000,9 @@ html.egp-android-panel body:not(.live-mode)
 
   function reencuadrarPronto(){
     requestAnimationFrame(mantenerDentro);
-    setTimeout(mantenerDentro,80);
-    setTimeout(mantenerDentro,250);
+    setTimeout(mantenerDentro,50);
+    setTimeout(mantenerDentro,180);
+    setTimeout(mantenerDentro,350);
   }
 
   window.addEventListener('resize',reencuadrarPronto);

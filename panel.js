@@ -1173,10 +1173,33 @@ document.documentElement.dataset.egmVersion="6.36.92";
     }
   }
 
+  /*
+   * EGP_UI24R_BACKGROUND_LIGHT_V1
+   * Panel normal: 150 ms.
+   * Ui24R abierta: 800 ms para liberar trabajo del hilo principal.
+   */
+  function localQueueSyncDelay(){
+    const overlay=document.getElementById('ui24rOverlay');
+
+    return overlay && overlay.classList.contains('is-open')
+      ? 800
+      : 150;
+  }
+
+  async function localQueueSyncLoop(){
+    localQueueTimer=1;
+
+    await refreshLocalQueue();
+
+    localQueueTimer=setTimeout(
+      localQueueSyncLoop,
+      localQueueSyncDelay()
+    );
+  }
+
   function startLocalQueueSync(){
     if(localQueueTimer)return;
-    refreshLocalQueue();
-    localQueueTimer=setInterval(refreshLocalQueue,150);
+    localQueueSyncLoop();
   }
 
   setTimeout(startLocalQueueSync,50);

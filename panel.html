@@ -3151,6 +3151,137 @@ html.egp-android-panel body:not(.live-mode)
 </style>
 <!-- EGP_SEARCH_CUSTOM_KEYBOARD_BW_V1_FIN -->
 
+<!-- EGP_SEARCH_CUSTOM_KEYBOARD_APPLE_V1_INICIO -->
+<style id="EGP_SEARCH_CUSTOM_KEYBOARD_APPLE_V1">
+/*
+ * Apariencia inspirada en el teclado claro de iPhone/iOS.
+ * Este bloque va después del override blanco/negro y lo reemplaza visualmente.
+ */
+#egpSearchKeyboard{
+  background:#d1d5db !important;
+  border:0 !important;
+  box-shadow:
+    0 -1px 0 rgba(0,0,0,.16),
+    0 -10px 26px rgba(0,0,0,.18) !important;
+  border-radius:0 !important;
+}
+
+#egpSearchKeyboard .egp-kb-top{
+  min-height:30px !important;
+  margin-bottom:7px !important;
+}
+
+#egpSearchKeyboard .egp-kb-mode-title{
+  color:#4b4b4f !important;
+  font-size:11px !important;
+  font-weight:700 !important;
+  letter-spacing:.04em !important;
+}
+
+#egpSearchKeyboard button{
+  background:#ffffff !important;
+  color:#111111 !important;
+  border:0 !important;
+  border-radius:7px !important;
+  box-shadow:
+    0 1px 0 rgba(0,0,0,.34),
+    0 1px 2px rgba(0,0,0,.18) !important;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Text",
+    "Helvetica Neue",
+    Arial,
+    sans-serif !important;
+  font-weight:500 !important;
+  letter-spacing:0 !important;
+}
+
+#egpSearchKeyboard .egp-kb-close,
+#egpSearchKeyboard .egp-kb-wide,
+#egpSearchKeyboard .egp-kb-switch,
+#egpSearchKeyboard .egp-kb-delete{
+  background:#aeb3bd !important;
+  color:#111111 !important;
+  border:0 !important;
+  box-shadow:
+    0 1px 0 rgba(0,0,0,.35),
+    0 1px 2px rgba(0,0,0,.14) !important;
+  font-weight:600 !important;
+}
+
+#egpSearchKeyboard button:active,
+#egpSearchKeyboard .egp-kb-close:active,
+#egpSearchKeyboard .egp-kb-wide:active,
+#egpSearchKeyboard .egp-kb-switch:active,
+#egpSearchKeyboard .egp-kb-delete:active{
+  background:#c7c9ce !important;
+  color:#111111 !important;
+  transform:translateY(1px) scale(.98) !important;
+  box-shadow:none !important;
+}
+
+/*
+ * Vertical: aspecto compacto similar al teclado de iPhone.
+ */
+@media (orientation:portrait) and (hover:none) and (pointer:coarse){
+  #egpSearchKeyboard{
+    padding:7px 5px max(8px,env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  #egpSearchKeyboard .egp-kb-grid{
+    gap:6px !important;
+  }
+
+  #egpSearchKeyboard button{
+    min-height:44px !important;
+    font-size:18px !important;
+  }
+
+  #egpSearchKeyboard .egp-kb-wide{
+    font-size:12px !important;
+  }
+
+  #egpSearchKeyboard .egp-kb-close{
+    min-height:31px !important;
+    height:31px !important;
+    font-size:11px !important;
+  }
+}
+
+/*
+ * Horizontal: mismo aspecto Apple pero más bajo para no tapar resultados.
+ */
+@media (orientation:landscape) and (hover:none) and (pointer:coarse){
+  #egpSearchKeyboard{
+    padding:6px !important;
+    border-radius:10px !important;
+  }
+
+  #egpSearchKeyboard .egp-kb-grid{
+    gap:4px !important;
+  }
+
+  #egpSearchKeyboard button{
+    min-height:clamp(32px,7.4dvh,41px) !important;
+    font-size:14px !important;
+    border-radius:6px !important;
+  }
+
+  #egpSearchKeyboard .egp-kb-wide{
+    font-size:10px !important;
+  }
+
+  #egpSearchKeyboard .egp-kb-close{
+    min-height:28px !important;
+    height:28px !important;
+    font-size:10px !important;
+  }
+}
+</style>
+<!-- EGP_SEARCH_CUSTOM_KEYBOARD_APPLE_V1_FIN -->
+
+
 
   <script src="./pwa.js?v=6.36.103-arranque-canonico"></script>
 

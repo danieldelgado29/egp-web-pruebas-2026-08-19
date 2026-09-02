@@ -5072,5 +5072,122 @@ body.egp-config-keyboard-open #configView.view.is-active{
 </script>
 <!-- EGP_UI24R_PERSISTENTE_POSTLOAD_V1_FIN -->
 
+
+<!-- EGP_IPHONE_DYNAMIC_ISLAND_SAFE_V1_INICIO -->
+<style id="EGP_IPHONE_DYNAMIC_ISLAND_SAFE_V1">
+/*
+ * Solo iPhone.
+ * La clase .egp-ios ya la activa egpIosMomentumV36.
+ *
+ * Vertical: safe-area-inset-top protege la Isla Dinamica.
+ * Horizontal: safe-area-inset-left/right protege el lado de la isla.
+ */
+body.egp-ios .app-shell{
+  padding-top:
+    max(
+      18px,
+      calc(env(safe-area-inset-top,0px) + 10px)
+    ) !important;
+
+  padding-left:
+    max(
+      12px,
+      calc(env(safe-area-inset-left,0px) + 12px)
+    ) !important;
+
+  padding-right:
+    max(
+      12px,
+      calc(env(safe-area-inset-right,0px) + 12px)
+    ) !important;
+
+  padding-bottom:
+    max(
+      40px,
+      calc(env(safe-area-inset-bottom,0px) + 18px)
+    ) !important;
+}
+
+/* La barra sticky de Control en vivo tampoco entra bajo la isla. */
+body.egp-ios .live-toolbar{
+  top:env(safe-area-inset-top,0px) !important;
+}
+
+/* Visores de pantalla completa: controles superiores dentro del área segura. */
+body.egp-ios .viewer-topbar{
+  padding-top:
+    max(
+      9px,
+      calc(env(safe-area-inset-top,0px) + 6px)
+    ) !important;
+
+  padding-left:
+    max(
+      16px,
+      calc(env(safe-area-inset-left,0px) + 12px)
+    ) !important;
+
+  padding-right:
+    max(
+      16px,
+      calc(env(safe-area-inset-right,0px) + 12px)
+    ) !important;
+}
+
+/* Login también respeta los bordes físicos del iPhone. */
+body.egp-ios #panelLogin{
+  padding-top:
+    max(
+      24px,
+      calc(env(safe-area-inset-top,0px) + 16px)
+    ) !important;
+
+  padding-left:
+    max(
+      24px,
+      calc(env(safe-area-inset-left,0px) + 16px)
+    ) !important;
+
+  padding-right:
+    max(
+      24px,
+      calc(env(safe-area-inset-right,0px) + 16px)
+    ) !important;
+
+  padding-bottom:
+    max(
+      24px,
+      calc(env(safe-area-inset-bottom,0px) + 16px)
+    ) !important;
+}
+
+/*
+ * Horizontal:
+ * iOS entrega automáticamente el inset del lado donde está la isla.
+ */
+@media (orientation:landscape){
+  body.egp-ios .app-shell{
+    padding-top:
+      max(
+        10px,
+        calc(env(safe-area-inset-top,0px) + 8px)
+      ) !important;
+
+    padding-left:
+      max(
+        12px,
+        calc(env(safe-area-inset-left,0px) + 12px)
+      ) !important;
+
+    padding-right:
+      max(
+        12px,
+        calc(env(safe-area-inset-right,0px) + 12px)
+      ) !important;
+  }
+}
+</style>
+<!-- EGP_IPHONE_DYNAMIC_ISLAND_SAFE_V1_FIN -->
+
 </body>
 </html>

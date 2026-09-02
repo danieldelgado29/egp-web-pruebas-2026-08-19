@@ -1872,6 +1872,66 @@ document.documentElement.dataset.egmVersion="6.36.92";
     cancelAnimationFrame(filterFrame);
     filterFrame=requestAnimationFrame(filterSongs);
   }
+  /*
+   * EGP_PANEL_SONG_LIST_WATCHDOG_V1
+   *
+   * Muy liviano: solo actua durante show, sin busqueda y con Ui24R cerrada.
+   * No modifica datos; re-renderiza o fuerza un nuevo filtrado.
+   */
+  function egpSongListWatchdog(){
+    if(!document.body.classList.contains('live-mode')) return;
+
+    const search=$('#songSearch');
+    if(!search || norm(search.value)) return;
+
+    const overlay=document.getElementById('ui24rOverlay');
+    if(overlay?.classList.contains('is-open')) return;
+
+    const list=$('#songList');
+    if(!list) return;
+
+    if(
+      Array.isArray(state.filtered) &&
+      state.filtered.length>0 &&
+      list.querySelectorAll('.song-card').length===0
+    ){
+      egpSongGuardDiagnostic(
+        'dom_empty_with_filtered_data',
+        {expectedCards:state.filtered.length}
+      );
+
+      renderSongs();
+      return;
+    }
+
+    if(
+      Array.isArray(state.songs) &&
+      state.songs.length>0 &&
+      Array.isArray(state.filtered) &&
+      state.filtered.length===0
+    ){
+      egpScheduleSongRecovery(
+        'filtered_empty_with_library_alive'
+      );
+    }
+  }
+
+  setInterval(egpSongListWatchdog,1000);
+
+  window.addEventListener(
+    'focus',
+    ()=>setTimeout(egpSongListWatchdog,60)
+  );
+
+  document.addEventListener(
+    'visibilitychange',
+    ()=>{
+      if(!document.hidden){
+        setTimeout(egpSongListWatchdog,60);
+      }
+    }
+  );
+
   $('#songSearch').addEventListener('input',scheduleFilterSongs);
   let repertoireCache={key:'',songs:[],numbers:new Map()};
   function invalidateRepertoireCache(){repertoireCache={key:'',songs:[],numbers:new Map()};}
@@ -1889,9 +1949,128 @@ document.documentElement.dataset.egmVersion="6.36.92";
     repertoireSongs();
     return repertoireCache.numbers.get(songId)||null;
   }
+  /*
+   * EGP_PANEL_SONG_LIST_GUARD_V1
+   *
+   * state.songs = biblioteca real en memoria.
+   * state.filtered = lista visible.
+   *
+   * Un snapshot/config transitorio nunca debe convertir una lista sana
+   * en una pantalla vacia durante un show.
+   */
+  let egpLastHealthySongList={
+    repertoire:'',
+    songs:[],
+    savedAt:0
+  };
+
+  let egpSongRecoveryTimer=0;
+  let egpSongRecoveryBusy=false;
+
+  function egpSongGuardDiagnostic(reason,extra={}){
+    const payload={
+      at:new Date().toISOString(),
+      reason,
+      repertoire:String(state.config?.repertoire||'todas'),
+      baseSongs:Array.isArray(state.songs)?state.songs.length:-1,
+      filtered:Array.isArray(state.filtered)?state.filtered.length:-1,
+      search:String($('#songSearch')?.value||''),
+      localQueueMode:LOCAL_QUEUE_MODE===true,
+      live:document.body.classList.contains('live-mode'),
+      ...extra
+    };
+
+    console.warn('EGP SONG LIST GUARD',payload);
+
+    try{
+      localStorage.setItem(
+        'egp-panel-song-list-guard-last-v1',
+        JSON.stringify(payload)
+      );
+    }catch(_){}
+  }
+
+  function egpScheduleSongRecovery(reason){
+    if(egpSongRecoveryTimer) return;
+
+    egpSongGuardDiagnostic(reason);
+
+    egpSongRecoveryTimer=setTimeout(()=>{
+      egpSongRecoveryTimer=0;
+
+      if(egpSongRecoveryBusy) return;
+
+      egpSongRecoveryBusy=true;
+
+      try{
+        invalidateRepertoireCache();
+        filterSongs();
+      }finally{
+        egpSongRecoveryBusy=false;
+      }
+    },300);
+  }
+
   function filterSongs(){
     const q=norm($('#songSearch').value);
-    const songs=repertoireSongs();
+    let songs=repertoireSongs();
+
+    const live=document.body.classList.contains('live-mode');
+    const repertoire=String(state.config?.repertoire||'todas');
+
+    if(
+      !q &&
+      live &&
+      Array.isArray(state.songs) &&
+      state.songs.length>0
+    ){
+      if(songs.length>0){
+        egpLastHealthySongList={
+          repertoire,
+          songs:[...songs],
+          savedAt:Date.now()
+        };
+      }else{
+        /*
+         * Si el mismo repertorio estaba sano hace un momento,
+         * NO pintar cero de inmediato.
+         *
+         * Se conserva solo como proteccion transitoria y se vuelve
+         * a calcular desde la biblioteca real cada 300 ms.
+         */
+        const healthy=
+          egpLastHealthySongList.repertoire===repertoire &&
+          egpLastHealthySongList.songs.length>0 &&
+          Date.now()-egpLastHealthySongList.savedAt<15000;
+
+        if(healthy){
+          const liveIds=new Set(state.songs.map(song=>String(song.id)));
+
+          const preserved=
+            egpLastHealthySongList.songs.filter(
+              song=>liveIds.has(String(song.id))
+            );
+
+          if(preserved.length>0){
+            songs=preserved;
+            egpScheduleSongRecovery(
+              'repertoire_temporarily_empty'
+            );
+          }
+        }else if(state.filtered.length>0){
+          /*
+           * Primer cero inesperado de un repertorio que aun no tiene
+           * snapshot sano: mantener la pantalla actual durante el
+           * primer reintento en vez de borrarla.
+           */
+          egpScheduleSongRecovery(
+            'first_unexpected_empty'
+          );
+          return;
+        }
+      }
+    }
+
     if(!q){
       state.filtered=songs;
     }else{

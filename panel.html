@@ -3032,14 +3032,12 @@ html.egp-android-panel body:not(.live-mode)
               class="egp-kb-wide egp-kb-switch"
               data-kb-action="numbers"
             >123</button>
-            ${isiPhone ? `
-              <button
-                type="button"
-                class="egp-kb-space"
-                data-kb-key=" "
-                aria-label="Espacio"
-              >espacio</button>
-            ` : ''}
+            <button
+              type="button"
+              class="egp-kb-space"
+              data-kb-key=" "
+              aria-label="Espacio"
+            >espacio</button>
             <button
               type="button"
               class="egp-kb-wide egp-kb-delete"
@@ -4755,6 +4753,31 @@ body.egp-config-keyboard-open #configView.view.is-active{
 </style>
 <!-- EGP_IPHONE_KEYBOARDS_SPACE_LANDSCAPE_V1_FIN -->
 
+<!-- EGP_ANDROID_KEYBOARDS_SPACE_V1_INICIO -->
+<style id="EGP_ANDROID_KEYBOARDS_SPACE_V1">
+/*
+ * La fila inferior de letras es igual en iPhone y Android:
+ * 123 | espacio | borrar.
+ * No cambia posicionamiento ni logica horizontal de ningun dispositivo.
+ */
+#egpSearchKeyboard .egp-kb-letter-functions,
+#egpConfigKeyboard .egp-config-kb-functions{
+  grid-template-columns:
+    minmax(58px,.8fr)
+    minmax(120px,2.2fr)
+    minmax(58px,.8fr) !important;
+}
+
+#egpSearchKeyboard .egp-kb-space,
+#egpConfigKeyboard .egp-config-kb-space{
+  text-transform:none !important;
+  font-size:12px !important;
+  font-weight:500 !important;
+  letter-spacing:0 !important;
+}
+</style>
+<!-- EGP_ANDROID_KEYBOARDS_SPACE_V1_FIN -->
+
 <script id="EGP_CONFIG_CUSTOM_KEYBOARD_QWERTY_V1">
 (function(){
   'use strict';
@@ -4839,14 +4862,12 @@ body.egp-config-keyboard-open #configView.view.is-active{
             data-config-kb-action="numbers"
           >123</button>
 
-          ${isiPhone ? `
-            <button
-              type="button"
-              class="egp-config-kb-space"
-              data-config-kb-key=" "
-              aria-label="Espacio"
-            >espacio</button>
-          ` : ''}
+          <button
+            type="button"
+            class="egp-config-kb-space"
+            data-config-kb-key=" "
+            aria-label="Espacio"
+          >espacio</button>
 
           <button
             type="button"

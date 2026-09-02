@@ -3644,128 +3644,135 @@ html.egp-android-panel body:not(.live-mode)
 <!-- EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1_FIN -->
 
 
-<!-- EGP_IPHONE_UI24R_MUSICOS_ISLAND_METHOD_V1_INICIO -->
-<script id="EGP_IPHONE_UI24R_MUSICOS_ISLAND_METHOD_V1">
+<!-- EGP_IPHONE_UI24R_MUSICOS_ISLAND_METHOD_V2_INICIO -->
+<script id="EGP_IPHONE_UI24R_MUSICOS_ISLAND_METHOD_V2">
 (function(){
   /*
-   * COPIA DEL MÉTODO QUE FUNCIONA EN EGP MÚSICOS.
+   * MISMO MÉTODO QUE EGP MÚSICOS.
    *
-   * NO redimensiona ni recorta el iframe.
-   * Panel.css ya tiene:
-   *   transform:scaleX(var(--egp-ui-sx,1))
-   *   transform-origin:var(--egp-ui-origin,50% 50%)
-   *
-   * Aquí solo calculamos esas dos variables.
+   * Diferencia respecto V1:
+   * este bloque está físicamente antes del iframe en panel.html,
+   * por eso esperamos a DOMContentLoaded antes de buscar #ui24rFrame.
    */
-  const iphone=
-    /iPhone|iPod/i.test(navigator.userAgent);
+  function iniciar(){
+    const iphone=
+      /iPhone|iPod/i.test(navigator.userAgent);
 
-  if(!iphone) return;
+    if(!iphone) return;
 
-  const frame=
-    document.getElementById('ui24rFrame');
+    const frame=
+      document.getElementById('ui24rFrame');
 
-  if(!frame) return;
-
-  function angulo(){
-    let a=0;
-
-    if(
-      screen.orientation &&
-      typeof screen.orientation.angle==='number'
-    ){
-      a=screen.orientation.angle;
-    }
-    else if(typeof window.orientation==='number'){
-      a=window.orientation;
+    if(!frame){
+      console.warn(
+        'EGP Ui24R Isla V2: iframe no encontrado'
+      );
+      return;
     }
 
-    return ((a%360)+360)%360;
-  }
+    function angulo(){
+      let a=0;
 
-  function ajustar(){
-    const landscape=
-      window.innerWidth >
-      window.innerHeight;
+      if(
+        screen.orientation &&
+        typeof screen.orientation.angle==='number'
+      ){
+        a=screen.orientation.angle;
+      }
+      else if(typeof window.orientation==='number'){
+        a=window.orientation;
+      }
 
-    /*
-     * Igual que Músicos:
-     * vertical queda exactamente a 100%.
-     */
-    if(!landscape){
+      return ((a%360)+360)%360;
+    }
+
+    function ajustar(){
+      const landscape=
+        window.innerWidth >
+        window.innerHeight;
+
+      if(!landscape){
+        frame.style.setProperty(
+          '--egp-ui-sx',
+          '1'
+        );
+
+        frame.style.setProperty(
+          '--egp-ui-origin',
+          '50% 50%'
+        );
+
+        return;
+      }
+
+      /*
+       * EXACTAMENTE la reserva que funciona en Músicos.
+       */
+      const margen=46;
+      const a=angulo();
+
+      const ladoIsla=
+        a===90
+          ? 'left'
+          : 'right';
+
+      const sx=
+        (
+          window.innerWidth -
+          margen
+        )
+        /
+        window.innerWidth;
+
       frame.style.setProperty(
         '--egp-ui-sx',
-        '1'
+        String(sx)
       );
 
       frame.style.setProperty(
         '--egp-ui-origin',
-        '50% 50%'
+        ladoIsla==='left'
+          ? '100% 50%'
+          : '0% 50%'
       );
-
-      return;
     }
 
-    /*
-     * Igual que Músicos:
-     * iPhone reserva 46 px para la Isla Dinámica.
-     */
-    const margen=46;
-    const a=angulo();
-
-    const ladoIsla=
-      a===90
-        ? 'left'
-        : 'right';
-
-    const sx=
-      (
-        window.innerWidth -
-        margen
-      )
-      /
-      window.innerWidth;
-
-    frame.style.setProperty(
-      '--egp-ui-sx',
-      String(sx)
-    );
-
-    /*
-     * Isla izquierda -> anclar borde derecho.
-     * Isla derecha   -> anclar borde izquierdo.
-     */
-    frame.style.setProperty(
-      '--egp-ui-origin',
-      ladoIsla==='left'
-        ? '100% 50%'
-        : '0% 50%'
-    );
-  }
-
-  window.addEventListener(
-    'resize',
-    ajustar
-  );
-
-  window.addEventListener(
-    'orientationchange',
-    function(){
-      setTimeout(ajustar,200);
-    }
-  );
-
-  if(window.visualViewport){
-    window.visualViewport.addEventListener(
+    window.addEventListener(
       'resize',
       ajustar
     );
+
+    window.addEventListener(
+      'orientationchange',
+      function(){
+        setTimeout(ajustar,80);
+        setTimeout(ajustar,200);
+        setTimeout(ajustar,500);
+      }
+    );
+
+    if(window.visualViewport){
+      window.visualViewport.addEventListener(
+        'resize',
+        ajustar
+      );
+    }
+
+    ajustar();
   }
 
-  ajustar();
+  if(document.readyState==='loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      iniciar,
+      {once:true}
+    );
+  }else{
+    iniciar();
+  }
 })();
 </script>
-<!-- EGP_IPHONE_UI24R_MUSICOS_ISLAND_METHOD_V1_FIN -->
+<!-- EGP_IPHONE_UI24R_MUSICOS_ISLAND_METHOD_V2_FIN -->
 
 <!-- EGP_UI24R_BACK_INDEPENDENT_LAYER_V1_INICIO -->
 <style id="EGP_UI24R_BACK_INDEPENDENT_LAYER_V1">

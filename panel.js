@@ -700,6 +700,28 @@ document.documentElement.dataset.egmVersion="6.36.92";
     }
     state.songs.forEach((song,index)=>{ if(!Number.isFinite(song._sourceIndex)) song._sourceIndex=index; });
     hydrateSavedState();
+
+    /*
+     * EGP_LOCAL_CORE_CUSTOM_SONGS_V1
+     *
+     * Con Internet, Firebase entrega biblioteca.customSongs.
+     * Con SOLO router, las custom persistentes viven en Local Core.
+     * Se cargan antes de construir repertorios.
+     */
+    try{
+      const localLibrary=await localQueueRequest('/api/custom-songs');
+
+      if(Array.isArray(localLibrary?.customSongs)){
+        mergeRemoteCustomSongs(localLibrary.customSongs);
+        saveStateLocalOnly();
+      }
+    }catch(err){
+      console.warn(
+        'Custom songs Local Core no disponibles; Firebase/localStorage continúan:',
+        err
+      );
+    }
+
     if(pendingRemoteLibrary){
       const b=pendingRemoteLibrary;
       if(b.songEdits&&typeof b.songEdits==='object') state.songEdits={...state.songEdits,...b.songEdits};

@@ -461,7 +461,20 @@ document.documentElement.dataset.egmVersion="6.36.92";
           if(b.songEdits&&typeof b.songEdits==='object') state.songEdits={...state.songEdits,...b.songEdits};
           if(Array.isArray(b.customSongs)) mergeRemoteCustomSongs(b.customSongs);
           if(state.songs.length){
-            state.songs=state.songs.map(song=>state.songEdits[song.id]?{...song,...state.songEdits[song.id]}:song);
+            /*
+             * EGP_EXPLICIT_REPERTOIRE_LISTS_V1
+             * Un snapshot Firebase no puede convertir 76 -> 2 por
+             * una copia vieja de `listas` dentro de songEdits.
+             */
+            state.songs=state.songs.map(
+              song=>
+                state.songEdits[song.id]
+                  ? mergeSongEditSafelyV1(
+                      song,
+                      state.songEdits[song.id]
+                    )
+                  : song
+            );
 
             /*
              * EGP_REMOTE_CUSTOM_SONGS_VISIBLE_REFRESH_V1
@@ -805,7 +818,22 @@ document.documentElement.dataset.egmVersion="6.36.92";
       const b=pendingRemoteLibrary;
       if(b.songEdits&&typeof b.songEdits==='object') state.songEdits={...state.songEdits,...b.songEdits};
       if(Array.isArray(b.customSongs)) mergeRemoteCustomSongs(b.customSongs);
-      state.songs=state.songs.map(song=>state.songEdits[song.id]?{...song,...state.songEdits[song.id]}:song);
+
+      /*
+       * EGP_EXPLICIT_REPERTOIRE_LISTS_V1
+       * Firebase puede editar otros campos, pero una `listas` legada
+       * no reemplaza la membresía base.
+       */
+      state.songs=state.songs.map(
+        song=>
+          state.songEdits[song.id]
+            ? mergeSongEditSafelyV1(
+                song,
+                state.songEdits[song.id]
+              )
+            : song
+      );
+
       saveStateLocalOnly();
     }
     buildRepertoires();
@@ -915,12 +943,96 @@ document.documentElement.dataset.egmVersion="6.36.92";
     sortMasterSongs();
   }
 
+  /*
+   * EGP_EXPLICIT_REPERTOIRE_LISTS_V1
+   *
+   * Problema histórico:
+   * state.songEdits llegó a guardar {...song} completo al editar letra,
+   * imagen, nombre, etc. Eso arrastró `listas` aunque el repertorio NO
+   * hubiese sido editado. Firebase podía entonces pisar canciones.json
+   * con membresías viejas.
+   *
+   * Regla nueva:
+   * - _listasRevision > 0 = listas editadas EXPLÍCITAMENTE en Repertorios.
+   *   Esas listas sí son autoritativas.
+   * - sin _listasRevision = songEdit legado.
+   *   Conservamos las listas base actuales y únicamente heredamos IDs
+   *   personalizados `rep-*`, para no perder repertorios personalizados
+   *   creados históricamente.
+   */
+  function mergeSongEditSafelyV1(song,edit){
+    if(!song || !edit || typeof edit!=='object'){
+      return song;
+    }
+
+    const incoming={...edit};
+
+    if(Array.isArray(incoming.listas)){
+      const explicitRevision=
+        Number(incoming._listasRevision)||0;
+
+      if(explicitRevision>0){
+        incoming.listas=[
+          ...new Set([
+            'todas',
+            ...incoming.listas
+              .map(String)
+              .filter(id=>id && id!=='todas')
+          ])
+        ];
+
+      }else{
+        const currentLists=
+          Array.isArray(song.listas)
+            ? song.listas.map(String)
+            : [];
+
+        const legacyCustomLists=
+          incoming.listas
+            .map(String)
+            .filter(
+              id=>
+                id.startsWith('rep-')
+            );
+
+        incoming.listas=[
+          ...new Set([
+            'todas',
+            ...currentLists.filter(
+              id=>id && id!=='todas'
+            ),
+            ...legacyCustomLists
+          ])
+        ];
+      }
+    }
+
+    return {
+      ...song,
+      ...incoming
+    };
+  }
+
   function hydrateSavedState(){
     const saved = JSON.parse(localStorage.getItem('egm-panel-v3') || '{}');
     state.config = saved.config || null;
     state.customSongs = Array.isArray(saved.customSongs) ? saved.customSongs : [];
     state.songEdits = saved.songEdits && typeof saved.songEdits==='object' ? saved.songEdits : {};
-    state.songs = state.songs.map(song=>state.songEdits[song.id] ? {...song,...state.songEdits[song.id]} : song);
+
+    /*
+     * EGP_EXPLICIT_REPERTOIRE_LISTS_V1
+     * localStorage antiguo tampoco puede reinyectar listas obsoletas.
+     */
+    state.songs = state.songs.map(
+      song=>
+        state.songEdits[song.id]
+          ? mergeSongEditSafelyV1(
+              song,
+              state.songEdits[song.id]
+            )
+          : song
+    );
+
     state.customRepertoires = Array.isArray(saved.customRepertoires) ? saved.customRepertoires : [];
     state.songs = [...state.songs, ...state.customSongs];
     sortMasterSongs();
@@ -5758,12 +5870,27 @@ document.documentElement.dataset.egmVersion="6.36.92";
       let item=state.customRepertoires.find(r=>r.id===rep.id);
       if(!item){item={id:rep.id,name:rep.name};state.customRepertoires.push(item);}
       item.name=name;
+      const listasRevision=Date.now();
+
       state.songs.forEach(song=>{
         const listas=new Set(song.listas||[]);listas.add('todas');
         checked.has(song.id)?listas.add(rep.id):listas.delete(rep.id);
         song.listas=[...listas];
+
         const ci=state.customSongs.findIndex(s=>s.id===song.id);
-        if(ci>=0)state.customSongs[ci]={...song};else state.songEdits[song.id]={...song};
+
+        if(ci>=0){
+          state.customSongs[ci]={...song};
+        }else{
+          /*
+           * EGP_EXPLICIT_REPERTOIRE_LISTS_V1
+           * Este cambio SÍ proviene del editor de repertorios.
+           */
+          state.songEdits[song.id]={
+            ...song,
+            _listasRevision:listasRevision
+          };
+        }
       });
       if(state.config?.repertoire===rep.id)state.config.repertoireName=name;
       invalidateRepertoireCache();
@@ -5787,12 +5914,23 @@ document.documentElement.dataset.egmVersion="6.36.92";
     askConfirm('Duplicar repertorio',`Se creará “${name}” con ${sourceIds.size} canciones.`,()=>{
       const id=`rep-${slug(name)}-${Date.now().toString().slice(-5)}`;
       state.customRepertoires.push({id,name});
+      const listasRevision=Date.now();
+
       state.songs.forEach(song=>{
         const listas=new Set(song.listas||[]);listas.add('todas');
         if(sourceIds.has(song.id))listas.add(id);
         song.listas=[...listas];
+
         const ci=state.customSongs.findIndex(s=>s.id===song.id);
-        if(ci>=0)state.customSongs[ci]={...song};else state.songEdits[song.id]={...song};
+
+        if(ci>=0){
+          state.customSongs[ci]={...song};
+        }else{
+          state.songEdits[song.id]={
+            ...song,
+            _listasRevision:listasRevision
+          };
+        }
       });
       activeRepertoireId=id;
       resetRepertoireDraft(id);
@@ -5805,7 +5943,37 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const rep=allRepertoires().find(r=>r.id===activeRepertoireId);if(!rep||rep.id==='todas')return;
     askConfirm('Eliminar repertorio',`Se quitará “${rep.name}” de todas las canciones. Las canciones no serán eliminadas.`,()=>{
       state.customRepertoires=state.customRepertoires.filter(r=>r.id!==rep.id);
-      state.songs.forEach(song=>{song.listas=[...new Set(['todas',...(song.listas||[]).filter(id=>id!==rep.id&&id!=='todas')])];const ci=state.customSongs.findIndex(s=>s.id===song.id);if(ci>=0)state.customSongs[ci]={...song};else state.songEdits[song.id]={...song};});
+
+      const listasRevision=Date.now();
+
+      state.songs.forEach(song=>{
+        song.listas=[
+          ...new Set([
+            'todas',
+            ...(song.listas||[])
+              .filter(
+                id=>
+                  id!==rep.id &&
+                  id!=='todas'
+              )
+          ])
+        ];
+
+        const ci=
+          state.customSongs.findIndex(
+            s=>s.id===song.id
+          );
+
+        if(ci>=0){
+          state.customSongs[ci]={...song};
+        }else{
+          state.songEdits[song.id]={
+            ...song,
+            _listasRevision:listasRevision
+          };
+        }
+      });
+
       if(state.config?.repertoire===rep.id){state.config.repertoire='todas';state.config.repertoireName='Todas las canciones';}
       activeRepertoireId=allRepertoires().find(r=>r.id!=='todas')?.id||'todas';
       saveLibraryState();buildRepertoires();renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));toast('Guardado exitosamente');

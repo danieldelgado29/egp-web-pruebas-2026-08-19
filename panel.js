@@ -293,6 +293,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
   let remoteShowGeneration=0;
   let lastAppliedRemoteRevision=0;
   let lastAppliedCoreRevision=0;
+
+  /*
+   * EGP_SHOW_SEMANTIC_STATE_V3
+   * La cola y el show tienen ciclos de cambio distintos.
+   */
+  let lastAppliedCoreShowSignature='';
+  let currentAppliedShowSession='';
   const DEVICE_ID=sessionStorage.getItem('egm-device-id')||(`dev-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   sessionStorage.setItem('egm-device-id',DEVICE_ID);
 
@@ -1260,19 +1267,17 @@ document.documentElement.dataset.egmVersion="6.36.92";
         ? snapshot.queue
         : [];
 
-    const queueRevision=rows.reduce(
-      (max,row)=>Math.max(
-        max,
-        Number(row?.updated_at)||0
-      ),
-      0
-    );
-
+    /*
+     * EGP_SHOW_SEMANTIC_STATE_V3
+     *
+     * MUY IMPORTANTE:
+     * la revisión del SHOW no puede incluir updated_at de la COLA.
+     * Cola se sincroniza abajo por su propio camino.
+     */
     const revision=Math.max(
       Number(pub.show_revision)||0,
       Number(pub.updated_at)||0,
-      Number(show.updatedAt)||0,
-      queueRevision
+      Number(show.updatedAt)||0
     );
 
     const active=show.active===true;
@@ -1761,6 +1766,44 @@ document.documentElement.dataset.egmVersion="6.36.92";
     return true;
   }
 
+  /*
+   * EGP_SHOW_SEMANTIC_STATE_V3
+   *
+   * Firma SOLO de lo que cambia el significado/visual del show.
+   * No incluye cola/tocadas: ellas ya tienen sincronización propia.
+   */
+  function egpShowSemanticSignature(data){
+    if(!data||typeof data!=='object')return '';
+
+    return JSON.stringify([
+      data.show_activo===true,
+      String(
+        data.show_session_id ||
+        data.show_id ||
+        data.inicio_show ||
+        ''
+      ),
+      String(
+        data.lista_activa ||
+        data.listaActiva ||
+        'todas'
+      ),
+      String(data.repertorio_nombre||''),
+      String(data.lugar||''),
+      String(data.perfil_clientes||'medio'),
+      data.pedidos_whatsapp===true,
+      data.pedidos_panel===true,
+      String(data.pedidos_modo||'libre'),
+      data.mostrar_cola!==false,
+      data.uso_publicidad===true,
+      Number(data.inicio_show)||0,
+      Number(data.cronometro_schema)||0,
+      Number(data.cronometro_elapsed_ms)||0,
+      data.cronometro_running===true,
+      Number(data.cronometro_started_at)||0
+    ]);
+  }
+
   function applyRemotePanelState(data,options={}){
     if(!data||typeof data!=='object')return;
 
@@ -1791,12 +1834,24 @@ document.documentElement.dataset.egmVersion="6.36.92";
       );
 
     if(authority==='core'){
+      /*
+       * EGP_SHOW_SEMANTIC_STATE_V3
+       *
+       * Para Core manda la FIRMA del show, no una revisión mezclada
+       * accidentalmente con cambios de cola.
+       */
+      const semanticSignature=
+        egpShowSemanticSignature(data);
+
       if(
-        revision &&
-        revision<=lastAppliedCoreRevision
+        semanticSignature &&
+        semanticSignature===lastAppliedCoreShowSignature
       ){
         return;
       }
+
+      lastAppliedCoreShowSignature=
+        semanticSignature;
 
       if(revision){
         lastAppliedCoreRevision=revision;
@@ -1832,7 +1887,49 @@ document.documentElement.dataset.egmVersion="6.36.92";
         if(!options.skipQueue)normalizeRemoteQueueIfNeeded(incomingQueue,state.played);
       }
       const remoteActive=data.show_activo===true;
-      if(Date.now()<localShowTransitionUntil && localDesiredShowActive!==null && remoteActive!==localDesiredShowActive)return;
+
+      const incomingShowSession=String(
+        data.show_session_id ||
+        data.show_id ||
+        data.inicio_show ||
+        ''
+      );
+
+      const isNewShowSession=
+        remoteActive &&
+        incomingShowSession &&
+        incomingShowSession!==currentAppliedShowSession;
+
+      /*
+       * EGP_NEW_SHOW_REARMS_UI_V3
+       *
+       * Un show NUEVO siempre rearma autoentrada.
+       * Esto NO afecta Atrás dentro del mismo show.
+       */
+      if(isNewShowSession){
+        currentAppliedShowSession=
+          incomingShowSession;
+
+        configOpenedFromLive=false;
+        window.__egpAutoEntrarShowActivoLanV1=false;
+
+        /*
+         * Una transición local antigua jamás puede bloquear un show
+         * nuevo iniciado desde otro dispositivo.
+         */
+        localDesiredShowActive=null;
+        localShowTransitionUntil=0;
+      }
+
+      if(
+        !isNewShowSession &&
+        Date.now()<localShowTransitionUntil &&
+        localDesiredShowActive!==null &&
+        remoteActive!==localDesiredShowActive
+      ){
+        return;
+      }
+
       if(remoteActive){
         showActiveConfirmed=true;
         const repertoire=data.lista_activa||data.listaActiva||'todas';
@@ -1983,16 +2080,52 @@ document.documentElement.dataset.egmVersion="6.36.92";
           return;
         }
 
+        /*
+         * EGP_FINISH_ONCE_V3
+         *
+         * Finalizar es una transición, no un evento repetible por polling.
+         */
+        const wasActuallyInShow=
+          showActiveConfirmed===true ||
+          Boolean(currentAppliedShowSession) ||
+          document.body.classList.contains('live-mode');
+
         showActiveConfirmed=false;
+        currentAppliedShowSession='';
         configOpenedFromLive=false;
+        localDesiredShowActive=null;
+        localShowTransitionUntil=0;
 
         try{localStorage.removeItem(PANEL_AUTH_SESSION_KEY);}catch(_){}
-    state.config=null;state.queue=[];state.played.clear();
+
+        state.config=null;
+        state.queue=[];
+        state.played.clear();
+
         setStatus(false);
-        applyRemoteShowTimer({schema:SHOW_TIMER_SCHEMA,elapsedMs:0,running:false,startedAt:0});
+
+        applyRemoteShowTimer({
+          schema:SHOW_TIMER_SCHEMA,
+          elapsedMs:0,
+          running:false,
+          startedAt:0
+        });
+
         saveStateLocalOnly();
-        // El cierre remoto es global: ningún modal puede impedir volver a Configuración.
-        if(panelAuthValid()&&$('#panelLogin').hidden){closeDialogsForRemoteShowEnd();showConfig();toast('El show fue finalizado desde otro dispositivo.');}
+
+        if(
+          panelAuthValid() &&
+          $('#panelLogin').hidden
+        ){
+          closeDialogsForRemoteShowEnd();
+          showConfig(false);
+
+          if(wasActuallyInShow){
+            toast(
+              'El show fue finalizado desde otro dispositivo.'
+            );
+          }
+        }
       }
       renderQueue();
       if(document.body.classList.contains('live-mode')){invalidateRepertoireCache();filterSongs();}
@@ -2010,6 +2143,16 @@ document.documentElement.dataset.egmVersion="6.36.92";
     askConfirm('Comenzar nuevo show','Se guardará esta configuración y se reiniciará la cola del show anterior.',()=>{
       // Entrada inmediata: no esperar una lectura de verificación para mostrar Control en vivo.
       remoteShowGeneration++;localDesiredShowActive=true;showActiveConfirmed=true;localShowTransitionUntil=Date.now()+10000;
+
+      /*
+       * EGP_NEW_SHOW_REARMS_UI_V3
+       * Registrar la misma identidad que publicaremos a Core/Firebase.
+       */
+      currentAppliedShowSession=
+        `show-${new Date(config.startedAt).getTime()}`;
+      configOpenedFromLive=false;
+      window.__egpAutoEntrarShowActivoLanV1=false;
+
       state.config=config;state.queue=[];state.played.clear();addVenueOption(venue);
       startNewShowTimer();
       saveStateLocalOnly();

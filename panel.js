@@ -292,6 +292,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   let egpPedidosLan=[];
   let remoteShowGeneration=0;
   let lastAppliedRemoteRevision=0;
+  let lastAppliedCoreRevision=0;
   const DEVICE_ID=sessionStorage.getItem('egm-device-id')||(`dev-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   sessionStorage.setItem('egm-device-id',DEVICE_ID);
 
@@ -1227,303 +1228,142 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
 
+  /*
+   * EGP_CORE_USES_REMOTE_RULES_V2
+   *
+   * Local Core se convierte al MISMO contrato que config/estado de Firebase.
+   * Desde aquí no existen dos reglas de interfaz.
+   */
+  function egpCoreSnapshotToPanelState(snapshot){
+    const pub=
+      snapshot?.publicConfig &&
+      typeof snapshot.publicConfig==='object'
+        ? snapshot.publicConfig
+        : {};
+
+    const show=
+      snapshot?.show &&
+      typeof snapshot.show==='object'
+        ? snapshot.show
+        : {};
+
+    const rows=
+      Array.isArray(snapshot?.queue)
+        ? snapshot.queue
+        : [];
+
+    const queueRevision=rows.reduce(
+      (max,row)=>Math.max(
+        max,
+        Number(row?.updated_at)||0
+      ),
+      0
+    );
+
+    const revision=Math.max(
+      Number(pub.show_revision)||0,
+      Number(pub.updated_at)||0,
+      Number(show.updatedAt)||0,
+      queueRevision
+    );
+
+    const active=show.active===true;
+
+    const queue=rows
+      .slice()
+      .sort(
+        (a,b)=>
+          (Number(a?.position)||0)-
+          (Number(b?.position)||0)
+      )
+      .map(row=>String(row?.id||''))
+      .filter(Boolean);
+
+    const played=rows
+      .filter(row=>row?.played===true)
+      .map(row=>String(row?.id||''))
+      .filter(Boolean);
+
+    return {
+      ...pub,
+
+      show_activo:active,
+      show_active:active,
+
+      lugar:String(
+        pub.lugar ??
+        show.venue ??
+        ''
+      ),
+
+      lista_activa:String(
+        pub.lista_activa ||
+        pub.listaActiva ||
+        'todas'
+      ),
+
+      listaActiva:String(
+        pub.listaActiva ||
+        pub.lista_activa ||
+        'todas'
+      ),
+
+      inicio_show:Number(
+        pub.inicio_show ||
+        pub.show_id ||
+        0
+      )||0,
+
+      cronometro_schema:
+        Number(pub.cronometro_schema)||0,
+
+      cronometro_elapsed_ms:
+        Math.max(
+          0,
+          Number(pub.cronometro_elapsed_ms)||0
+        ),
+
+      cronometro_running:
+        active &&
+        pub.cronometro_running===true,
+
+      cronometro_started_at:
+        active
+          ? Number(pub.cronometro_started_at)||0
+          : 0,
+
+      cola:active?queue:[],
+      tocadas:active?played:[],
+
+      show_revision:revision,
+      updated_at:revision
+    };
+  }
+
+
   function applyLocalQueueSnapshot(snapshot,{force=false}={}){
     if(!snapshot||!Array.isArray(snapshot.queue))return false;
 
     /*
-     * LOCAL CORE /api/state tiene dos fuentes:
+     * EGP_CORE_USES_REMOTE_RULES_V2
      *
-     * - snapshot.show.active / snapshot.show.venue
-     *   = estado REAL e inmediato del show en la LAN.
-     *
-     * - snapshot.publicConfig
-     *   = repertorio, pedidos y demás configuración publicada.
-     *
-     * Panel antes miraba solo publicConfig.show_active.
-     * Eso hacía que un Android sin Internet recibiera cola pero
-     * permaneciera en Configuración aunque show.active === true.
+     * Esta es la pieza central:
+     * Core NO interpreta show/config/timer por una ruta distinta.
+     * Se adapta y se entrega a applyRemotePanelState(), exactamente
+     * como el snapshot de Internet.
      */
-    const rawLocalPublicConfig=
-      snapshot.publicConfig &&
-      typeof snapshot.publicConfig==='object'
-        ? snapshot.publicConfig
-        : null;
+    const corePanelState=
+      egpCoreSnapshotToPanelState(snapshot);
 
-    const localShow=
-      snapshot.show &&
-      typeof snapshot.show==='object'
-        ? snapshot.show
-        : null;
-
-    const localPublicConfig=
-      rawLocalPublicConfig || localShow
-        ? {
-            ...(rawLocalPublicConfig||{}),
-
-            ...(localShow
-              ? {
-                  show_active:
-                    localShow.active===true,
-
-                  lugar:
-                    String(
-                      localShow.venue ??
-                      rawLocalPublicConfig?.lugar ??
-                      ''
-                    )
-                }
-              : {})
-          }
-        : null;
-
-    if(
-      localPublicConfig &&
-      typeof localPublicConfig.show_active==='boolean'
-    ){
-      const localActive=
-        localPublicConfig.show_active===true;
-
-      const localChanged=
-        lastCoreShowActive!==localActive;
-
-      lastCoreShowActive=localActive;
-      showActiveConfirmed=localActive;
-      setStatus(localActive);
-
-      if(localActive){
-        const oldConfig=state.config||{};
-
-        const repertoire=String(
-          localPublicConfig.lista_activa ||
-          localPublicConfig.listaActiva ||
-          oldConfig.repertoire ||
-          'todas'
-        );
-
-        const select=$('#repertoireSelect');
-
-        const option=select
-          ? [...select.options].find(
-              o=>o.value===repertoire
-            )
-          : null;
-
-        const repertoireName=String(
-          localPublicConfig.repertorio_nombre ||
-          option?.dataset?.name ||
-          option?.textContent?.replace(/ · .*$/,'') ||
-          oldConfig.repertoireName ||
-          titleFromId(repertoire)
-        );
-
-        const requests=
-          localPublicConfig.pedidos_panel===true;
-
-        const whatsapp=requests
-          ? false
-          : localPublicConfig.pedidos_whatsapp===true;
-
-        const startedRaw=Number(
-          localPublicConfig.inicio_show ||
-          localPublicConfig.show_id ||
-          0
-        );
-
-        const nextConfig={
-          ...oldConfig,
-          venue:String(
-            localPublicConfig.lugar ??
-            oldConfig.venue ??
-            ''
-          ),
-          repertoire,
-          repertoireName,
-          profile:String(
-            localPublicConfig.perfil_clientes ||
-            oldConfig.profile ||
-            'medio'
-          ),
-          whatsapp,
-          requests,
-          requestsMode:
-            localPublicConfig.pedidos_modo==='uno_por_turno'
-              ? 'uno_por_turno'
-              : 'libre',
-          publicQueue:
-            localPublicConfig.mostrar_cola!==false,
-          advertising:
-            localPublicConfig.uso_publicidad===true,
-          startedAt:
-            startedRaw>0
-              ? new Date(startedRaw).toISOString()
-              : (
-                  oldConfig.startedAt ||
-                  new Date().toISOString()
-                )
-        };
-
-        const configChanged=
-          !state.config ||
-          oldConfig.venue!==nextConfig.venue ||
-          oldConfig.repertoire!==nextConfig.repertoire ||
-          oldConfig.repertoireName!==nextConfig.repertoireName ||
-          oldConfig.profile!==nextConfig.profile ||
-          oldConfig.whatsapp!==nextConfig.whatsapp ||
-          oldConfig.requests!==nextConfig.requests ||
-          oldConfig.requestsMode!==nextConfig.requestsMode ||
-          oldConfig.publicQueue!==nextConfig.publicQueue ||
-          oldConfig.advertising!==nextConfig.advertising ||
-          oldConfig.startedAt!==nextConfig.startedAt;
-
-        if(configChanged){
-          state.config=nextConfig;
-
-          $('#venueInput').value=
-            state.config.venue;
-
-          $('#profileSelect').value=
-            state.config.profile;
-
-          $('#whatsappToggle').checked=
-            state.config.whatsapp===true;
-
-          const requestsToggle=
-            document.getElementById(
-              'requestsToggle'
-            );
-
-          if(requestsToggle){
-            requestsToggle.checked=
-              state.config.requests===true;
-          }
-
-          const requestsMode=
-            document.getElementById(
-              'requestsModeSelect'
-            );
-
-          if(requestsMode){
-            requestsMode.value=
-              state.config.requestsMode;
-          }
-
-          $('#publicQueueToggle').checked=
-            state.config.publicQueue!==false;
-
-          $('#advertisingToggle').checked=
-            state.config.advertising===true;
-
-          if(
-            select &&
-            [...select.options].some(
-              o=>o.value===repertoire
-            )
-          ){
-            select.value=repertoire;
-          }
-
-          $('#liveRepertoireName').textContent=
-            repertoireName;
-
-          invalidateRepertoireCache();
-          saveStateLocalOnly();
-        }
-
-        /*
-         * EGP_CORE_TIMER_AUTHORITY_V1
-         * El mismo ancla del Core se aplica en Mac/iPhone/Android.
-         */
-        applyRemoteShowTimer({
-          schema:
-            Number(
-              localPublicConfig.cronometro_schema
-            )||0,
-          elapsedMs:
-            Number(
-              localPublicConfig.cronometro_elapsed_ms
-            )||0,
-          running:
-            localPublicConfig.cronometro_running===true,
-          runningPresent:
-            Object.prototype.hasOwnProperty.call(
-              localPublicConfig,
-              'cronometro_running'
-            ),
-          startedAt:
-            Number(
-              localPublicConfig.cronometro_started_at
-            )||0
-        });
-
-        if(
-          panelAuthValid() &&
-          $('#panelLogin').hidden
-        ){
-          const continueBtn=
-            $('#continueShowBtn');
-
-          if(configOpenedFromLive){
-            if(continueBtn){
-              continueBtn.hidden=false;
-            }
-          }else if(
-            !document.body.classList.contains(
-              'live-mode'
-            )
-          ){
-            showLive();
-          }
-        }
-
-      }else if(
-        localDesiredShowActive!==true
-      ){
-        /*
-         * EGP_CORE_FINISH_GLOBAL_V1
-         * Core inactivo = todos terminan el mismo show.
-         */
-        const needsLocalFinishApply=
-          localChanged ||
-          Boolean(state.config) ||
-          document.body.classList.contains('live-mode') ||
-          configOpenedFromLive ||
-          showTimer.running ||
-          showTimer.elapsedMs>0;
-
-        showActiveConfirmed=false;
-        configOpenedFromLive=false;
-        window.__egpAutoEntrarShowActivoLanV1=false;
-
-        const continueBtn=$('#continueShowBtn');
-        if(continueBtn){
-          continueBtn.hidden=true;
-        }
-
-        if(needsLocalFinishApply){
-          state.config=null;
-          state.queue=[];
-          state.played.clear();
-
-          showTimer={
-            elapsedMs:0,
-            running:false,
-            startedAt:0
-          };
-          saveShowTimer();
-          showTimerLoop();
-
-          saveStateLocalOnly();
-
-          if(
-            panelAuthValid() &&
-            $('#panelLogin').hidden
-          ){
-            closeDialogsForRemoteShowEnd();
-            showConfig(false);
-          }
-        }
+    applyRemotePanelState(
+      corePanelState,
+      {
+        skipQueue:true,
+        skipPlayed:true,
+        allowWhileLocal:true,
+        authority:'core'
       }
-    }
+    );
 
     if(!force&&(queueDragState.active||queueDragState.saving))return false;
 
@@ -1690,7 +1530,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
             {
               skipQueue:true,
               skipPlayed:true,
-              allowWhileLocal:true
+              allowWhileLocal:true,
+              authority:'firebase'
             }
           );
         }
@@ -1915,20 +1756,56 @@ document.documentElement.dataset.egmVersion="6.36.92";
   function applyRemotePanelState(data,options={}){
     if(!data||typeof data!=='object')return;
 
+    const authority=
+      options.authority==='core'
+        ? 'core'
+        : 'firebase';
+
     /*
-     * EGP_CORE_SHOW_AUTHORITY_V1
-     * Core accesible = Firebase no modifica configuración, cronómetro
-     * ni estado activo/finalizado del show.
+     * EGP_CORE_USES_REMOTE_RULES_V2
+     *
+     * Core vivo bloquea snapshots de Firebase, pero el propio Core
+     * entra deliberadamente por esta MISMA función.
      */
     if(
+      authority==='firebase' &&
       LOCAL_QUEUE_MODE===true &&
       options.allowWhileLocal!==true
     ){
       return;
     }
-    const revision=Number(data.show_revision||data.updated_at||0);
-    if(revision&&revision<lastAppliedRemoteRevision)return;
-    if(revision)lastAppliedRemoteRevision=revision;
+
+    const revision=
+      Number(
+        data.show_revision ||
+        data.updated_at ||
+        0
+      );
+
+    if(authority==='core'){
+      if(
+        revision &&
+        revision<=lastAppliedCoreRevision
+      ){
+        return;
+      }
+
+      if(revision){
+        lastAppliedCoreRevision=revision;
+      }
+
+    }else{
+      if(
+        revision &&
+        revision<lastAppliedRemoteRevision
+      ){
+        return;
+      }
+
+      if(revision){
+        lastAppliedRemoteRevision=revision;
+      }
+    }
     applyingRemoteShowState=true;
     try{
       const incomingQueue=Array.isArray(data.cola)?data.cola.map(String):[];
@@ -2082,7 +1959,16 @@ document.documentElement.dataset.egmVersion="6.36.92";
          */
         window.__egpAutoEntrarShowActivoLanV1=false;
 
-        if(LOCAL_QUEUE_MODE===true){
+        /*
+         * EGP_CORE_USES_REMOTE_RULES_V2
+         * Ese return solo protege contra un Firebase viejo.
+         * Si quien habla es Core, se ejecuta la MISMA finalización global
+         * que ya funciona por Internet.
+         */
+        if(
+          LOCAL_QUEUE_MODE===true &&
+          authority!=='core'
+        ){
           saveStateLocalOnly();
           renderQueue();
           renderSongs();
@@ -2090,6 +1976,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
         }
 
         showActiveConfirmed=false;
+        configOpenedFromLive=false;
 
         try{localStorage.removeItem(PANEL_AUTH_SESSION_KEY);}catch(_){}
     state.config=null;state.queue=[];state.played.clear();

@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-core-autoridad-show-v1";
+const VERSION = "egm-v6.36.103-mismas-reglas-core-firebase-v2";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [

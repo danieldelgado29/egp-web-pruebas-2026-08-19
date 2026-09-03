@@ -1697,6 +1697,41 @@ document.documentElement.dataset.egmVersion="6.36.92";
         saveStateLocalOnly();
 
         /*
+         * EGP_REMOTE_SHOW_IMMEDIATE_LIVE_V2
+         *
+         * Regla global:
+         * cuando otro Panel publica un show_activo=true por Firebase,
+         * cualquier Panel YA autenticado y todavía en Configuración
+         * entra inmediatamente a Control en vivo.
+         *
+         * Única excepción:
+         * configOpenedFromLive=true significa que el usuario abrió
+         * Configuración voluntariamente DESDE este mismo show.
+         * En ese caso se respeta su posición y se muestra Continuar show.
+         */
+        const egpContinueRemoteV2=$('#continueShowBtn');
+
+        if(
+          egpContinueRemoteV2 &&
+          $('#configView')?.classList.contains('is-active')
+        ){
+          egpContinueRemoteV2.hidden=false;
+        }
+
+        if(
+          panelAuthValid() &&
+          $('#panelLogin').hidden &&
+          !configOpenedFromLive &&
+          !document.querySelector(
+            '#imageEditorDialog[open],#songbookEditorDialog[open]'
+          )
+        ){
+          showLive();
+
+          refreshLocalQueue().catch(()=>{});
+        }
+
+        /*
          * EGP_AUTOENTRAR_SHOW_ACTIVO_LAN_V1
          *
          * Si este dispositivo acaba de conectarse y YA existe un show,
@@ -1748,6 +1783,15 @@ document.documentElement.dataset.egmVersion="6.36.92";
           }
         }
       }else if(data.show_activo===false){
+        /*
+         * EGP_REMOTE_SHOW_REARM_NEXT_V2
+         *
+         * La antigua autoentrada era de una sola vez por carga.
+         * Al terminar un show se rearma para que el SIGUIENTE show,
+         * aun sin recargar la PWA, vuelva a poder entrar automáticamente.
+         */
+        window.__egpAutoEntrarShowActivoLanV1=false;
+
         if(LOCAL_QUEUE_MODE===true){
           saveStateLocalOnly();
           renderQueue();

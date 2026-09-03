@@ -320,6 +320,16 @@ document.documentElement.dataset.egmVersion="6.36.92";
    */
   let egpQueueFirebaseMirrorChain=Promise.resolve();
 
+  /*
+   * EGP_CORE_SHOW_AUTHORITY_V1
+   *
+   * Mientras Local Core responde, Core manda TODO el estado del show.
+   * Firebase es espejo/failover y nunca puede pisar un Core accesible.
+   */
+  let egpCoreFirebaseMirrorKey='';
+  let egpCoreFirebaseMirrorBusy=false;
+  let egpCoreFirebaseMirrorRetryAt=0;
+
 
   // 6.36.35 — Persistencia offline-first para imágenes y anotaciones.
   const OFFLINE_DB_NAME='egm-editor-offline-v1';
@@ -462,7 +472,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
         }
         // Las ediciones de imagen ya no se leen desde config/estado.
         // La única fuente oficial es imageEdits/{owner-songId}.
-        if(state.config){
+        // EGP_CORE_SHOW_AUTHORITY_V1: con Core vivo, Firebase no pisa config.
+        if(state.config&&!LOCAL_QUEUE_MODE){
           const remoteRequests=egpRemoteDesdeCache?state.config.requests===true:data.pedidos_panel===true;
           const remoteWhatsapp=remoteRequests?false:(data.pedidos_whatsapp===true);
           state.config.requests=remoteRequests;
@@ -518,6 +529,12 @@ document.documentElement.dataset.egmVersion="6.36.92";
       repertorio_nombre:cfg.repertoireName||'',
       uso_publicidad:cfg.advertising===true,
       show_activo:active,
+      show_id:active&&cfg.startedAt
+        ? String(new Date(cfg.startedAt).getTime())
+        : String(latestRemoteState?.show_id||''),
+      show_session_id:active&&cfg.startedAt
+        ? `show-${new Date(cfg.startedAt).getTime()}`
+        : String(latestRemoteState?.show_session_id||''),
       inicio_show:active&&cfg.startedAt?new Date(cfg.startedAt).getTime():0,
       cronometro_schema:SHOW_TIMER_SCHEMA,
       cronometro_elapsed_ms:active&&typeof showTimer!=='undefined'?Math.max(0,Number(showTimer.elapsedMs)||0):0,
@@ -1020,6 +1037,196 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
 
+  /*
+   * EGP_CORE_TO_FIREBASE_FULL_MIRROR_V1
+   *
+   * Cualquier Panel que alcance Core y tenga Internet refleja
+   * el snapshot completo de Core en Firebase.
+   */
+  function egpMirrorCoreSnapshotToFirebase(snapshot){
+    if(
+      EGP_AUDIT_LOCAL ||
+      !snapshot ||
+      !snapshot.show ||
+      !snapshot.publicConfig
+    ){
+      return;
+    }
+
+    const pub=snapshot.publicConfig||{};
+    const rows=Array.isArray(snapshot.queue)
+      ? snapshot.queue
+      : [];
+
+    const queueRevision=rows.reduce(
+      (max,row)=>Math.max(
+        max,
+        Number(row?.updated_at)||0
+      ),
+      0
+    );
+
+    const revision=Math.max(
+      Number(pub.show_revision)||0,
+      Number(pub.updated_at)||0,
+      Number(snapshot.show?.updatedAt)||0,
+      queueRevision
+    );
+
+    if(!revision)return;
+
+    const active=snapshot.show?.active===true;
+
+    const key=[
+      String(pub.show_session_id||pub.show_id||''),
+      active?'1':'0',
+      String(revision),
+      rows.map(row=>
+        `${String(row?.id||'')}:${row?.played===true?'1':'0'}:${Number(row?.updated_at)||0}`
+      ).join(',')
+    ].join('|');
+
+    if(
+      key===egpCoreFirebaseMirrorKey ||
+      egpCoreFirebaseMirrorBusy ||
+      Date.now()<egpCoreFirebaseMirrorRetryAt
+    ){
+      return;
+    }
+
+    egpCoreFirebaseMirrorBusy=true;
+
+    const queue=rows
+      .slice()
+      .sort(
+        (a,b)=>
+          (Number(a?.position)||0)-
+          (Number(b?.position)||0)
+      )
+      .map(row=>String(row?.id||''))
+      .filter(Boolean);
+
+    const played=rows
+      .filter(row=>row?.played===true)
+      .map(row=>String(row?.id||''))
+      .filter(Boolean);
+
+    const payload={
+      lista_activa:String(
+        pub.lista_activa ||
+        pub.listaActiva ||
+        'todas'
+      ),
+      listaActiva:String(
+        pub.listaActiva ||
+        pub.lista_activa ||
+        'todas'
+      ),
+      repertorio_nombre:String(
+        pub.repertorio_nombre||''
+      ),
+      repertorio_activo_ids:Array.isArray(
+        pub.repertorio_activo_ids
+      )
+        ? pub.repertorio_activo_ids.map(String)
+        : [],
+      repertorioActivoIds:Array.isArray(
+        pub.repertorioActivoIds
+      )
+        ? pub.repertorioActivoIds.map(String)
+        : (
+            Array.isArray(pub.repertorio_activo_ids)
+              ? pub.repertorio_activo_ids.map(String)
+              : []
+          ),
+      pedidos_whatsapp:
+        active && pub.pedidos_whatsapp===true,
+      pedidos_panel:
+        active && pub.pedidos_panel===true,
+      pedidos_modo:
+        pub.pedidos_modo==='uno_por_turno'
+          ? 'uno_por_turno'
+          : 'libre',
+      mostrar_cola:
+        pub.mostrar_cola!==false,
+      lugar:String(pub.lugar||''),
+      perfil_clientes:String(
+        pub.perfil_clientes||'medio'
+      ),
+      uso_publicidad:
+        pub.uso_publicidad===true,
+
+      show_activo:active,
+      show_id:String(pub.show_id||''),
+      show_session_id:String(
+        pub.show_session_id||''
+      ),
+      inicio_show:
+        active
+          ? Number(pub.inicio_show||pub.show_id||0)
+          : 0,
+
+      cronometro_schema:
+        Number(pub.cronometro_schema)||SHOW_TIMER_SCHEMA,
+      cronometro_elapsed_ms:
+        active
+          ? Math.max(
+              0,
+              Number(pub.cronometro_elapsed_ms)||0
+            )
+          : 0,
+      cronometro_running:
+        active && pub.cronometro_running===true,
+      cronometro_started_at:
+        active && pub.cronometro_running===true
+          ? Number(pub.cronometro_started_at)||0
+          : 0,
+
+      cola:active?queue:[],
+      tocadas:active?played:[],
+
+      show_revision:revision,
+      show_writer:String(
+        pub.show_writer||DEVICE_ID
+      ),
+      updated_at:revision
+    };
+
+    (async()=>{
+      try{
+        if(!remoteStateRef){
+          await initRemoteSync(true);
+        }
+
+        if(
+          !remoteStateRef ||
+          !window.__egmSetDoc
+        ){
+          throw new Error(
+            'Firebase todavía no está listo'
+          );
+        }
+
+        await window.__egmSetDoc(
+          remoteStateRef,
+          payload,
+          {merge:true}
+        );
+
+        egpCoreFirebaseMirrorKey=key;
+        egpCoreFirebaseMirrorRetryAt=0;
+
+      }catch(err){
+        egpCoreFirebaseMirrorRetryAt=
+          Date.now()+3000;
+
+      }finally{
+        egpCoreFirebaseMirrorBusy=false;
+      }
+    })();
+  }
+
+
   function applyLocalQueueSnapshot(snapshot,{force=false}={}){
     if(!snapshot||!Array.isArray(snapshot.queue))return false;
 
@@ -1222,6 +1429,32 @@ document.documentElement.dataset.egmVersion="6.36.92";
           saveStateLocalOnly();
         }
 
+        /*
+         * EGP_CORE_TIMER_AUTHORITY_V1
+         * El mismo ancla del Core se aplica en Mac/iPhone/Android.
+         */
+        applyRemoteShowTimer({
+          schema:
+            Number(
+              localPublicConfig.cronometro_schema
+            )||0,
+          elapsedMs:
+            Number(
+              localPublicConfig.cronometro_elapsed_ms
+            )||0,
+          running:
+            localPublicConfig.cronometro_running===true,
+          runningPresent:
+            Object.prototype.hasOwnProperty.call(
+              localPublicConfig,
+              'cronometro_running'
+            ),
+          startedAt:
+            Number(
+              localPublicConfig.cronometro_started_at
+            )||0
+        });
+
         if(
           panelAuthValid() &&
           $('#panelLogin').hidden
@@ -1245,24 +1478,49 @@ document.documentElement.dataset.egmVersion="6.36.92";
       }else if(
         localDesiredShowActive!==true
       ){
-        if(
-          localChanged &&
-          document.body.classList.contains(
-            'live-mode'
-          ) &&
-          !configOpenedFromLive
-        ){
-          showConfig(false);
+        /*
+         * EGP_CORE_FINISH_GLOBAL_V1
+         * Core inactivo = todos terminan el mismo show.
+         */
+        const needsLocalFinishApply=
+          localChanged ||
+          Boolean(state.config) ||
+          document.body.classList.contains('live-mode') ||
+          configOpenedFromLive ||
+          showTimer.running ||
+          showTimer.elapsedMs>0;
+
+        showActiveConfirmed=false;
+        configOpenedFromLive=false;
+        window.__egpAutoEntrarShowActivoLanV1=false;
+
+        const continueBtn=$('#continueShowBtn');
+        if(continueBtn){
+          continueBtn.hidden=true;
         }
 
-        const continueBtn=
-          $('#continueShowBtn');
+        if(needsLocalFinishApply){
+          state.config=null;
+          state.queue=[];
+          state.played.clear();
 
-        if(
-          continueBtn &&
-          !configOpenedFromLive
-        ){
-          continueBtn.hidden=true;
+          showTimer={
+            elapsedMs:0,
+            running:false,
+            startedAt:0
+          };
+          saveShowTimer();
+          showTimerLoop();
+
+          saveStateLocalOnly();
+
+          if(
+            panelAuthValid() &&
+            $('#panelLogin').hidden
+          ){
+            closeDialogsForRemoteShowEnd();
+            showConfig(false);
+          }
         }
       }
     }
@@ -1422,6 +1680,19 @@ document.documentElement.dataset.egmVersion="6.36.92";
           saveStateLocalOnly();
           renderQueue();
           renderSongs();
+
+          /*
+           * EGP_CORE_SHOW_AUTHORITY_V1
+           * Core cayó: Firebase vuelve a ser failover del show.
+           */
+          applyRemotePanelState(
+            latestRemoteState,
+            {
+              skipQueue:true,
+              skipPlayed:true,
+              allowWhileLocal:true
+            }
+          );
         }
 
         return;
@@ -1431,6 +1702,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
       try{
         applyLocalQueueSnapshot(snap);
+
+        /*
+         * EGP_CORE_TO_FIREBASE_FULL_MIRROR_V1
+         * Este dispositivo hace de puente si también tiene Internet.
+         */
+        egpMirrorCoreSnapshotToFirebase(snap);
+
       }catch(err){
         console.warn('Local Core conectado; error aplicando estado local:',err);
       }
@@ -1636,6 +1914,18 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   function applyRemotePanelState(data,options={}){
     if(!data||typeof data!=='object')return;
+
+    /*
+     * EGP_CORE_SHOW_AUTHORITY_V1
+     * Core accesible = Firebase no modifica configuración, cronómetro
+     * ni estado activo/finalizado del show.
+     */
+    if(
+      LOCAL_QUEUE_MODE===true &&
+      options.allowWhileLocal!==true
+    ){
+      return;
+    }
     const revision=Number(data.show_revision||data.updated_at||0);
     if(revision&&revision<lastAppliedRemoteRevision)return;
     if(revision)lastAppliedRemoteRevision=revision;
@@ -7295,78 +7585,301 @@ document.documentElement.dataset.egmVersion="6.36.92";
   },{passive:false,capture:true});
 
 
-  /* EGP CONFIG LAN CONSOLIDADA V85 */
+  /*
+   * EGP CONFIG LAN CONSOLIDADA V86
+   * EGP_CORE_SHOW_AUTHORITY_V1
+   *
+   * 8788 recibe configuración + sesión + revisión + cronómetro.
+   * 8790 conserva su contrato histórico de pedidos.
+   */
   const EGP_REQUESTS_LAN_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':(location.hostname==='elenagirjoaba.com'?location.origin+'/__egp_lan':'http://10.10.10.2:8790');
 
   async function egpPublicarConfigLan(data={}){
-    try{
-      const cfg=state.config||{};
-      const active=('show_activo' in data)?data.show_activo===true:Boolean(state.config);
-      const showId=String(
-        ('inicio_show' in data)
-          ? (Number(data.inicio_show)||0)
-          : (
-              (cfg.startedAt?new Date(cfg.startedAt).getTime():0) ||
-              latestRemoteState?.inicio_show ||
-              0
-            )
-      );
-      const enabled=('pedidos_panel' in data)?(active&&data.pedidos_panel===true):(active&&cfg.requests===true);
-      const mode=('pedidos_modo' in data)?(data.pedidos_modo==='uno_por_turno'?'uno_por_turno':'libre'):(cfg.requestsMode==='uno_por_turno'?'uno_por_turno':'libre');
-      const repertoire=('lista_activa' in data)?String(data.lista_activa||'todas'):String(cfg.repertoire||'todas');
-      const repertoireName=('repertorio_nombre' in data)?String(data.repertorio_nombre||''):String(cfg.repertoireName||'');
-      const ids=Array.isArray(data.repertorio_activo_ids)
+    const cfg=state.config||{};
+    const active=
+      ('show_activo' in data)
+        ? data.show_activo===true
+        : Boolean(state.config);
+
+    const explicitStart=
+      ('inicio_show' in data)
+        ? Number(data.inicio_show)||0
+        : 0;
+
+    const configStart=
+      cfg.startedAt
+        ? new Date(cfg.startedAt).getTime()
+        : 0;
+
+    const rememberedStart=
+      Number(
+        latestRemoteState?.inicio_show ||
+        latestRemoteState?.show_id ||
+        0
+      )||0;
+
+    const startValue=
+      active
+        ? (
+            explicitStart ||
+            configStart ||
+            rememberedStart ||
+            Date.now()
+          )
+        : 0;
+
+    const showId=String(
+      startValue ||
+      latestRemoteState?.show_id ||
+      ''
+    );
+
+    const sessionId=String(
+      data.show_session_id ||
+      (
+        showId && showId!=='0'
+          ? `show-${showId}`
+          : ''
+      )
+    );
+
+    const enabled=
+      ('pedidos_panel' in data)
+        ? (
+            active &&
+            data.pedidos_panel===true
+          )
+        : (
+            active &&
+            cfg.requests===true
+          );
+
+    const mode=
+      ('pedidos_modo' in data)
+        ? (
+            data.pedidos_modo==='uno_por_turno'
+              ? 'uno_por_turno'
+              : 'libre'
+          )
+        : (
+            cfg.requestsMode==='uno_por_turno'
+              ? 'uno_por_turno'
+              : 'libre'
+          );
+
+    const repertoire=
+      ('lista_activa' in data)
+        ? String(data.lista_activa||'todas')
+        : String(cfg.repertoire||'todas');
+
+    const repertoireName=
+      ('repertorio_nombre' in data)
+        ? String(data.repertorio_nombre||'')
+        : String(cfg.repertoireName||'');
+
+    const ids=
+      Array.isArray(data.repertorio_activo_ids)
         ? data.repertorio_activo_ids.map(String)
-        : (repertoire==='todas'
-            ? state.songs
-            : state.songs.filter(song=>(song.listas||[]).includes(repertoire))
+        : (
+            repertoire==='todas'
+              ? state.songs
+              : state.songs.filter(
+                  song=>
+                    (song.listas||[]).includes(
+                      repertoire
+                    )
+                )
           ).map(song=>String(song.id));
-      const whatsappRequested=('pedidos_whatsapp' in data)?data.pedidos_whatsapp===true:cfg.whatsapp===true;
-      const whatsapp=active&&!enabled&&whatsappRequested;
-      const publicQueue=('mostrar_cola' in data)?data.mostrar_cola!==false:cfg.publicQueue!==false;
-      const venue=('lugar' in data)?String(data.lugar||''):String(cfg.venue||'');
-      const profile=('perfil_clientes' in data)?String(data.perfil_clientes||'medio'):String(cfg.profile||'medio');
-      const advertising=('uso_publicidad' in data)?data.uso_publicidad===true:cfg.advertising===true;
 
-      const publicConfigPayload={
-        show_active:active,
-        show_id:showId,
-        pedidos_panel:enabled,
-        pedidos_modo:mode,
-        pedidos_whatsapp:whatsapp,
-        mostrar_cola:publicQueue,
-        lista_activa:repertoire,
-        repertorio_nombre:repertoireName,
-        repertorio_activo_ids:ids,
-        lugar:venue,
-        perfil_clientes:profile,
-        uso_publicidad:advertising
-      };
+    const whatsappRequested=
+      ('pedidos_whatsapp' in data)
+        ? data.pedidos_whatsapp===true
+        : cfg.whatsapp===true;
 
-      // FASE 1: 8788 recibe la configuración pública sin tocar cola/Bridge.
-      // Si el Core no está disponible, 8790 continúa funcionando igual que antes.
-      try{
-        const coreResponse=await fetch(`${LOCAL_CORE_URL}/api/public-config`,{
+    const whatsapp=
+      active &&
+      !enabled &&
+      whatsappRequested;
+
+    const publicQueue=
+      ('mostrar_cola' in data)
+        ? data.mostrar_cola!==false
+        : cfg.publicQueue!==false;
+
+    const venue=
+      ('lugar' in data)
+        ? String(data.lugar||'')
+        : String(cfg.venue||'');
+
+    const profile=
+      ('perfil_clientes' in data)
+        ? String(
+            data.perfil_clientes||'medio'
+          )
+        : String(cfg.profile||'medio');
+
+    const advertising=
+      ('uso_publicidad' in data)
+        ? data.uso_publicidad===true
+        : cfg.advertising===true;
+
+    const timerElapsed=
+      active
+        ? Math.max(
+            0,
+            Number(
+              ('cronometro_elapsed_ms' in data)
+                ? data.cronometro_elapsed_ms
+                : showTimer.elapsedMs
+            )||0
+          )
+        : 0;
+
+    const timerRunning=
+      active &&
+      (
+        ('cronometro_running' in data)
+          ? data.cronometro_running===true
+          : showTimer.running===true
+      );
+
+    const timerStarted=
+      timerRunning
+        ? Number(
+            ('cronometro_started_at' in data)
+              ? data.cronometro_started_at
+              : showTimer.startedAt
+          )||0
+        : 0;
+
+    const revision=
+      Number(data.show_revision)||Date.now();
+
+    const publicConfigPayload={
+      show_active:active,
+      show_activo:active,
+      show_id:showId,
+      show_session_id:sessionId,
+      show_revision:revision,
+      show_writer:DEVICE_ID,
+
+      pedidos_panel:enabled,
+      pedidos_modo:mode,
+      pedidos_whatsapp:whatsapp,
+      mostrar_cola:publicQueue,
+
+      lista_activa:repertoire,
+      listaActiva:repertoire,
+      repertorio_nombre:repertoireName,
+      repertorio_activo_ids:ids,
+      repertorioActivoIds:ids,
+
+      lugar:venue,
+      perfil_clientes:profile,
+      uso_publicidad:advertising,
+
+      inicio_show:startValue,
+      cronometro_schema:SHOW_TIMER_SCHEMA,
+      cronometro_elapsed_ms:timerElapsed,
+      cronometro_running:timerRunning,
+      cronometro_started_at:timerStarted
+    };
+
+    let coreResult=null;
+    let legacyOk=false;
+
+    try{
+      const coreResponse=await fetch(
+        `${LOCAL_CORE_URL}/api/public-config`,
+        {
           method:'POST',
-          headers:{'Content-Type':'application/json'},
+          headers:{
+            'Content-Type':'application/json'
+          },
           cache:'no-store',
-          body:JSON.stringify(publicConfigPayload)
-        });
-        if(!coreResponse.ok)throw new Error(`Local Core HTTP ${coreResponse.status}`);
-      }catch(coreErr){
-        console.warn('PublicConfig 8788 no disponible:',coreErr);
+          body:JSON.stringify(
+            publicConfigPayload
+          )
+        }
+      );
+
+      const coreJson=await coreResponse.json();
+
+      if(
+        !coreResponse.ok ||
+        coreJson?.ok===false
+      ){
+        throw new Error(
+          coreJson?.error ||
+          `Local Core HTTP ${coreResponse.status}`
+        );
       }
 
-      await fetch(`${EGP_REQUESTS_LAN_URL}/api/config`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        cache:'no-store',
-        body:JSON.stringify(publicConfigPayload)
-      });
-    }catch(err){
-      console.warn('Fallback LAN de Pedidos no disponible:',err);
-      throw err;
+      coreResult=coreJson;
+      LOCAL_QUEUE_MODE=true;
+
+    }catch(coreErr){
+      console.warn(
+        'Core 8788 no disponible para configuración:',
+        coreErr
+      );
     }
+
+    const legacyPayload={
+      show_active:active,
+      show_id:showId,
+      pedidos_panel:enabled,
+      pedidos_modo:mode,
+      pedidos_whatsapp:whatsapp,
+      mostrar_cola:publicQueue,
+      lista_activa:repertoire,
+      repertorio_nombre:repertoireName,
+      repertorio_activo_ids:ids,
+      lugar:venue,
+      perfil_clientes:profile,
+      uso_publicidad:advertising
+    };
+
+    try{
+      const legacyResponse=await fetch(
+        `${EGP_REQUESTS_LAN_URL}/api/config`,
+        {
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json'
+          },
+          cache:'no-store',
+          body:JSON.stringify(
+            legacyPayload
+          )
+        }
+      );
+
+      if(!legacyResponse.ok){
+        throw new Error(
+          `LAN 8790 HTTP ${legacyResponse.status}`
+        );
+      }
+
+      legacyOk=true;
+
+    }catch(err){
+      console.warn(
+        'Fallback LAN de Pedidos no disponible:',
+        err
+      );
+    }
+
+    if(!coreResult&&!legacyOk){
+      throw new Error(
+        'No se pudo publicar configuración en Core ni LAN pedidos'
+      );
+    }
+
+    return coreResult||{
+      ok:true,
+      publicConfig:publicConfigPayload
+    };
   }
 
   /* EGP PEDIDOS AL PANEL · implementación integrada en el núcleo del Panel */

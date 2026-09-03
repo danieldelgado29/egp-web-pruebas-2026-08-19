@@ -297,7 +297,15 @@ document.documentElement.dataset.egmVersion="6.36.92";
   sessionStorage.setItem('egm-device-id',DEVICE_ID);
 
   const EGP_AUDIT_LOCAL=new URL(location.href).searchParams.get('audit_local')==='1';
-  const LOCAL_CORE_URL=EGP_AUDIT_LOCAL?'http://10.10.10.2:8796':(location.hostname==='elenagirjoaba.com'?location.origin+'/__egp_core':'https://core.elenagirjoaba.com');
+  /*
+   * EGP_CORE_DEDICATED_ROUTE_ALL_DEVICES_V1
+   *
+   * Una sola puerta al Local Core para Mac, iPhone y Android.
+   * Evita que la Mac use /__egp_core, ruta que puede resolver al GitHub público.
+   */
+  const LOCAL_CORE_URL=EGP_AUDIT_LOCAL
+    ? 'http://10.10.10.2:8796'
+    : 'https://core.elenagirjoaba.com';
   const CORE_TEST_MODE=new URL(location.href).searchParams.get('core_test')==='1';
 
   /*

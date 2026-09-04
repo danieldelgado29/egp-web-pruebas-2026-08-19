@@ -317,6 +317,24 @@ document.documentElement.dataset.egmVersion="6.36.92";
   let egpFirebaseQueueBridgeChain=Promise.resolve();
 
   /*
+   * EGP_FIREBASE_TO_CORE_FULL_SHOW_BRIDGE_V1
+   *
+   * Regla constitucional tomada de e017:
+   * - Core/LAN sigue siendo la autoridad final cuando está vivo.
+   * - Firebase es transporte/failover para Panels fuera del router.
+   *
+   * Regla que faltaba:
+   * una MUTACIÓN NUEVA y válida recibida por Firebase puede entrar a Core.
+   * Nunca se aplica Firebase directamente sobre la UI cuando Core está vivo:
+   * primero se confirma en Core y luego Core vuelve a repartir el estado.
+   */
+  let egpFirebaseStateBridgeBaselineRevision=0;
+  let egpFirebaseStateBridgeLastImportedRevision=0;
+  let egpFirebaseStateBridgeChain=Promise.resolve();
+  let egpFirebaseStateBridgeQueued=0;
+  let egpFirebaseStateBridgeActive=false;
+
+  /*
    * EGP_SHOW_SEMANTIC_STATE_V3
    * La cola y el show tienen ciclos de cambio distintos.
    */
@@ -464,7 +482,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
           LOCAL_QUEUE_MODE &&
           snap?.metadata?.fromCache!==true
         ){
-          egpBridgeFirebaseQueueToCore(data);
+          egpBridgeFirebaseStateToCore(data);
         }
 
         const incomingQueue=LOCAL_QUEUE_MODE?[...state.queue]:(Array.isArray(data.cola)?data.cola.map(String):[]);
@@ -1218,8 +1236,10 @@ document.documentElement.dataset.egmVersion="6.36.92";
     };
   }
 
-  async function egpApplyDesiredFirebaseQueueToCore(data={}){
+  async function egpApplyDesiredFirebaseQueueToCore(data={},options={}){
     if(!LOCAL_QUEUE_MODE)return false;
+
+    const force=options?.force===true;
 
     const revision=egpFirebaseQueueRevision(data);
     const writer=String(data?.show_writer||'');
@@ -1227,13 +1247,16 @@ document.documentElement.dataset.egmVersion="6.36.92";
     if(!revision)return false;
 
     if(
-      revision<=egpFirebaseQueueBridgeBaselineRevision ||
-      revision<=egpFirebaseQueueBridgeLastImportedRevision
+      !force &&
+      (
+        revision<=egpFirebaseQueueBridgeBaselineRevision ||
+        revision<=egpFirebaseQueueBridgeLastImportedRevision
+      )
     ){
       return false;
     }
 
-    if(writer && writer===DEVICE_ID){
+    if(!force && writer && writer===DEVICE_ID){
       egpFirebaseQueueBridgeBaselineRevision=
         Math.max(
           egpFirebaseQueueBridgeBaselineRevision,
@@ -1483,8 +1506,475 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
 
+  /*
+   * EGP_FIREBASE_TO_CORE_FULL_SHOW_BRIDGE_V1
+   *
+   * Flujo:
+   * Panel fuera de LAN -> Firebase -> Panel con Core -> Core -> Bridge/Músicos
+   *                                                   -> Firebase -> demás Panels
+   *
+   * Core nunca deja de ser la autoridad final.
+   */
+
+  function egpFirebaseStateRevision(data={}){
+    return (
+      Number(data?.show_revision) ||
+      Number(data?.updated_at) ||
+      0
+    );
+  }
+
+  function egpCoreSemanticRevision(snapshot={}){
+    const pub=
+      snapshot?.publicConfig &&
+      typeof snapshot.publicConfig==='object'
+        ? snapshot.publicConfig
+        : {};
+
+    const rows=
+      Array.isArray(snapshot?.queue)
+        ? snapshot.queue
+        : [];
+
+    /*
+     * NO usamos show.updatedAt como autoridad:
+     * e017 ya documentó que Core puede tocar timestamps técnicos
+     * aunque el significado del show no haya cambiado.
+     *
+     * show_revision es la revisión semántica de configuración/show.
+     * updated_at de cada fila sí representa una mutación real de cola.
+     */
+    const publicRevision=
+      Number(pub.show_revision) ||
+      Number(pub.updated_at) ||
+      0;
+
+    const queueRevision=rows.reduce(
+      (max,row)=>Math.max(
+        max,
+        Number(row?.updated_at)||0
+      ),
+      0
+    );
+
+    return Math.max(
+      publicRevision,
+      queueRevision
+    );
+  }
+
+  function egpRemoteShowSession(data={}){
+    return String(
+      data?.show_session_id ||
+      data?.show_id ||
+      data?.inicio_show ||
+      ''
+    );
+  }
+
+  function egpCoreShowSession(snapshot={}){
+    const pub=
+      snapshot?.publicConfig &&
+      typeof snapshot.publicConfig==='object'
+        ? snapshot.publicConfig
+        : {};
+
+    return String(
+      pub.show_session_id ||
+      pub.show_id ||
+      pub.inicio_show ||
+      ''
+    );
+  }
+
+  function egpRemoteShowStart(data={}){
+    const value=
+      Number(data?.inicio_show) ||
+      Number(data?.show_id) ||
+      0;
+
+    return Number.isFinite(value)
+      ? Math.max(0,value)
+      : 0;
+  }
+
+  function egpCoreShowStart(snapshot={}){
+    const pub=
+      snapshot?.publicConfig &&
+      typeof snapshot.publicConfig==='object'
+        ? snapshot.publicConfig
+        : {};
+
+    const value=
+      Number(pub.inicio_show) ||
+      Number(pub.show_id) ||
+      0;
+
+    return Number.isFinite(value)
+      ? Math.max(0,value)
+      : 0;
+  }
+
+  function egpMarkFirebaseStateBridgeRevision(revision){
+    const value=Number(revision)||0;
+    if(!value)return;
+
+    egpFirebaseStateBridgeBaselineRevision=
+      Math.max(
+        egpFirebaseStateBridgeBaselineRevision,
+        value
+      );
+
+    egpFirebaseStateBridgeLastImportedRevision=
+      Math.max(
+        egpFirebaseStateBridgeLastImportedRevision,
+        value
+      );
+
+    egpFirebaseQueueBridgeBaselineRevision=
+      Math.max(
+        egpFirebaseQueueBridgeBaselineRevision,
+        value
+      );
+
+    egpFirebaseQueueBridgeLastImportedRevision=
+      Math.max(
+        egpFirebaseQueueBridgeLastImportedRevision,
+        value
+      );
+  }
+
+  function egpRemoteStateCanReplaceCore(data,core,revision){
+    const remoteRevision=Number(revision)||0;
+    const coreRevision=egpCoreSemanticRevision(core);
+
+    if(!remoteRevision || remoteRevision<=coreRevision){
+      return false;
+    }
+
+    const remoteActive=
+      data?.show_activo===true;
+
+    const coreActive=
+      core?.show?.active===true;
+
+    const remoteSession=
+      egpRemoteShowSession(data);
+
+    const coreSession=
+      egpCoreShowSession(core);
+
+    if(!remoteActive){
+      if(
+        remoteSession &&
+        coreSession &&
+        remoteSession!==coreSession
+      ){
+        return false;
+      }
+
+      return true;
+    }
+
+    if(!coreActive){
+      return true;
+    }
+
+    if(
+      !remoteSession ||
+      !coreSession ||
+      remoteSession===coreSession
+    ){
+      return true;
+    }
+
+    const remoteStart=egpRemoteShowStart(data);
+    const coreStart=egpCoreShowStart(core);
+
+    if(remoteStart && coreStart){
+      return remoteStart>coreStart;
+    }
+
+    return false;
+  }
+
+  async function egpApplyDesiredFirebaseStateToCore(data={}){
+    if(!LOCAL_QUEUE_MODE)return false;
+
+    const revision=
+      egpFirebaseStateRevision(data);
+
+    const writer=
+      String(data?.show_writer||'');
+
+    if(!revision)return false;
+
+    if(
+      revision<=egpFirebaseStateBridgeBaselineRevision ||
+      revision<=egpFirebaseStateBridgeLastImportedRevision
+    ){
+      return false;
+    }
+
+    if(writer && writer===DEVICE_ID){
+      egpMarkFirebaseStateBridgeRevision(revision);
+      return false;
+    }
+
+    const core=
+      await localQueueRequest('/api/state');
+
+    if(
+      !egpRemoteStateCanReplaceCore(
+        data,
+        core,
+        revision
+      )
+    ){
+      console.info(
+        'EGP Firebase -> Core: snapshot rechazado; Core conserva autoridad',
+        {
+          revision,
+          coreRevision:egpCoreSemanticRevision(core),
+          remoteSession:egpRemoteShowSession(data),
+          coreSession:egpCoreShowSession(core),
+          remoteActive:data?.show_activo===true,
+          coreActive:core?.show?.active===true
+        }
+      );
+
+      egpMarkFirebaseStateBridgeRevision(revision);
+      return false;
+    }
+
+    const active=
+      data?.show_activo===true;
+
+    const coreActive=
+      core?.show?.active===true;
+
+    const remoteSession=
+      egpRemoteShowSession(data);
+
+    const coreSession=
+      egpCoreShowSession(core);
+
+    const changingSession=
+      active &&
+      (
+        !coreActive ||
+        (
+          remoteSession &&
+          coreSession &&
+          remoteSession!==coreSession
+        )
+      );
+
+    console.info(
+      'EGP Firebase -> Core: importando estado total',
+      {
+        writer,
+        revision,
+        active,
+        remoteSession,
+        coreSession,
+        changingSession
+      }
+    );
+
+    if(!active || changingSession){
+      await localQueueRequest(
+        '/api/queue/clear',
+        {}
+      );
+    }
+
+    await localQueueRequest(
+      '/api/show',
+      {
+        active,
+        venue:String(
+          data?.lugar ||
+          core?.show?.venue ||
+          ''
+        )
+      }
+    );
+
+    const configPatch={
+      ...data,
+      show_activo:active,
+      show_active:active,
+      show_revision:revision,
+      updated_at:revision
+    };
+
+    if(!active){
+      Object.assign(
+        configPatch,
+        {
+          cola:[],
+          tocadas:[],
+          pedidos_whatsapp:false,
+          pedidos_panel:false,
+          pedidos_modo:'libre',
+          inicio_show:0,
+          cronometro_elapsed_ms:0,
+          cronometro_running:false,
+          cronometro_started_at:0
+        }
+      );
+    }
+
+    await egpPublicarConfigLan(
+      configPatch
+    );
+
+    if(active){
+      await egpApplyDesiredFirebaseQueueToCore(
+        data,
+        {force:true}
+      );
+
+    }else{
+      try{
+        await egpCerrarPedidosPendientes();
+      }catch(err){
+        console.warn(
+          'Pedidos pendientes al finalizar desde Firebase:',
+          err
+        );
+      }
+
+      const finalSnapshot=
+        await localQueueRequest('/api/state');
+
+      applyLocalQueueSnapshot(
+        finalSnapshot,
+        {force:true}
+      );
+    }
+
+    egpMarkFirebaseStateBridgeRevision(
+      revision
+    );
+
+    return true;
+  }
+
+  async function egpRepublishCoreAfterFirebaseBridge(){
+    if(
+      EGP_AUDIT_LOCAL ||
+      !LOCAL_QUEUE_MODE ||
+      egpFirebaseStateBridgeActive ||
+      egpFirebaseStateBridgeQueued>0
+    ){
+      return;
+    }
+
+    try{
+      const snapshot=
+        await localQueueRequest('/api/state');
+
+      applyLocalQueueSnapshot(
+        snapshot,
+        {force:true}
+      );
+
+      egpCoreFirebaseMirrorKey='';
+
+      egpMirrorCoreSnapshotToFirebase(
+        snapshot
+      );
+
+    }catch(err){
+      console.warn(
+        'Confirmación Core -> Firebase pendiente:',
+        err
+      );
+    }
+  }
+
+  function egpBridgeFirebaseStateToCore(data={}){
+    if(
+      EGP_AUDIT_LOCAL ||
+      !LOCAL_QUEUE_MODE
+    ){
+      return;
+    }
+
+    const revision=
+      egpFirebaseStateRevision(data);
+
+    if(!revision)return;
+
+    const writer=
+      String(data?.show_writer||'');
+
+    if(writer && writer===DEVICE_ID){
+      egpMarkFirebaseStateBridgeRevision(
+        revision
+      );
+      return;
+    }
+
+    if(
+      revision<=egpFirebaseStateBridgeBaselineRevision ||
+      revision<=egpFirebaseStateBridgeLastImportedRevision
+    ){
+      return;
+    }
+
+    egpFirebaseStateBridgeQueued++;
+
+    const task=async()=>{
+      egpFirebaseStateBridgeActive=true;
+
+      try{
+        await egpApplyDesiredFirebaseStateToCore(
+          data
+        );
+
+      }catch(err){
+        console.warn(
+          'Firebase -> Core total pendiente:',
+          err
+        );
+
+      }finally{
+        egpFirebaseStateBridgeActive=false;
+
+        egpFirebaseStateBridgeQueued=
+          Math.max(
+            0,
+            egpFirebaseStateBridgeQueued-1
+          );
+
+        if(egpFirebaseStateBridgeQueued===0){
+          setTimeout(
+            ()=>egpRepublishCoreAfterFirebaseBridge(),
+            0
+          );
+        }
+      }
+    };
+
+    egpFirebaseStateBridgeChain=
+      egpFirebaseStateBridgeChain.then(
+        task,
+        task
+      );
+  }
+
+
   function egpMirrorQueueLanToFirebase(){
-    if(EGP_AUDIT_LOCAL)return Promise.resolve();
+    if(
+      EGP_AUDIT_LOCAL ||
+      egpFirebaseStateBridgeActive ||
+      egpFirebaseStateBridgeQueued>0
+    ){
+      return Promise.resolve();
+    }
 
     const queue=[...state.queue].map(String);
     const played=[...state.played].map(String);
@@ -1540,6 +2030,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
   function egpMirrorCoreSnapshotToFirebase(snapshot){
     if(
       EGP_AUDIT_LOCAL ||
+      egpFirebaseStateBridgeActive ||
+      egpFirebaseStateBridgeQueued>0 ||
       !snapshot ||
       !snapshot.show ||
       !snapshot.publicConfig
@@ -2143,6 +2635,65 @@ document.documentElement.dataset.egmVersion="6.36.92";
               egpFirebaseQueueBridgeBaselineRevision
           }
         );
+      }
+
+      /*
+       * EGP_FIREBASE_TO_CORE_FULL_SHOW_BRIDGE_V1
+       *
+       * Al ENTRAR a modo Core no descartamos a ciegas el último snapshot
+       * Firebase. Si es semánticamente posterior, puede contener acciones
+       * hechas por iPhone/Android durante el failover.
+       */
+      if(enteringLocalQueueMode && latestRemoteState){
+        const remoteRevision=
+          egpFirebaseStateRevision(
+            latestRemoteState
+          );
+
+        const coreRevision=
+          egpCoreSemanticRevision(
+            snap
+          );
+
+        const remoteWriter=
+          String(
+            latestRemoteState?.show_writer||''
+          );
+
+        if(
+          remoteRevision &&
+          remoteRevision>coreRevision &&
+          (!remoteWriter || remoteWriter!==DEVICE_ID)
+        ){
+          egpFirebaseStateBridgeBaselineRevision=
+            Math.max(
+              egpFirebaseStateBridgeBaselineRevision,
+              coreRevision
+            );
+
+          egpFirebaseStateBridgeLastImportedRevision=
+            Math.max(
+              egpFirebaseStateBridgeLastImportedRevision,
+              coreRevision
+            );
+
+          egpBridgeFirebaseStateToCore(
+            latestRemoteState
+          );
+
+        }else{
+          egpMarkFirebaseStateBridgeRevision(
+            remoteRevision
+          );
+
+          if(
+            remoteRevision &&
+            remoteWriter &&
+            remoteWriter!==DEVICE_ID
+          ){
+            egpCoreFirebaseMirrorKey='';
+          }
+        }
       }
 
       try{

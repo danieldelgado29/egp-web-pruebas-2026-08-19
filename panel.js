@@ -302,6 +302,21 @@ document.documentElement.dataset.egmVersion="6.36.92";
   let lastAppliedCoreRevision=0;
 
   /*
+   * EGP_FIREBASE_TO_CORE_QUEUE_BRIDGE_V1
+   *
+   * Un Panel que no alcanza Local Core (iPhone/Android fuera de LAN)
+   * puede mutar la cola por Firebase.
+   *
+   * El Panel que SI alcanza Core actúa como puente:
+   * Firebase -> Core -> Bridge.
+   *
+   * Core sigue siendo la autoridad final.
+   */
+  let egpFirebaseQueueBridgeBaselineRevision=0;
+  let egpFirebaseQueueBridgeLastImportedRevision=0;
+  let egpFirebaseQueueBridgeChain=Promise.resolve();
+
+  /*
    * EGP_SHOW_SEMANTIC_STATE_V3
    * La cola y el show tienen ciclos de cambio distintos.
    */
@@ -436,6 +451,22 @@ document.documentElement.dataset.egmVersion="6.36.92";
         if(!snap.exists()) return;
         const data=snap.data()||{};
         const queueBeforeSnapshot=[...state.queue];
+
+        /*
+         * EGP_FIREBASE_TO_CORE_QUEUE_BRIDGE_V1
+         * Si este dispositivo tiene Core, una mutación de cola hecha
+         * por otro Panel vía Internet se importa a Core.
+         *
+         * NO aplicamos Firebase directamente a la UI: esperamos la
+         * confirmación del Core, evitando doble autoridad.
+         */
+        if(
+          LOCAL_QUEUE_MODE &&
+          snap?.metadata?.fromCache!==true
+        ){
+          egpBridgeFirebaseQueueToCore(data);
+        }
+
         const incomingQueue=LOCAL_QUEUE_MODE?[...state.queue]:(Array.isArray(data.cola)?data.cola.map(String):[]);
         const incomingPlayedOrder=LOCAL_QUEUE_MODE?[...state.played]:(Array.isArray(data.tocadas)?[...new Set(data.tocadas.map(String))]:[]);
         const oldPlayedOrder=[...state.played].map(String);
@@ -1135,6 +1166,323 @@ document.documentElement.dataset.egmVersion="6.36.92";
     }
   }
 
+  function egpFirebaseQueueRevision(data={}){
+    return Math.max(
+      Number(data?.show_revision)||0,
+      Number(data?.updated_at)||0
+    );
+  }
+
+  function egpQueueSemanticSignature(queue=[],played=[]){
+    const p=
+      played instanceof Set
+        ? played
+        : new Set(
+            Array.isArray(played)
+              ? played.map(String)
+              : []
+          );
+
+    const q=
+      Array.isArray(queue)
+        ? queue.map(String).filter(Boolean)
+        : [];
+
+    return JSON.stringify({
+      queue:q,
+      played:q.filter(id=>p.has(id))
+    });
+  }
+
+  function egpCoreQueueFromSnapshot(snapshot={}){
+    const rows=
+      Array.isArray(snapshot?.queue)
+        ? snapshot.queue.slice()
+        : [];
+
+    rows.sort(
+      (a,b)=>
+        (Number(a?.position)||0)-
+        (Number(b?.position)||0)
+    );
+
+    return {
+      queue:rows
+        .map(row=>String(row?.id||''))
+        .filter(Boolean),
+
+      played:rows
+        .filter(row=>row?.played===true)
+        .map(row=>String(row?.id||''))
+        .filter(Boolean)
+    };
+  }
+
+  async function egpApplyDesiredFirebaseQueueToCore(data={}){
+    if(!LOCAL_QUEUE_MODE)return false;
+
+    const revision=egpFirebaseQueueRevision(data);
+    const writer=String(data?.show_writer||'');
+
+    if(!revision)return false;
+
+    if(
+      revision<=egpFirebaseQueueBridgeBaselineRevision ||
+      revision<=egpFirebaseQueueBridgeLastImportedRevision
+    ){
+      return false;
+    }
+
+    if(writer && writer===DEVICE_ID){
+      egpFirebaseQueueBridgeBaselineRevision=
+        Math.max(
+          egpFirebaseQueueBridgeBaselineRevision,
+          revision
+        );
+      return false;
+    }
+
+    const desiredQueue=
+      Array.isArray(data?.cola)
+        ? [...new Set(
+            data.cola.map(String).filter(Boolean)
+          )]
+        : [];
+
+    const desiredPlayed=
+      new Set(
+        Array.isArray(data?.tocadas)
+          ? data.tocadas.map(String).filter(Boolean)
+          : []
+      );
+
+    const core=await localQueueRequest('/api/state');
+
+    if(core?.show?.active!==true){
+      return false;
+    }
+
+    const remoteSession=String(
+      data?.show_session_id ||
+      data?.show_id ||
+      data?.inicio_show ||
+      ''
+    );
+
+    const corePub=
+      core?.publicConfig &&
+      typeof core.publicConfig==='object'
+        ? core.publicConfig
+        : {};
+
+    const coreSession=String(
+      corePub?.show_session_id ||
+      corePub?.show_id ||
+      corePub?.inicio_show ||
+      ''
+    );
+
+    if(
+      remoteSession &&
+      coreSession &&
+      remoteSession!==coreSession
+    ){
+      console.warn(
+        'Firebase->Core ignorado: pertenece a otro show',
+        {remoteSession,coreSession}
+      );
+
+      egpFirebaseQueueBridgeBaselineRevision=
+        Math.max(
+          egpFirebaseQueueBridgeBaselineRevision,
+          revision
+        );
+
+      return false;
+    }
+
+    const current=egpCoreQueueFromSnapshot(core);
+
+    const desiredSignature=
+      egpQueueSemanticSignature(
+        desiredQueue,
+        desiredPlayed
+      );
+
+    const currentSignature=
+      egpQueueSemanticSignature(
+        current.queue,
+        current.played
+      );
+
+    if(desiredSignature===currentSignature){
+      egpFirebaseQueueBridgeLastImportedRevision=
+        Math.max(
+          egpFirebaseQueueBridgeLastImportedRevision,
+          revision
+        );
+      return true;
+    }
+
+    console.info(
+      'EGP Firebase -> Core: importando cola remota',
+      {
+        writer,
+        revision,
+        desiredQueue,
+        desiredPlayed:[...desiredPlayed]
+      }
+    );
+
+    const desiredSet=new Set(desiredQueue);
+    const currentSet=new Set(current.queue);
+    const currentPlayed=new Set(current.played);
+
+    for(const id of current.queue){
+      if(!desiredSet.has(id)){
+        await localQueueRequest(
+          '/api/queue/remove',
+          {id}
+        );
+      }
+    }
+
+    for(const id of desiredQueue){
+      if(
+        currentPlayed.has(id) &&
+        !desiredPlayed.has(id)
+      ){
+        await localQueueRequest(
+          '/api/queue/remove',
+          {id}
+        );
+
+        const song=state.songs.find(
+          x=>String(x.id)===id
+        );
+
+        await localQueueRequest(
+          '/api/queue/add',
+          {
+            id,
+            title:song?.titulo||id,
+            number:String(
+              song?.numero ||
+              song?.n ||
+              ''
+            )
+          }
+        );
+      }
+    }
+
+    for(const id of desiredQueue){
+      if(
+        !currentSet.has(id) &&
+        !(
+          currentPlayed.has(id) &&
+          !desiredPlayed.has(id)
+        )
+      ){
+        const song=state.songs.find(
+          x=>String(x.id)===id
+        );
+
+        await localQueueRequest(
+          '/api/queue/add',
+          {
+            id,
+            title:song?.titulo||id,
+            number:String(
+              song?.numero ||
+              song?.n ||
+              ''
+            )
+          }
+        );
+      }
+    }
+
+    for(const id of desiredQueue){
+      if(desiredPlayed.has(id)){
+        await localQueueRequest(
+          '/api/queue/played',
+          {
+            id,
+            played:true
+          }
+        );
+      }
+    }
+
+    await localQueueRequest(
+      '/api/queue/reorder',
+      {
+        order:desiredQueue
+      }
+    );
+
+    const finalSnapshot=
+      await localQueueRequest('/api/state');
+
+    applyLocalQueueSnapshot(
+      finalSnapshot,
+      {force:true}
+    );
+
+    egpFirebaseQueueBridgeLastImportedRevision=
+      Math.max(
+        egpFirebaseQueueBridgeLastImportedRevision,
+        revision
+      );
+
+    egpMirrorCoreSnapshotToFirebase(
+      finalSnapshot
+    );
+
+    return true;
+  }
+
+  function egpBridgeFirebaseQueueToCore(data={}){
+    if(
+      EGP_AUDIT_LOCAL ||
+      !LOCAL_QUEUE_MODE
+    ){
+      return;
+    }
+
+    const revision=
+      egpFirebaseQueueRevision(data);
+
+    if(
+      !revision ||
+      revision<=egpFirebaseQueueBridgeBaselineRevision ||
+      revision<=egpFirebaseQueueBridgeLastImportedRevision
+    ){
+      return;
+    }
+
+    const task=async()=>{
+      try{
+        await egpApplyDesiredFirebaseQueueToCore(
+          data
+        );
+      }catch(err){
+        console.warn(
+          'Firebase -> Core pendiente:',
+          err
+        );
+      }
+    };
+
+    egpFirebaseQueueBridgeChain=
+      egpFirebaseQueueBridgeChain.then(
+        task,
+        task
+      );
+  }
+
+
   function egpMirrorQueueLanToFirebase(){
     if(EGP_AUDIT_LOCAL)return Promise.resolve();
 
@@ -1771,7 +2119,31 @@ document.documentElement.dataset.egmVersion="6.36.92";
         return;
       }
 
+      const enteringLocalQueueMode=
+        LOCAL_QUEUE_MODE!==true;
+
       LOCAL_QUEUE_MODE=true;
+
+      if(enteringLocalQueueMode){
+        egpFirebaseQueueBridgeBaselineRevision=
+          Math.max(
+            egpFirebaseQueueBridgeBaselineRevision,
+            egpFirebaseQueueRevision(
+              latestRemoteState||{}
+            )
+          );
+
+        egpFirebaseQueueBridgeLastImportedRevision=
+          egpFirebaseQueueBridgeBaselineRevision;
+
+        console.info(
+          'EGP Firebase->Core bridge armado',
+          {
+            baseline:
+              egpFirebaseQueueBridgeBaselineRevision
+          }
+        );
+      }
 
       try{
         applyLocalQueueSnapshot(snap);

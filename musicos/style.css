@@ -514,7 +514,7 @@ body.egp-ui24r-open{
 
 /* EGP MUSICOS UI24R VERTICAL SOLO V1 */
 @media (orientation:portrait){
-  #egpUi24rFrame{
+  .egp-ui24r-overlay.is-open #egpUi24rFrame{
     transform-origin:
       var(--egp-ui-origin,50% 100%)!important;
 

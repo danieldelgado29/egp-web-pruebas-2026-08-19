@@ -642,7 +642,7 @@ if ("serviceWorker" in navigator && !previewMode) {
         return;
       }
 
-      const registration = await navigator.serviceWorker.register("./service-worker.js?v=1.5.8", {
+      const registration = await navigator.serviceWorker.register("./service-worker.js?v=1.5.8.19", {
         scope: "./",
         updateViaCache: "none"
       });
@@ -801,6 +801,19 @@ function egpMostrarMonitoreo() {
   document.body
     .classList
     .add("egp-ui24r-open");
+
+  /*
+   * EGP MUSICOS UI24R VERTICAL OPEN V2
+   * Recalcular SOLO al abrir la interfaz.
+   */
+  requestAnimationFrame(() => {
+    if (
+      typeof window.egpMusicosUi24rAjustarV2
+      === "function"
+    ) {
+      window.egpMusicosUi24rAjustarV2();
+    }
+  });
 }
 
 
@@ -1529,6 +1542,9 @@ monitorBackBtn?.addEventListener("click", () => {
     );
   }
 
+
+  window.egpMusicosUi24rAjustarV2 =
+    ajustar;
 
   window.addEventListener(
     "resize",

@@ -1336,7 +1336,6 @@ html.egp-android-panel body.live-mode
   height:100% !important;
   border:0 !important;
   background:#000 !important;
-  transform:none !important;
   pointer-events:auto !important;
   touch-action:auto !important;
 }
@@ -1352,7 +1351,6 @@ html.egp-android-panel body.live-mode
     inset:0 !important;
     width:100% !important;
     height:100% !important;
-    transform:none !important;
     pointer-events:auto !important;
     touch-action:auto !important;
   }
@@ -3548,100 +3546,160 @@ html.egp-android-panel body:not(.live-mode)
 
 
 
-<!-- EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1_INICIO -->
-<script id="EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1">
+
+
+
+<!-- EGP_IPHONE_UI24R_SINGLE_GEOMETRY_V3_INICIO -->
+<style id="EGP_IPHONE_UI24R_SINGLE_GEOMETRY_V3_CSS">
+html.egp-iphone-ui24r-v3 #ui24rFrame{
+  transform:
+    scaleX(var(--egp-ui-sx,1))
+    scaleY(var(--egp-ui-sy,1)) !important;
+
+  -webkit-transform:
+    scaleX(var(--egp-ui-sx,1))
+    scaleY(var(--egp-ui-sy,1)) !important;
+
+  transform-origin:
+    var(--egp-ui-origin,50% 50%) !important;
+
+  -webkit-transform-origin:
+    var(--egp-ui-origin,50% 50%) !important;
+}
+</style>
+
+<script id="EGP_IPHONE_UI24R_SINGLE_GEOMETRY_V3">
 (function(){
-  const isiPhone=/iPhone|iPod/i.test(navigator.userAgent);
+  'use strict';
 
-  window.egpUi24rSyncIntrinsicSize=function(frame){
-    if(!isiPhone || !frame) return;
+  const iphone=/iPhone|iPod/i.test(navigator.userAgent);
+  if(!iphone) return;
 
-    /*
-     * iOS puede dar a un iframe embebido el viewport intrínseco
-     * HTML por defecto (aprox. 300x150) aunque CSS lo pinte grande.
-     *
-     * mixer.html usa width=device-width, por lo que debemos escribir
-     * el tamaño físico del iframe ANTES de asignar src.
-     */
-    const sync=function(){
-      const r=frame.getBoundingClientRect();
+  document.documentElement.classList.add('egp-iphone-ui24r-v3');
 
-      const w=Math.max(
-        1,
-        Math.round(r.width || window.innerWidth || 1)
-      );
+  const frame=document.getElementById('ui24rFrame');
+  if(!frame) return;
 
-      const h=Math.max(
-        1,
-        Math.round(r.height || window.innerHeight || 1)
-      );
+  const LANDSCAPE_ISLAND=46;
+  const PORTRAIT_TOP_MIN=59;
 
-      frame.setAttribute('width',String(w));
-      frame.setAttribute('height',String(h));
+  function angle(){
+    let a=0;
 
-      frame.style.setProperty(
-        '--egp-ios-frame-w',
-        w+'px'
-      );
+    if(
+      screen.orientation &&
+      typeof screen.orientation.angle==='number'
+    ){
+      a=screen.orientation.angle;
+    }else if(typeof window.orientation==='number'){
+      a=window.orientation;
+    }
 
-      frame.style.setProperty(
-        '--egp-ios-frame-h',
-        h+'px'
-      );
-    };
-
-    sync();
-    requestAnimationFrame(sync);
-  };
-
-  function resync(){
-    const frame=document.getElementById('ui24rFrame');
-    if(!frame) return;
-
-    window.egpUi24rSyncIntrinsicSize(frame);
+    return ((a%360)+360)%360;
   }
 
-  window.addEventListener('resize',resync);
+  function cssSafeTop(){
+    const probe=document.createElement('div');
 
-  window.addEventListener(
-    'orientationchange',
-    function(){
-      setTimeout(resync,80);
-      setTimeout(resync,250);
-      setTimeout(resync,600);
+    probe.style.cssText=[
+      'position:fixed',
+      'visibility:hidden',
+      'pointer-events:none',
+      'left:-10000px',
+      'top:0',
+      'padding-top:max('+
+        PORTRAIT_TOP_MIN+
+        'px,env(safe-area-inset-top,0px))'
+    ].join(';');
+
+    document.documentElement.appendChild(probe);
+
+    const value=
+      parseFloat(getComputedStyle(probe).paddingTop) ||
+      PORTRAIT_TOP_MIN;
+
+    probe.remove();
+
+    return Math.max(PORTRAIT_TOP_MIN,value);
+  }
+
+  function apply(){
+    const w=Math.max(1,window.innerWidth||1);
+    const h=Math.max(1,window.innerHeight||1);
+    const landscape=w>h;
+
+    let sx=1;
+    let sy=1;
+    let origin='50% 50%';
+
+    if(landscape){
+      sx=Math.max(
+        0.70,
+        Math.min(1,(w-LANDSCAPE_ISLAND)/w)
+      );
+
+      origin=
+        angle()===90
+          ? '100% 50%'
+          : '0% 50%';
+    }else{
+      const safeTop=Math.min(
+        cssSafeTop(),
+        Math.max(0,h-100)
+      );
+
+      sy=Math.max(
+        0.70,
+        Math.min(1,(h-safeTop)/h)
+      );
+
+      origin='50% 100%';
     }
-  );
+
+    frame.style.setProperty('--egp-ui-sx',String(sx));
+    frame.style.setProperty('--egp-ui-sy',String(sy));
+    frame.style.setProperty('--egp-ui-origin',origin);
+  }
+
+  function applySoon(){
+    apply();
+    requestAnimationFrame(apply);
+    setTimeout(apply,80);
+    setTimeout(apply,220);
+    setTimeout(apply,500);
+  }
+
+  window.egpUi24rApplyIphoneGeometryV3=applySoon;
+
+  window.addEventListener('resize',applySoon);
+  window.addEventListener('orientationchange',applySoon);
 
   if(window.visualViewport){
     window.visualViewport.addEventListener(
       'resize',
-      resync
+      applySoon
     );
   }
 
   document.addEventListener(
     'DOMContentLoaded',
-    function(){
-      requestAnimationFrame(resync);
-    },
+    applySoon,
     {once:true}
   );
+
+  document.addEventListener(
+    'click',
+    function(event){
+      if(!event.target.closest('#ui24rBtn')) return;
+      applySoon();
+    },
+    true
+  );
+
+  applySoon();
 })();
 </script>
-
-<style id="EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1_CSS">
-@supports (-webkit-touch-callout:none){
-  #ui24rFrame{
-    min-width:0 !important;
-    min-height:0 !important;
-    max-width:none !important;
-    max-height:none !important;
-    box-sizing:border-box !important;
-    -webkit-transform:none !important;
-  }
-}
-</style>
-<!-- EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1_FIN -->
+<!-- EGP_IPHONE_UI24R_SINGLE_GEOMETRY_V3_FIN -->
 
 <!-- EGP_UI24R_BACK_INDEPENDENT_LAYER_V1_INICIO -->
 <style id="EGP_UI24R_BACK_INDEPENDENT_LAYER_V1">
@@ -3712,11 +3770,7 @@ html.egp-android-panel body:not(.live-mode)
 
     if(actual && actual!=='about:blank') return;
 
-    if(typeof window.egpUi24rSyncIntrinsicSize==='function'){
-      window.egpUi24rSyncIntrinsicSize(frame);
-    }
-
-    frame.setAttribute(
+frame.setAttribute(
       'src',
       frame.dataset.src || 'https://ui.elenagirjoaba.com/mixer.html'
     );
@@ -4414,13 +4468,7 @@ html.egp-android-panel body:not(.live-mode)
       frame.dataset.egpPersistentLoaded='1';
       frame.dataset.egpHotReconnectAt=String(stamp);
 
-      if(
-        typeof window.egpUi24rSyncIntrinsicSize==='function'
-      ){
-        window.egpUi24rSyncIntrinsicSize(frame);
-      }
-
-      frame.setAttribute(
+frame.setAttribute(
         'src',
         REAL_URL + '?egp_reconnect=' + stamp
       );
@@ -5049,11 +5097,7 @@ body.egp-config-keyboard-open #configView.view.is-active{
     frame.dataset.egpPersistentLoaded='1';
 
     if(!actual || actual==='about:blank'){
-      if(typeof window.egpUi24rSyncIntrinsicSize==='function'){
-        window.egpUi24rSyncIntrinsicSize(frame);
-      }
-
-      frame.setAttribute('src',REAL_URL);
+frame.setAttribute('src',REAL_URL);
     }
   }
 

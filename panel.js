@@ -292,6 +292,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
   let egpPedidosLan=[];
   let remoteShowGeneration=0;
   let lastAppliedRemoteRevision=0;
+  /*
+   * EGP_REMOTE_LIBRARY_REVISION_GATE_V1
+   * La biblioteca solo se vuelve a aplicar si cambia
+   * biblioteca_updated_at. Un cambio de show/cola no reconstruye
+   * repertorios ni reinyecta songEdits.
+   */
+  let lastAppliedRemoteLibraryRevision=null;
   let lastAppliedCoreRevision=0;
 
   /*
@@ -455,7 +462,18 @@ document.documentElement.dataset.egmVersion="6.36.92";
           normalizeRemoteQueueIfNeeded(incomingQueue,incomingPlayedOrder);
         }
 
-        if(data.biblioteca&&typeof data.biblioteca==='object'){
+        const remoteLibraryRevision=
+          Number(data.biblioteca_updated_at)||0;
+
+        if(
+          data.biblioteca &&
+          typeof data.biblioteca==='object' &&
+          (
+            lastAppliedRemoteLibraryRevision===null ||
+            remoteLibraryRevision!==lastAppliedRemoteLibraryRevision
+          )
+        ){
+          lastAppliedRemoteLibraryRevision=remoteLibraryRevision;
           const b=data.biblioteca;
           pendingRemoteLibrary=b;
           if(b.songEdits&&typeof b.songEdits==='object') state.songEdits={...state.songEdits,...b.songEdits};
@@ -1205,14 +1223,103 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
     const active=snapshot.show?.active===true;
 
-    const key=[
-      String(pub.show_session_id||pub.show_id||''),
-      active?'1':'0',
-      String(revision),
-      rows.map(row=>
-        `${String(row?.id||'')}:${row?.played===true?'1':'0'}:${Number(row?.updated_at)||0}`
-      ).join(',')
-    ].join('|');
+    /*
+     * EGP_CORE_FIREBASE_SEMANTIC_MIRROR_V1
+     *
+     * No usar revision/updated_at como llave: Local Core puede tocar
+     * esos timestamps aunque el show siga exactamente igual.
+     * Firebase solo recibe otra escritura cuando cambia el estado
+     * semantico que realmente importa.
+     */
+    const key=JSON.stringify({
+      session:String(
+        pub.show_session_id ||
+        pub.show_id ||
+        ''
+      ),
+
+      active,
+
+      repertoire:String(
+        pub.lista_activa ||
+        pub.listaActiva ||
+        'todas'
+      ),
+
+      repertoireName:String(
+        pub.repertorio_nombre||''
+      ),
+
+      repertoireIds:Array.isArray(
+        pub.repertorio_activo_ids
+      )
+        ? pub.repertorio_activo_ids.map(String)
+        : [],
+
+      requests:
+        active &&
+        pub.pedidos_panel===true,
+
+      whatsapp:
+        active &&
+        pub.pedidos_whatsapp===true,
+
+      requestsMode:
+        pub.pedidos_modo==='uno_por_turno'
+          ? 'uno_por_turno'
+          : 'libre',
+
+      publicQueue:
+        pub.mostrar_cola!==false,
+
+      venue:String(pub.lugar||''),
+
+      profile:String(
+        pub.perfil_clientes||'medio'
+      ),
+
+      advertising:
+        pub.uso_publicidad===true,
+
+      startedAt:
+        active
+          ? Number(
+              pub.inicio_show ||
+              pub.show_id ||
+              0
+            )
+          : 0,
+
+      timer:
+        active
+          ? [
+              Number(pub.cronometro_schema)||0,
+              pub.cronometro_running===true,
+              pub.cronometro_running===true
+                ? Number(pub.cronometro_started_at)||0
+                : Math.max(
+                    0,
+                    Number(pub.cronometro_elapsed_ms)||0
+                  )
+            ]
+          : [0,false,0],
+
+      queue:
+        active
+          ? rows
+              .slice()
+              .sort(
+                (a,b)=>
+                  (Number(a?.position)||0)-
+                  (Number(b?.position)||0)
+              )
+              .map(row=>[
+                String(row?.id||''),
+                Number(row?.position)||0,
+                row?.played===true
+              ])
+          : []
+    });
 
     if(
       key===egpCoreFirebaseMirrorKey ||
@@ -1743,7 +1850,16 @@ document.documentElement.dataset.egmVersion="6.36.92";
       select.add(option);
     });
 
-    select.value=savedRepertoire||'';
+    const savedExists=
+      savedRepertoire &&
+      [...select.options].some(
+        option=>option.value===savedRepertoire
+      );
+
+    select.value=
+      savedExists
+        ? savedRepertoire
+        : '';
   }
 
   function titleFromId(id){ return id.split('-').map(w=>w[0]?.toUpperCase()+w.slice(1)).join(' '); }

@@ -3644,40 +3644,29 @@ html.egp-android-panel body:not(.live-mode)
 <!-- EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1_FIN -->
 
 
-<!-- EGP_IPHONE_UI24R_PHYSICAL_SAFE_VIEWPORT_V1_INICIO -->
-<style id="EGP_IPHONE_UI24R_PHYSICAL_SAFE_VIEWPORT_V1">
-/*
- * SOLO PANEL EN IPHONE.
- *
- * Intentos anteriores:
- * - safe-area puro: podía devolver 0 / insuficiente en algunas aperturas.
- * - scaleX: cambiaba la geometría visual sin cambiar bien el área táctil.
- *
- * Este método NO escala Ui24R.
- * Cambia físicamente el rectángulo del iframe y después vuelve a sincronizar
- * su viewport intrínseco. Así imagen y tacto siguen usando la misma geometría.
- */
-html.egp-ui24r-iphone-safe-v1 #ui24rOverlay #ui24rFrame{
-  inset:auto !important;
+<!-- EGP_IPHONE_UI24R_TRANSLATE_ONLY_V2_INICIO -->
+<style id="EGP_IPHONE_UI24R_TRANSLATE_ONLY_V2">
+html.egp-ui24r-iphone-translate-v2
+#ui24rOverlay
+#ui24rFrame{
+  transform:
+    translate(
+      var(--egp-ui24r-move-x,0px),
+      var(--egp-ui24r-move-y,0px)
+    ) !important;
 
-  top:var(--egp-ui24r-iphone-top,0px) !important;
-  right:var(--egp-ui24r-iphone-right,0px) !important;
-  bottom:var(--egp-ui24r-iphone-bottom,0px) !important;
-  left:var(--egp-ui24r-iphone-left,0px) !important;
+  -webkit-transform:
+    translate(
+      var(--egp-ui24r-move-x,0px),
+      var(--egp-ui24r-move-y,0px)
+    ) !important;
 
-  width:auto !important;
-  height:auto !important;
-
-  transform:none !important;
-  -webkit-transform:none !important;
-
-  max-width:none !important;
-  max-height:none !important;
-  box-sizing:border-box !important;
+  transform-origin:50% 50% !important;
+  -webkit-transform-origin:50% 50% !important;
 }
 </style>
 
-<script id="EGP_IPHONE_UI24R_PHYSICAL_SAFE_VIEWPORT_V1_JS">
+<script id="EGP_IPHONE_UI24R_TRANSLATE_ONLY_V2_JS">
 (function(){
   'use strict';
 
@@ -3685,109 +3674,80 @@ html.egp-ui24r-iphone-safe-v1 #ui24rOverlay #ui24rFrame{
   if(!isiPhone) return;
 
   document.documentElement.classList.add(
-    'egp-ui24r-iphone-safe-v1'
+    'egp-ui24r-iphone-translate-v2'
   );
 
-  const PORTRAIT_TOP=59;
-  const LANDSCAPE_ISLAND=59;
+  const PORTRAIT_Y=59;
+  const LANDSCAPE_X=46;
 
-  function frame(){
+  function getFrame(){
     return document.getElementById('ui24rFrame');
   }
 
-  function angle(){
-    let value=0;
+  function getAngle(){
+    let a=0;
 
     if(
       screen.orientation &&
       typeof screen.orientation.angle==='number'
     ){
-      value=screen.orientation.angle;
+      a=screen.orientation.angle;
     }else if(typeof window.orientation==='number'){
-      value=window.orientation;
+      a=window.orientation;
     }
 
-    return ((value%360)+360)%360;
-  }
-
-  function syncIntrinsic(el){
-    if(!el) return;
-
-    requestAnimationFrame(function(){
-      const r=el.getBoundingClientRect();
-      const w=Math.max(1,Math.round(r.width));
-      const h=Math.max(1,Math.round(r.height));
-
-      el.setAttribute('width',String(w));
-      el.setAttribute('height',String(h));
-
-      el.style.setProperty('--egp-ios-frame-w',w+'px');
-      el.style.setProperty('--egp-ios-frame-h',h+'px');
-    });
+    return ((a%360)+360)%360;
   }
 
   function apply(){
-    const el=frame();
-    if(!el) return;
+    const frame=getFrame();
+    if(!frame) return;
 
     const landscape=
       (window.innerWidth||0) >
       (window.innerHeight||0);
 
-    let top=0;
-    let right=0;
-    let bottom=0;
-    let left=0;
+    let x=0;
+    let y=0;
 
     if(!landscape){
-      top=PORTRAIT_TOP;
+      y=PORTRAIT_Y;
     }else{
-      const a=angle();
-
-      if(a===90){
-        left=LANDSCAPE_ISLAND;
-      }else{
-        right=LANDSCAPE_ISLAND;
-      }
+      const a=getAngle();
+      x=(a===90)
+        ? LANDSCAPE_X
+        : -LANDSCAPE_X;
     }
 
-    el.style.setProperty(
-      '--egp-ui24r-iphone-top',
-      top+'px'
-    );
-    el.style.setProperty(
-      '--egp-ui24r-iphone-right',
-      right+'px'
-    );
-    el.style.setProperty(
-      '--egp-ui24r-iphone-bottom',
-      bottom+'px'
-    );
-    el.style.setProperty(
-      '--egp-ui24r-iphone-left',
-      left+'px'
+    frame.style.setProperty(
+      '--egp-ui24r-move-x',
+      x+'px'
     );
 
-    syncIntrinsic(el);
-    setTimeout(function(){ syncIntrinsic(el); },80);
-    setTimeout(function(){ syncIntrinsic(el); },260);
+    frame.style.setProperty(
+      '--egp-ui24r-move-y',
+      y+'px'
+    );
   }
 
-  window.egpUi24rApplyIphoneSafeViewport=apply;
+  window.egpUi24rTranslateOnlyV2=apply;
 
   window.addEventListener('resize',apply);
 
   window.addEventListener(
     'orientationchange',
     function(){
-      setTimeout(apply,60);
-      setTimeout(apply,220);
-      setTimeout(apply,520);
+      setTimeout(apply,40);
+      setTimeout(apply,180);
+      setTimeout(apply,450);
     }
   );
 
   if(window.visualViewport){
-    window.visualViewport.addEventListener('resize',apply);
+    window.visualViewport.addEventListener(
+      'resize',
+      apply
+    );
   }
 
   document.addEventListener(
@@ -3801,20 +3761,18 @@ html.egp-ui24r-iphone-safe-v1 #ui24rOverlay #ui24rFrame{
   document.addEventListener(
     'click',
     function(event){
-      const btn=event.target.closest('#ui24rBtn');
-      if(!btn) return;
-
+      if(!event.target.closest('#ui24rBtn')) return;
       apply();
       setTimeout(apply,80);
-      setTimeout(apply,260);
+      setTimeout(apply,250);
     },
     true
   );
 
-  setTimeout(apply,150);
+  setTimeout(apply,120);
 })();
 </script>
-<!-- EGP_IPHONE_UI24R_PHYSICAL_SAFE_VIEWPORT_V1_FIN -->
+<!-- EGP_IPHONE_UI24R_TRANSLATE_ONLY_V2_FIN -->
 
 
 <!-- EGP_UI24R_BACK_INDEPENDENT_LAYER_V1_INICIO -->

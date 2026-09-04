@@ -1325,10 +1325,61 @@ monitorBackBtn?.addEventListener("click", () => {
 
 
     /*
-     * VERTICAL:
-     * sin compresión.
+     * EGP MUSICOS UI24R VERTICAL SOLO V1
+     *
+     * SOLO cuando la interfaz Ui24R está en vertical.
+     * Reserva arriba la zona de Dynamic Island SIN cambiar
+     * width/height del iframe.
+     *
+     * Horizontal continúa exactamente con el bloque existente.
      */
     if (!landscape){
+
+      const probe =
+        document.createElement("div");
+
+      probe.style.cssText = `
+        position:fixed;
+        visibility:hidden;
+        pointer-events:none;
+        left:-10000px;
+        top:0;
+        padding-top:
+          max(
+            59px,
+            env(safe-area-inset-top,0px)
+          );
+      `;
+
+      document.body.appendChild(probe);
+
+      const top =
+        Math.max(
+          59,
+          parseFloat(
+            getComputedStyle(probe)
+              .paddingTop
+          ) || 59
+        );
+
+      probe.remove();
+
+      const h =
+        Math.max(
+          1,
+          window.innerHeight
+        );
+
+      const sy =
+        Math.max(
+          0.70,
+          Math.min(
+            1,
+            (h - Math.min(top,h-100))
+            /
+            h
+          )
+        );
 
       frame.style.setProperty(
         "--egp-ui-sx",
@@ -1336,8 +1387,13 @@ monitorBackBtn?.addEventListener("click", () => {
       );
 
       frame.style.setProperty(
+        "--egp-ui-sy",
+        String(sy)
+      );
+
+      frame.style.setProperty(
         "--egp-ui-origin",
-        "50% 50%"
+        "50% 100%"
       );
 
       return;

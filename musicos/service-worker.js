@@ -1,7 +1,7 @@
 "use strict";
-const CACHE = "egp-musicos-v1.5.8.19-com-pwa";
+const CACHE = "egp-musicos-v1.5.8.18-com-pwa";
 const CORE = [
-  "./", "./index.html", "./style.css?v=ui24r-vertical-20260904-v2", "./app.js?v=ui24r-vertical-20260904-v2",
+  "./", "./index.html", "./style.css?v=1.5.8.17", "./app.js?v=com-pwa-20260905-v1",
   "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png",
   "../canciones.json", "../configuracion.json"
 ];

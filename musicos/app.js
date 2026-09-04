@@ -642,7 +642,7 @@ if ("serviceWorker" in navigator && !previewMode) {
         return;
       }
 
-      const registration = await navigator.serviceWorker.register("./service-worker.js?v=1.5.8.19", {
+      const registration = await navigator.serviceWorker.register("./service-worker.js?v=1.5.8", {
         scope: "./",
         updateViaCache: "none"
       });
@@ -801,19 +801,6 @@ function egpMostrarMonitoreo() {
   document.body
     .classList
     .add("egp-ui24r-open");
-
-  /*
-   * EGP MUSICOS UI24R VERTICAL OPEN V2
-   * Recalcular SOLO al abrir la interfaz.
-   */
-  requestAnimationFrame(() => {
-    if (
-      typeof window.egpMusicosUi24rAjustarV2
-      === "function"
-    ) {
-      window.egpMusicosUi24rAjustarV2();
-    }
-  });
 }
 
 
@@ -1338,61 +1325,10 @@ monitorBackBtn?.addEventListener("click", () => {
 
 
     /*
-     * EGP MUSICOS UI24R VERTICAL SOLO V1
-     *
-     * SOLO cuando la interfaz Ui24R está en vertical.
-     * Reserva arriba la zona de Dynamic Island SIN cambiar
-     * width/height del iframe.
-     *
-     * Horizontal continúa exactamente con el bloque existente.
+     * VERTICAL:
+     * sin compresión.
      */
     if (!landscape){
-
-      const probe =
-        document.createElement("div");
-
-      probe.style.cssText = `
-        position:fixed;
-        visibility:hidden;
-        pointer-events:none;
-        left:-10000px;
-        top:0;
-        padding-top:
-          max(
-            59px,
-            env(safe-area-inset-top,0px)
-          );
-      `;
-
-      document.body.appendChild(probe);
-
-      const top =
-        Math.max(
-          59,
-          parseFloat(
-            getComputedStyle(probe)
-              .paddingTop
-          ) || 59
-        );
-
-      probe.remove();
-
-      const h =
-        Math.max(
-          1,
-          window.innerHeight
-        );
-
-      const sy =
-        Math.max(
-          0.70,
-          Math.min(
-            1,
-            (h - Math.min(top,h-100))
-            /
-            h
-          )
-        );
 
       frame.style.setProperty(
         "--egp-ui-sx",
@@ -1400,13 +1336,8 @@ monitorBackBtn?.addEventListener("click", () => {
       );
 
       frame.style.setProperty(
-        "--egp-ui-sy",
-        String(sy)
-      );
-
-      frame.style.setProperty(
         "--egp-ui-origin",
-        "50% 100%"
+        "50% 50%"
       );
 
       return;
@@ -1542,9 +1473,6 @@ monitorBackBtn?.addEventListener("click", () => {
     );
   }
 
-
-  window.egpMusicosUi24rAjustarV2 =
-    ajustar;
 
   window.addEventListener(
     "resize",

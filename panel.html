@@ -3548,100 +3548,197 @@ html.egp-android-panel body:not(.live-mode)
 
 
 
-<!-- EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1_INICIO -->
-<script id="EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1">
+<!-- EGP_IPHONE_UI24R_V3C_INICIO -->
+<style id="EGP_IPHONE_UI24R_V3C_CSS">
+html.egp-iphone-ui24r-v3c #ui24rFrame{
+  transform:
+    scaleX(var(--egp-ui-sx,1))
+    scaleY(var(--egp-ui-sy,1)) !important;
+
+  -webkit-transform:
+    scaleX(var(--egp-ui-sx,1))
+    scaleY(var(--egp-ui-sy,1)) !important;
+
+  transform-origin:
+    var(--egp-ui-origin,50% 50%) !important;
+
+  -webkit-transform-origin:
+    var(--egp-ui-origin,50% 50%) !important;
+}
+</style>
+
+<script id="EGP_IPHONE_UI24R_V3C">
 (function(){
+  'use strict';
+
   const isiPhone=/iPhone|iPod/i.test(navigator.userAgent);
 
   window.egpUi24rSyncIntrinsicSize=function(frame){
     if(!isiPhone || !frame) return;
-
-    /*
-     * iOS puede dar a un iframe embebido el viewport intrínseco
-     * HTML por defecto (aprox. 300x150) aunque CSS lo pinte grande.
-     *
-     * mixer.html usa width=device-width, por lo que debemos escribir
-     * el tamaño físico del iframe ANTES de asignar src.
-     */
-    const sync=function(){
-      const r=frame.getBoundingClientRect();
-
-      const w=Math.max(
-        1,
-        Math.round(r.width || window.innerWidth || 1)
-      );
-
-      const h=Math.max(
-        1,
-        Math.round(r.height || window.innerHeight || 1)
-      );
-
-      frame.setAttribute('width',String(w));
-      frame.setAttribute('height',String(h));
-
-      frame.style.setProperty(
-        '--egp-ios-frame-w',
-        w+'px'
-      );
-
-      frame.style.setProperty(
-        '--egp-ios-frame-h',
-        h+'px'
-      );
-    };
-
-    sync();
-    requestAnimationFrame(sync);
+    apply(frame);
   };
 
-  function resync(){
-    const frame=document.getElementById('ui24rFrame');
-    if(!frame) return;
+  function currentAngle(){
+    let a=0;
 
-    window.egpUi24rSyncIntrinsicSize(frame);
+    if(
+      screen.orientation &&
+      typeof screen.orientation.angle==='number'
+    ){
+      a=screen.orientation.angle;
+    }else if(typeof window.orientation==='number'){
+      a=window.orientation;
+    }
+
+    return ((a%360)+360)%360;
   }
 
-  window.addEventListener('resize',resync);
+  function safeTopPx(){
+    const probe=document.createElement('div');
+
+    probe.style.cssText=[
+      'position:fixed',
+      'visibility:hidden',
+      'pointer-events:none',
+      'left:-10000px',
+      'top:0',
+      'padding-top:max(59px,env(safe-area-inset-top,0px))'
+    ].join(';');
+
+    document.documentElement.appendChild(probe);
+
+    const px=
+      parseFloat(getComputedStyle(probe).paddingTop) ||
+      59;
+
+    probe.remove();
+
+    return Math.max(59,px);
+  }
+
+  function apply(frame){
+    if(!isiPhone || !frame) return;
+
+    document.documentElement.classList.add(
+      'egp-iphone-ui24r-v3c'
+    );
+
+    document.documentElement.dataset.egpUi24rV3c='aplicado';
+    frame.dataset.egpUi24rV3c='aplicado';
+
+    const w=Math.max(
+      1,
+      Math.round(window.innerWidth || 1)
+    );
+
+    const h=Math.max(
+      1,
+      Math.round(window.innerHeight || 1)
+    );
+
+    const landscape=w>h;
+
+    let sx=1;
+    let sy=1;
+    let origin='50% 50%';
+
+    if(landscape){
+      const margen=46;
+
+      sx=Math.max(
+        0.70,
+        Math.min(1,(w-margen)/w)
+      );
+
+      origin=
+        currentAngle()===90
+          ? '100% 50%'
+          : '0% 50%';
+    }else{
+      const top=Math.min(
+        safeTopPx(),
+        Math.max(0,h-100)
+      );
+
+      sy=Math.max(
+        0.70,
+        Math.min(1,(h-top)/h)
+      );
+
+      origin='50% 100%';
+    }
+
+    frame.style.setProperty('--egp-ui-sx',String(sx));
+    frame.style.setProperty('--egp-ui-sy',String(sy));
+    frame.style.setProperty('--egp-ui-origin',origin);
+  }
+
+  function getFrame(){
+    return document.getElementById('ui24rFrame');
+  }
+
+  function run(){
+    const frame=getFrame();
+    if(!frame) return false;
+
+    apply(frame);
+    requestAnimationFrame(function(){ apply(frame); });
+    setTimeout(function(){ apply(frame); },80);
+    setTimeout(function(){ apply(frame); },220);
+    setTimeout(function(){ apply(frame); },500);
+
+    return true;
+  }
+
+  function init(){
+    if(run()) return;
+
+    if(document.readyState==='loading'){
+      document.addEventListener(
+        'DOMContentLoaded',
+        run,
+        {once:true}
+      );
+    }else{
+      requestAnimationFrame(run);
+    }
+  }
+
+  window.egpUi24rApplyV3C=run;
+
+  window.addEventListener('resize',run);
 
   window.addEventListener(
     'orientationchange',
     function(){
-      setTimeout(resync,80);
-      setTimeout(resync,250);
-      setTimeout(resync,600);
+      setTimeout(run,80);
+      setTimeout(run,220);
+      setTimeout(run,500);
     }
   );
 
   if(window.visualViewport){
     window.visualViewport.addEventListener(
       'resize',
-      resync
+      run
     );
   }
 
   document.addEventListener(
-    'DOMContentLoaded',
-    function(){
-      requestAnimationFrame(resync);
+    'click',
+    function(event){
+      const target=event.target;
+      if(!target || !target.closest) return;
+      if(!target.closest('#ui24rBtn')) return;
+      run();
     },
-    {once:true}
+    true
   );
+
+  init();
 })();
 </script>
-
-<style id="EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1_CSS">
-@supports (-webkit-touch-callout:none){
-  #ui24rFrame{
-    min-width:0 !important;
-    min-height:0 !important;
-    max-width:none !important;
-    max-height:none !important;
-    box-sizing:border-box !important;
-    -webkit-transform:none !important;
-  }
-}
-</style>
-<!-- EGP_IOS_UI24R_INTRINSIC_VIEWPORT_V1_FIN -->
+<!-- EGP_IPHONE_UI24R_V3C_FIN -->
 
 <!-- EGP_UI24R_BACK_INDEPENDENT_LAYER_V1_INICIO -->
 <style id="EGP_UI24R_BACK_INDEPENDENT_LAYER_V1">

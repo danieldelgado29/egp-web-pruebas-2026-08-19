@@ -942,11 +942,69 @@ if ("serviceWorker" in navigator && !previewMode) {
         return;
       }
 
-      const registration = await navigator.serviceWorker.register("./service-worker.js?v=1.5.8", {
-        scope: "./",
-        updateViaCache: "none"
-      });
-      await registration.update();
+      /*
+       * EGP_MUSICOS_AUTOUPDATE_V1
+       *
+       * La PWA se actualiza sola:
+       * - al abrir
+       * - al volver a primer plano
+       * - al recuperar red
+       * - cada 60 s mientras está abierta
+       *
+       * El SW nuevo hace skipWaiting + clients.claim y además
+       * navega los clientes abiertos a la versión nueva.
+       */
+      const registration = await navigator.serviceWorker.register(
+        "./service-worker.js?v=1.5.8.20-auto-update-v1",
+        {
+          scope: "./",
+          updateViaCache: "none"
+        }
+      );
+
+      let egpUpdateChecking=false;
+
+      const egpCheckForUpdate=async()=>{
+        if(egpUpdateChecking)return;
+        egpUpdateChecking=true;
+
+        try{
+          await registration.update();
+        }catch(error){
+          console.warn(
+            "Actualización Músicos pendiente:",
+            error
+          );
+        }finally{
+          egpUpdateChecking=false;
+        }
+      };
+
+      await egpCheckForUpdate();
+
+      document.addEventListener(
+        "visibilitychange",
+        ()=>{
+          if(!document.hidden){
+            egpCheckForUpdate();
+          }
+        }
+      );
+
+      window.addEventListener(
+        "pageshow",
+        ()=>egpCheckForUpdate()
+      );
+
+      window.addEventListener(
+        "online",
+        ()=>egpCheckForUpdate()
+      );
+
+      setInterval(
+        egpCheckForUpdate,
+        60000
+      );
     } catch (error) {
       console.warn("Service Worker músicos:", error);
     }

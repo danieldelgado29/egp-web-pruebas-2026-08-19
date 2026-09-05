@@ -287,6 +287,17 @@ document.documentElement.dataset.egmVersion="6.36.92";
   let activeViewerSongId=null, activeViewerType=null, activeImageOwner='elena', activeImageSongId=null, activeImageMode='image', returnToImageViewer=false, viewerRenderGeneration=0, pendingViewerRefresh=null;
   let applyingRemoteShowState=false;
   let latestRemoteState=null;
+
+  /*
+   * EGP_FAILOVER_VISUAL_STABILITY_V2
+   *
+   * latestRemoteState queda reservado para snapshots Firebase
+   * CONFIRMADOS por servidor. Un snapshot fromCache nunca puede
+   * convertirse en fuente de failover ni volver a entrar a Core.
+   */
+  let latestRemoteServerState=null;
+  let egpHadLocalCoreAuthority=false;
+
   let egpPedidosPendientes=[];
   let egpPedidosFirebase=[];
   let egpPedidosLan=[];
@@ -468,6 +479,67 @@ document.documentElement.dataset.egmVersion="6.36.92";
       onSnapshot(remoteStateRef,snap=>{
         if(!snap.exists()) return;
         const data=snap.data()||{};
+        const egpRemoteDesdeCache=
+          snap?.metadata?.fromCache===true;
+
+        const egpFirebaseServerRevision=
+          egpFirebaseStateRevision(data);
+
+        if(!egpRemoteDesdeCache){
+          latestRemoteServerState=data;
+          latestRemoteState=data;
+        }
+
+        /*
+         * EGP_FAILOVER_VISUAL_STABILITY_V2
+         *
+         * 1. Si ya tuvimos Core durante ESTE runtime y estamos en vivo,
+         *    un snapshot Firebase DE CACHÉ jamás repinta la pantalla.
+         *
+         * 2. Si Core acaba de caer y Firebase servidor todavía está
+         *    detrás de la última revisión Core, tampoco repinta.
+         *
+         * LOCAL_QUEUE_MODE puede pasar a false inmediatamente:
+         * Firebase ya es el failover; solo esperamos un snapshot
+         * servidor suficientemente nuevo antes de cambiar la vista.
+         */
+        const egpHealthyLiveView=
+          document.body.classList.contains('live-mode') &&
+          Boolean(state.config);
+
+        const egpIgnoreCachedFirebaseDuringLive=
+          egpRemoteDesdeCache &&
+          egpHadLocalCoreAuthority &&
+          egpHealthyLiveView;
+
+        const egpWaitFirebaseCatchup=
+          !egpRemoteDesdeCache &&
+          egpHadLocalCoreAuthority &&
+          LOCAL_QUEUE_MODE!==true &&
+          egpHealthyLiveView &&
+          Number(lastAppliedCoreRevision)>0 &&
+          egpFirebaseServerRevision>0 &&
+          egpFirebaseServerRevision<Number(lastAppliedCoreRevision);
+
+        if(
+          egpIgnoreCachedFirebaseDuringLive ||
+          egpWaitFirebaseCatchup
+        ){
+          remoteReady=true;
+
+          console.info(
+            'EGP failover visual: conservando último estado sano',
+            {
+              fromCache:egpRemoteDesdeCache,
+              firebaseRevision:egpFirebaseServerRevision,
+              coreRevision:Number(lastAppliedCoreRevision)||0,
+              localQueueMode:LOCAL_QUEUE_MODE===true
+            }
+          );
+
+          return;
+        }
+
         const queueBeforeSnapshot=[...state.queue];
 
         /*
@@ -500,11 +572,12 @@ document.documentElement.dataset.egmVersion="6.36.92";
           if(queueSnapshotApplied)state.queue=canonicalQueueOrder(incomingQueue,incomingPlayedOrder);
         }
 
-        latestRemoteState=data;
-
+        /*
+         * latestRemoteState NO se asigna aquí:
+         * ya se guardó arriba únicamente si el snapshot vino del servidor.
+         */
         egpSyncPedidosFromRemote(data);
 
-        const egpRemoteDesdeCache=snap?.metadata?.fromCache===true;
         applyRemotePanelState(data,{skipQueue:true,skipPlayed:true,preserveLocalRequests:egpRemoteDesdeCache});
 
         if(!LOCAL_QUEUE_MODE&&!queueDragState.active&&!queueDragState.saving){
@@ -519,7 +592,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
           typeof data.biblioteca==='object' &&
           (
             lastAppliedRemoteLibraryRevision===null ||
-            remoteLibraryRevision!==lastAppliedRemoteLibraryRevision
+            remoteLibraryRevision>lastAppliedRemoteLibraryRevision
           )
         ){
           lastAppliedRemoteLibraryRevision=remoteLibraryRevision;
@@ -2580,11 +2653,36 @@ document.documentElement.dataset.egmVersion="6.36.92";
         snap=await localQueueRequest('/api/state');
       }catch(err){
         const wasLocal=LOCAL_QUEUE_MODE;
+
+        /*
+         * Firebase toma el rol de failover INMEDIATAMENTE.
+         * La vista, sin embargo, solo cambia si tenemos un snapshot
+         * confirmado por servidor y no más viejo que el último Core.
+         */
         LOCAL_QUEUE_MODE=false;
 
-        if(wasLocal&&latestRemoteState){
-          const q=Array.isArray(latestRemoteState.cola)?latestRemoteState.cola.map(String):[];
-          const p=Array.isArray(latestRemoteState.tocadas)?[...new Set(latestRemoteState.tocadas.map(String))]:[];
+        const failoverState=
+          latestRemoteServerState;
+
+        const failoverRevision=
+          failoverState
+            ? egpFirebaseStateRevision(failoverState)
+            : 0;
+
+        const coreRevision=
+          Number(lastAppliedCoreRevision)||0;
+
+        const failoverReady=
+          Boolean(failoverState) &&
+          (
+            !coreRevision ||
+            !failoverRevision ||
+            failoverRevision>=coreRevision
+          );
+
+        if(wasLocal&&failoverReady){
+          const q=Array.isArray(failoverState.cola)?failoverState.cola.map(String):[];
+          const p=Array.isArray(failoverState.tocadas)?[...new Set(failoverState.tocadas.map(String))]:[];
 
           state.played=new Set(p);
           applyRemoteQueueSnapshot(q);
@@ -2595,10 +2693,10 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
           /*
            * EGP_CORE_SHOW_AUTHORITY_V1
-           * Core cayó: Firebase vuelve a ser failover del show.
+           * Core cayó: Firebase servidor confirmado asume el show.
            */
           applyRemotePanelState(
-            latestRemoteState,
+            failoverState,
             {
               skipQueue:true,
               skipPlayed:true,
@@ -2606,10 +2704,27 @@ document.documentElement.dataset.egmVersion="6.36.92";
               authority:'firebase'
             }
           );
+
+        }else if(wasLocal){
+          /*
+           * No hay snapshot servidor listo o todavía está atrasado.
+           * No vaciar ni reducir la pantalla: conservar el último
+           * estado Core hasta que onSnapshot entregue uno válido.
+           */
+          console.warn(
+            'EGP failover: Firebase toma control; UI conserva último Core hasta sincronizar',
+            {
+              hasServerSnapshot:Boolean(failoverState),
+              firebaseRevision:failoverRevision,
+              coreRevision
+            }
+          );
         }
 
         return;
       }
+
+      egpHadLocalCoreAuthority=true;
 
       const enteringLocalQueueMode=
         LOCAL_QUEUE_MODE!==true;

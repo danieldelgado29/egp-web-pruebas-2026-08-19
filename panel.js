@@ -271,6 +271,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   let remoteStateRef = null;
   let remoteDb = null;
   let remoteGetDoc = null;
+  let remoteGetDocFromServer = null;
   let remoteDoc = null;
   let remoteSetDoc = null;
   let remoteReady = false;
@@ -297,6 +298,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
    */
   let latestRemoteServerState=null;
   let egpHadLocalCoreAuthority=false;
+
+  /*
+   * EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V1
+   * El Panel es cliente. Cloud Sync en la Mac es el único mediador
+   * Core <-> Firebase.
+   */
+  const EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V1=true;
 
   let egpPedidosPendientes=[];
   let egpPedidosFirebase=[];
@@ -458,7 +466,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
     remoteInitPromise=(async()=>{
     if(!navigator.onLine && !forceNetwork) throw new Error('Sin conexión a internet');
     try{
-      const [{ initializeApp }, { doc, collection, query, where, getDocs, initializeFirestore, onSnapshot, setDoc: firebaseSetDoc, getDoc, updateDoc, runTransaction }] = await Promise.all([
+      const [{ initializeApp }, { doc, collection, query, where, getDocs, initializeFirestore, onSnapshot, setDoc: firebaseSetDoc, getDoc, getDocFromServer, updateDoc, runTransaction }] = await Promise.all([
         import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
         import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js')
       ]);
@@ -471,6 +479,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       remoteStateRef=doc(panelDb,'config','estado');
       window.__egmSetDoc=firebaseSetDoc;
       remoteGetDoc=getDoc;
+      remoteGetDocFromServer=getDocFromServer;
       remoteDoc=doc;
       remoteSetDoc=firebaseSetDoc;
       window.__egmUpdateDoc=updateDoc;
@@ -792,7 +801,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
         /*
          * Firebase sigue en paralelo para web publica/respaldo.
          */
-        if(!EGP_AUDIT_LOCAL){
+        if(!EGP_AUDIT_LOCAL && !EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V1){
           (async()=>{
             try{
               if(!remoteStateRef)await initRemoteSync(true);
@@ -1540,6 +1549,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
   function egpBridgeFirebaseQueueToCore(data={}){
+    if(EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V1)return;
     if(
       EGP_AUDIT_LOCAL ||
       !LOCAL_QUEUE_MODE
@@ -1969,6 +1979,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
   function egpBridgeFirebaseStateToCore(data={}){
+    if(EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V1)return;
     if(
       EGP_AUDIT_LOCAL ||
       !LOCAL_QUEUE_MODE
@@ -2041,6 +2052,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
 
   function egpMirrorQueueLanToFirebase(){
+    if(EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V1)return Promise.resolve();
     if(
       EGP_AUDIT_LOCAL ||
       egpFirebaseStateBridgeActive ||
@@ -2101,6 +2113,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
    * el snapshot completo de Core en Firebase.
    */
   function egpMirrorCoreSnapshotToFirebase(snapshot){
+    if(EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V1)return;
     if(
       EGP_AUDIT_LOCAL ||
       egpFirebaseStateBridgeActive ||
@@ -3400,40 +3413,468 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   refreshPanelProfileControls();
 
-  $('#showForm').addEventListener('submit',e=>{
-    e.preventDefault();
-    const venue=$('#venueInput').value.trim();
-    if(!venue) return toast('Escribe el lugar del show');
-    const config={venue,repertoire:$('#repertoireSelect').value,repertoireName:$('#repertoireSelect').selectedOptions[0].dataset.name||$('#repertoireSelect').selectedOptions[0].textContent,profile:$('#profileSelect').value,whatsapp:$('#whatsappToggle').checked===true,requests:$('#requestsToggle')?.checked===true,requestsMode:$('#requestsModeSelect')?.value==='uno_por_turno'?'uno_por_turno':'libre',publicQueue:$('#publicQueueToggle').checked,advertising:$('#advertisingToggle').checked,startedAt:new Date().toISOString()};
-    if(config.requests===true){config.whatsapp=false;$('#whatsappToggle').checked=false;}
-    askConfirm('Comenzar nuevo show','Se guardará esta configuración y se reiniciará la cola del show anterior.',()=>{
-      // Entrada inmediata: no esperar una lectura de verificación para mostrar Control en vivo.
-      remoteShowGeneration++;localDesiredShowActive=true;showActiveConfirmed=true;localShowTransitionUntil=Date.now()+10000;
+  /*
+   * EGP_SINGLE_SHOW_PANEL_GUARD_V1
+   */
+  async function egpReadCoreAuthorityV1(){
+    try{
+      return {reachable:true,data:await localQueueRequest('/api/state')};
+    }catch(error){
+      return {reachable:false,data:null,error};
+    }
+  }
 
-      /*
-       * EGP_NEW_SHOW_REARMS_UI_V3
-       * Registrar la misma identidad que publicaremos a Core/Firebase.
-       */
-      currentAppliedShowSession=
-        `show-${new Date(config.startedAt).getTime()}`;
-      configOpenedFromLive=false;
-      window.__egpAutoEntrarShowActivoLanV1=false;
+  async function egpReadFirebaseAuthorityV1(){
+    try{
+      if(!remoteStateRef)await initRemoteSync(true);
+      if(!remoteStateRef)return {reachable:false,data:null};
 
-      state.config=config;state.queue=[];state.played.clear();addVenueOption(venue);
-      startNewShowTimer();
+      const getter=
+        remoteGetDocFromServer ||
+        remoteGetDoc;
+
+      if(!getter)return {reachable:false,data:null};
+
+      const snap=await getter(remoteStateRef);
+      if(!snap.exists())return {reachable:true,data:{}};
+
+      return {
+        reachable:true,
+        data:snap.data()||{}
+      };
+    }catch(error){
+      return {reachable:false,data:null,error};
+    }
+  }
+
+  async function egpWaitCoreCatchupV1(session,revision,timeoutMs=3600){
+    const deadline=Date.now()+timeoutMs;
+
+    while(Date.now()<deadline){
+      try{
+        const snap=await localQueueRequest('/api/state');
+        const currentSession=egpCoreShowSession(snap);
+        const currentRevision=egpCoreSemanticRevision(snap);
+
+        if(
+          snap?.show?.active===true &&
+          (!session || currentSession===session) &&
+          (!revision || currentRevision>=revision)
+        ){
+          return snap;
+        }
+      }catch(_){}
+
+      await new Promise(resolve=>setTimeout(resolve,300));
+    }
+
+    return null;
+  }
+
+  async function egpResolvePanelAuthorityV1({
+    startup=false,
+    showConfigWhenInactive=false
+  }={}){
+    const [coreResult,remoteResult]=await Promise.all([
+      egpReadCoreAuthorityV1(),
+      egpReadFirebaseAuthorityV1()
+    ]);
+
+    let core=coreResult.data;
+    const remote=remoteResult.data;
+
+    let coreActive=core?.show?.active===true;
+    const remoteActive=remote?.show_activo===true;
+
+    const coreSession=egpCoreShowSession(core||{});
+    const remoteSession=egpRemoteShowSession(remote||{});
+
+    if(
+      startup &&
+      coreResult.reachable &&
+      remoteResult.reachable &&
+      remoteActive &&
+      (
+        !coreActive ||
+        (
+          coreSession &&
+          remoteSession &&
+          coreSession===remoteSession &&
+          egpFirebaseStateRevision(remote)>
+            egpCoreSemanticRevision(core)
+        )
+      )
+    ){
+      const caught=await egpWaitCoreCatchupV1(
+        remoteSession,
+        egpFirebaseStateRevision(remote)
+      );
+
+      if(caught){
+        core=caught;
+        coreActive=true;
+      }
+    }
+
+    if(coreActive){
+      LOCAL_QUEUE_MODE=true;
+      egpHadLocalCoreAuthority=true;
+      applyLocalQueueSnapshot(core,{force:true});
+
+      return {
+        reachable:true,
+        active:true,
+        authority:'core',
+        coreReachable:true,
+        firebaseReachable:remoteResult.reachable,
+        session:egpCoreShowSession(core)
+      };
+    }
+
+    if(remoteActive){
+      LOCAL_QUEUE_MODE=false;
+      latestRemoteServerState=remote;
+      latestRemoteState=remote;
+
+      applyRemotePanelState(
+        remote,
+        {authority:'firebase',allowWhileLocal:true}
+      );
+
+      return {
+        reachable:true,
+        active:true,
+        authority:'firebase',
+        coreReachable:coreResult.reachable,
+        firebaseReachable:true,
+        session:egpRemoteShowSession(remote)
+      };
+    }
+
+    if(coreResult.reachable || remoteResult.reachable){
+      showActiveConfirmed=false;
+      currentAppliedShowSession='';
+      localDesiredShowActive=null;
+      localShowTransitionUntil=0;
+      state.config=null;
+      state.queue=[];
+      state.played.clear();
+      setStatus(false);
       saveStateLocalOnly();
-      setStatus(true);showLive();egpPublicarConfigLan({show_activo:true,inicio_show:new Date(config.startedAt).getTime(),pedidos_whatsapp:config.whatsapp===true,pedidos_panel:config.requests===true,pedidos_modo:config.requestsMode});
-      toast(`Show iniciado. Repertorio activo: ${config.repertoireName}.`);
 
-      // Publicación en segundo plano. Los demás dispositivos reciben el show por onSnapshot.
-      syncRemoteState(true).then(()=>{
-        localDesiredShowActive=null;localShowTransitionUntil=0;
-        toast('Configuración sincronizada en todos los dispositivos.');
-      }).catch(err=>{
-        console.error('No se pudo publicar el show activo:',err);
-        toast('Show iniciado localmente. Se sincronizará cuando vuelva la conexión.');
-      });
-    },'Comenzar');
+      if(
+        showConfigWhenInactive &&
+        panelAuthValid() &&
+        $('#panelLogin').hidden
+      ){
+        showConfig(false);
+      }
+
+      return {
+        reachable:true,
+        active:false,
+        authority:coreResult.reachable?'core':'firebase',
+        coreReachable:coreResult.reachable,
+        firebaseReachable:remoteResult.reachable,
+        session:''
+      };
+    }
+
+    return {
+      reachable:false,
+      active:false,
+      authority:'',
+      coreReachable:false,
+      firebaseReachable:false,
+      session:''
+    };
+  }
+
+  async function egpClaimCoreShowV1(payload){
+    const response=await fetch(
+      `${LOCAL_CORE_URL}/api/public-config`,
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        cache:'no-store',
+        body:JSON.stringify(payload)
+      }
+    );
+
+    const data=await response.json();
+
+    if(!response.ok || data?.ok===false){
+      const error=new Error(
+        data?.error ||
+        data?.message ||
+        `Local Core HTTP ${response.status}`
+      );
+      error.code=data?.error||'CORE_CLAIM_FAILED';
+      throw error;
+    }
+
+    return data;
+  }
+
+  async function egpClaimFirebaseShowV1(payload){
+    if(!remoteStateRef)await initRemoteSync(true);
+
+    if(
+      !remoteStateRef ||
+      !remoteRunTransaction ||
+      !remoteDb
+    ){
+      throw new Error(
+        'Firebase no está listo para reservar el show'
+      );
+    }
+
+    await remoteRunTransaction(
+      remoteDb,
+      async transaction=>{
+        const snap=await transaction.get(remoteStateRef);
+        const current=snap.exists()?snap.data()||{}:{};
+
+        if(current.show_activo===true){
+          const error=new Error('SHOW_ALREADY_ACTIVE');
+          error.code='SHOW_ALREADY_ACTIVE';
+          error.current=current;
+          throw error;
+        }
+
+        transaction.set(
+          remoteStateRef,
+          payload,
+          {merge:true}
+        );
+      }
+    );
+
+    latestRemoteServerState=payload;
+    latestRemoteState=payload;
+    return true;
+  }
+
+  let egpStartingShowV1=false;
+
+  $('#showForm').addEventListener('submit',async e=>{
+    e.preventDefault();
+
+    if(egpStartingShowV1)return;
+
+    const venue=$('#venueInput').value.trim();
+    if(!venue)return toast('Escribe el lugar del show');
+
+    const preflight=await egpResolvePanelAuthorityV1();
+
+    if(preflight.active){
+      toast('Ya existe un show activo. Entrando al show actual.');
+      return;
+    }
+
+    if(!preflight.reachable){
+      toast(
+        'No se pudo comprobar ni Core ni Firebase. No se creará otro show.'
+      );
+      return;
+    }
+
+    askConfirm(
+      'Comenzar nuevo show',
+      'Se verificará nuevamente que no exista otro show activo.',
+      async()=>{
+        if(egpStartingShowV1)return;
+        egpStartingShowV1=true;
+
+        const startBtn=$('#showForm .start-btn');
+        if(startBtn)startBtn.disabled=true;
+
+        try{
+          const finalCheck=
+            await egpResolvePanelAuthorityV1();
+
+          if(finalCheck.active){
+            toast('Otro dispositivo ya inició un show. Entrando a ese show.');
+            return;
+          }
+
+          if(!finalCheck.reachable){
+            toast(
+              'No se pudo verificar la autoridad. Show NO iniciado.'
+            );
+            return;
+          }
+
+          const config={
+            venue,
+            repertoire:$('#repertoireSelect').value,
+            repertoireName:
+              $('#repertoireSelect').selectedOptions[0].dataset.name ||
+              $('#repertoireSelect').selectedOptions[0].textContent,
+            profile:$('#profileSelect').value,
+            whatsapp:$('#whatsappToggle').checked===true,
+            requests:$('#requestsToggle')?.checked===true,
+            requestsMode:
+              $('#requestsModeSelect')?.value==='uno_por_turno'
+                ? 'uno_por_turno'
+                : 'libre',
+            publicQueue:$('#publicQueueToggle').checked,
+            advertising:$('#advertisingToggle').checked,
+            startedAt:new Date().toISOString()
+          };
+
+          if(config.requests===true){
+            config.whatsapp=false;
+            $('#whatsappToggle').checked=false;
+          }
+
+          const startedAt=
+            new Date(config.startedAt).getTime();
+
+          const session=`show-${startedAt}`;
+
+          const ids=(
+            config.repertoire==='todas'
+              ? state.songs
+              : state.songs.filter(song=>
+                  Array.isArray(song.listas) &&
+                  song.listas.includes(config.repertoire)
+                )
+          ).map(song=>String(song.id));
+
+          const payload={
+            show_active:true,
+            show_activo:true,
+            show_id:String(startedAt),
+            show_session_id:session,
+            show_revision:startedAt,
+            show_writer:DEVICE_ID,
+            updated_at:startedAt,
+
+            lista_activa:config.repertoire,
+            listaActiva:config.repertoire,
+            repertorio_nombre:config.repertoireName,
+            repertorio_activo_ids:ids,
+            repertorioActivoIds:ids,
+
+            lugar:config.venue,
+            perfil_clientes:config.profile,
+            pedidos_whatsapp:
+              config.requests===true
+                ? false
+                : config.whatsapp===true,
+            pedidos_panel:config.requests===true,
+            pedidos_modo:config.requestsMode,
+            mostrar_cola:config.publicQueue!==false,
+            uso_publicidad:config.advertising===true,
+
+            inicio_show:startedAt,
+            cronometro_schema:SHOW_TIMER_SCHEMA,
+            cronometro_elapsed_ms:0,
+            cronometro_running:true,
+            cronometro_started_at:startedAt,
+
+            cola:[],
+            tocadas:[]
+          };
+
+          let claimed='';
+
+          if(finalCheck.coreReachable){
+            try{
+              await egpClaimCoreShowV1(payload);
+              claimed='core';
+
+              egpPublicarConfigLan(payload).catch(err=>{
+                console.warn(
+                  'Config secundaria LAN pendiente:',
+                  err
+                );
+              });
+
+            }catch(error){
+              const current=
+                await egpResolvePanelAuthorityV1();
+
+              if(current.active){
+                toast(
+                  'Otro dispositivo ya inició el show. Entrando al actual.'
+                );
+                return;
+              }
+
+              throw error;
+            }
+          }else if(finalCheck.firebaseReachable){
+            await egpClaimFirebaseShowV1(payload);
+            claimed='firebase';
+          }else{
+            throw new Error(
+              'No existe autoridad disponible para iniciar el show'
+            );
+          }
+
+          remoteShowGeneration++;
+          localDesiredShowActive=true;
+          showActiveConfirmed=true;
+          localShowTransitionUntil=Date.now()+10000;
+          currentAppliedShowSession=session;
+          configOpenedFromLive=false;
+          window.__egpAutoEntrarShowActivoLanV1=false;
+
+          state.config=config;
+          state.queue=[];
+          state.played.clear();
+          addVenueOption(venue);
+
+          startNewShowTimer();
+          saveStateLocalOnly();
+          setStatus(true);
+          showLive();
+
+          if(claimed==='core'){
+            LOCAL_QUEUE_MODE=true;
+            egpHadLocalCoreAuthority=true;
+            toast(
+              `Show iniciado. ${config.repertoireName}.`
+            );
+          }else{
+            LOCAL_QUEUE_MODE=false;
+            toast(
+              `Show iniciado por Internet. ${config.repertoireName}.`
+            );
+          }
+
+          localDesiredShowActive=null;
+          localShowTransitionUntil=0;
+
+        }catch(error){
+          console.error(
+            'No se pudo reservar una única sesión de show:',
+            error
+          );
+
+          if(
+            error?.code==='SHOW_ALREADY_ACTIVE' ||
+            String(error?.message||'').includes('SHOW_ALREADY_ACTIVE')
+          ){
+            await egpResolvePanelAuthorityV1();
+            toast(
+              'Ya existe un show activo. No se creó otro.'
+            );
+          }else{
+            toast(
+              'Show NO iniciado: '+
+              (error?.message||'error de sincronización')
+            );
+          }
+        }finally{
+          egpStartingShowV1=false;
+          if(startBtn)startBtn.disabled=false;
+        }
+      },
+      'Comenzar'
+    );
   });
 
   function showLive(){
@@ -9807,7 +10248,11 @@ document.documentElement.dataset.egmVersion="6.36.92";
         showLive();
       }else if(latestRemoteState){
         applyRemotePanelState(latestRemoteState);
-      }else{
+      }else if(
+        !document.documentElement.classList.contains(
+          'egp-show-resolving-v1'
+        )
+      ){
         showConfig();
       }
     }else{
@@ -9815,22 +10260,50 @@ document.documentElement.dataset.egmVersion="6.36.92";
     }
   });
   loadData().then(async()=>{
-    let sharedStateResolved=false;
-
+    /*
+     * EGP_BOOTSTRAP_AUTHORITY_GATE_V1
+     * Nunca enseñar Config mientras aún estamos averiguando
+     * si el show vive en Core o Firebase.
+     */
     try{
-      await initRemoteSync(true);
+      let resolved=null;
 
-      if(remoteGetDoc&&remoteStateRef){
-        const snap=await remoteGetDoc(remoteStateRef);
+      for(let attempt=0;attempt<3;attempt++){
+        resolved=await egpResolvePanelAuthorityV1({
+          startup:true,
+          showConfigWhenInactive:true
+        });
 
-        if(snap.exists()){
-          latestRemoteState=snap.data()||{};
-          sharedStateResolved=true;
-          applyRemotePanelState(latestRemoteState);
+        if(resolved.reachable)break;
+
+        await new Promise(
+          resolve=>setTimeout(resolve,450)
+        );
+      }
+
+      if(!resolved?.reachable){
+        console.warn(
+          'Core y Firebase no respondieron durante el arranque.'
+        );
+
+        state.config=null;
+        state.queue=[];
+        state.played.clear();
+        showActiveConfirmed=false;
+        currentAppliedShowSession='';
+        saveStateLocalOnly();
+
+        if(
+          panelAuthValid() &&
+          $('#panelLogin').hidden
+        ){
+          showConfig(false);
         }
       }
-    }catch(err){
-      console.warn('No se pudo leer todavía el estado compartido del show.',err);
+    }finally{
+      document.documentElement.classList.remove(
+        'egp-show-resolving-v1'
+      );
     }
 
     egpPedidosLanPanelV85();

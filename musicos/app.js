@@ -202,60 +202,323 @@ const openChromeBtn = $("#openChromeBtn");
 let deferredPrompt = null;
 let songs = new Map();
 let unsubscribe = null;
-const LAST_STATE_KEY = "egp-musicos-last-state-v1";
+/*
+ * EGP_MUSICOS_AUTHORITY_V2
+ * La caché V1 pudo guardar una cola de otro show.
+ * V2 usa una llave nueva y no la dibuja antes de resolver autoridad.
+ */
+const LAST_STATE_KEY = "egp-musicos-last-state-v2";
 const LOCAL_CORE = "https://core.elenagirjoaba.com";
+
 let localCoreOnline = false;
 let localCoreTimer = null;
+let lastCoreSuccessAt = 0;
+let coreProbeCompleted = false;
+
 let firebaseOnline = false;
 let latestFirebaseState = null;
 
-function saveLastState(data){ try{ localStorage.setItem(LAST_STATE_KEY,JSON.stringify(data||{})); }catch(_){} }
-function loadLastState(){ try{ return JSON.parse(localStorage.getItem(LAST_STATE_KEY)||"null"); }catch(_){ return null; } }
+let authorityResolved = false;
+let currentAuthority = "";
+let bootstrapFallbackTimer = null;
+
+function saveLastState(data){
+  try{
+    localStorage.setItem(
+      LAST_STATE_KEY,
+      JSON.stringify(data||{})
+    );
+  }catch(_){}
+}
+
+function loadLastState(){
+  try{
+    return JSON.parse(
+      localStorage.getItem(LAST_STATE_KEY)||"null"
+    );
+  }catch(_){
+    return null;
+  }
+}
+
+function finishAuthorityGate(){
+  document.documentElement.classList.remove(
+    "egp-musicos-resolving-v2"
+  );
+}
+
+function applyAuthorityState(
+  data,
+  authority,
+  {save=true}={}
+){
+  if(!data || typeof data!=="object")return;
+
+  authorityResolved=true;
+  currentAuthority=authority;
+
+  if(bootstrapFallbackTimer){
+    clearTimeout(bootstrapFallbackTimer);
+    bootstrapFallbackTimer=null;
+  }
+
+  if(save){
+    saveLastState(data);
+  }
+
+  if(authority==="core" || authority==="firebase"){
+    connectionDot.classList.add("online");
+    appError.hidden=true;
+  }else{
+    connectionDot.classList.remove("online");
+    appError.hidden=false;
+    appError.textContent=
+      "Sin conexión · mostrando último estado guardado";
+  }
+
+  render(data);
+  finishAuthorityGate();
+}
+
+function applyOfflineBlank(){
+  authorityResolved=true;
+  currentAuthority="offline";
+
+  connectionDot.classList.remove("online");
+  appError.hidden=false;
+  appError.textContent=
+    "Sin conexión · no hay un estado actual guardado";
+
+  render({
+    show_activo:false,
+    show_session_id:"",
+    show_id:"",
+    inicio_show:0,
+    lugar:"",
+    cola:[],
+    tocadas:[]
+  });
+
+  finishAuthorityGate();
+}
+
+function startAuthorityFallback(cachedState){
+  if(bootstrapFallbackTimer){
+    clearTimeout(bootstrapFallbackTimer);
+  }
+
+  bootstrapFallbackTimer=setTimeout(()=>{
+    if(authorityResolved)return;
+
+    if(cachedState){
+      applyAuthorityState(
+        cachedState,
+        "cache",
+        {save:false}
+      );
+    }else{
+      applyOfflineBlank();
+    }
+  },5000);
+}
+
+function canFirebaseTakeVisualAuthority(){
+  if(localCoreOnline)return false;
+
+  if(
+    lastCoreSuccessAt &&
+    Date.now()-lastCoreSuccessAt<=3000
+  ){
+    return false;
+  }
+
+  return true;
+}
+
+function maybeRenderFirebase(){
+  if(
+    !coreProbeCompleted ||
+    !firebaseOnline ||
+    !latestFirebaseState ||
+    !canFirebaseTakeVisualAuthority()
+  ){
+    return false;
+  }
+
+  applyAuthorityState(
+    latestFirebaseState,
+    "firebase"
+  );
+
+  return true;
+}
 
 function localCoreToMusicos(data){
-  const queue = Array.isArray(data?.queue) ? data.queue : [];
+  const queue =
+    Array.isArray(data?.queue)
+      ? data.queue
+      : [];
+
+  const pc =
+    data?.publicConfig &&
+    typeof data.publicConfig==="object"
+      ? data.publicConfig
+      : {};
+
+  const show =
+    data?.show &&
+    typeof data.show==="object"
+      ? data.show
+      : {};
+
+  const active=show.active===true;
+
+  const startValue=
+    active
+      ? Number(
+          pc.inicio_show ||
+          pc.show_id ||
+          0
+        )||0
+      : 0;
+
+  const session=
+    active
+      ? String(
+          pc.show_session_id ||
+          (
+            startValue
+              ? `show-${startValue}`
+              : ""
+          )
+        )
+      : "";
+
+  const revision=Math.max(
+    Number(pc.show_revision)||0,
+    Number(pc.updated_at)||0,
+    Number(show.updatedAt)||0,
+    ...queue.map(
+      item=>Number(item?.updated_at)||0
+    )
+  );
+
   return {
-    show_activo: data?.show?.active === true,
-    lugar: String(data?.show?.venue || ""),
-    cola: queue.map(item => String(item.id)),
-    tocadas: queue.filter(item => item?.played === true).map(item => String(item.id))
+    show_activo:active,
+
+    show_id:
+      active
+        ? String(pc.show_id||startValue||"")
+        : "",
+
+    show_session_id:session,
+    inicio_show:startValue,
+
+    show_revision:revision,
+    updated_at:revision,
+
+    lugar:String(
+      pc.lugar ||
+      show.venue ||
+      ""
+    ),
+
+    cola:
+      active
+        ? queue
+            .map(item=>String(item?.id||""))
+            .filter(Boolean)
+        : [],
+
+    tocadas:
+      active
+        ? queue
+            .filter(item=>item?.played===true)
+            .map(item=>String(item?.id||""))
+            .filter(Boolean)
+        : [],
+
+    sonando_id:
+      active
+        ? String(
+            data?.currentId ||
+            data?.sonando_id ||
+            ""
+          )
+        : "",
+
+    sonando_show_inicio:
+      active && startValue
+        ? String(startValue)
+        : ""
   };
 }
 
 async function pollLocalCore(){
   try{
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 1800);
+    const controller=new AbortController();
+    const timeout=setTimeout(
+      ()=>controller.abort(),
+      1800
+    );
 
-    const res = await fetch(LOCAL_CORE + "/api/state", {
-      cache: "no-store",
-      signal: controller.signal
-    });
+    const res=await fetch(
+      LOCAL_CORE+"/api/state",
+      {
+        cache:"no-store",
+        signal:controller.signal
+      }
+    );
 
     clearTimeout(timeout);
-    if(!res.ok) throw new Error("Local Core HTTP " + res.status);
 
-    const raw = await res.json();
-    if(raw?.ok !== true) throw new Error("Local Core inválido");
+    if(!res.ok){
+      throw new Error(
+        "Local Core HTTP "+res.status
+      );
+    }
 
-    const data = localCoreToMusicos(raw);
-    localCoreOnline = true;
-    connectionDot.classList.add("online");
-    appError.hidden = true;
-    saveLastState(data);
-    render(data);
+    const raw=await res.json();
+
+    if(raw?.ok!==true){
+      throw new Error(
+        "Local Core inválido"
+      );
+    }
+
+    const data=localCoreToMusicos(raw);
+
+    coreProbeCompleted=true;
+    localCoreOnline=true;
+    lastCoreSuccessAt=Date.now();
+
+    /*
+     * EN ROUTER: Core siempre gana.
+     */
+    applyAuthorityState(
+      data,
+      "core"
+    );
+
   }catch(_){
-    const wasLocal = localCoreOnline;
-    localCoreOnline = false;
+    coreProbeCompleted=true;
+    localCoreOnline=false;
 
-    if(firebaseOnline && latestFirebaseState){
-      connectionDot.classList.add("online");
-      if(wasLocal){
-        saveLastState(latestFirebaseState);
-        render(latestFirebaseState);
-      }
-    }else{
-      connectionDot.classList.remove("online");
+    /*
+     * FUERA DEL ROUTER:
+     * solo Firebase confirmado por servidor puede tomar la pantalla.
+     */
+    if(maybeRenderFirebase()){
+      return;
+    }
+
+    if(
+      lastCoreSuccessAt &&
+      Date.now()-lastCoreSuccessAt>3000
+    ){
+      connectionDot.classList.remove(
+        "online"
+      );
     }
   }
 }
@@ -376,14 +639,21 @@ async function startApp() {
   }
 
   const cachedState = loadLastState();
-  if (cachedState) {
-    render(cachedState);
-    venueName.textContent = String(cachedState?.lugar || cachedState?.show?.venue || venueName.textContent || "Último estado guardado");
-  }
+
+  /*
+   * EGP_MUSICOS_BOOTSTRAP_V2
+   * NO dibujar cachedState ahora.
+   * Primero resolver Core/Firebase.
+   */
+  startAuthorityFallback(cachedState);
 
   // En EGP-MUSICOS, Local Core es la fuente preferida.
   // Fuera de esa red, Firebase continúa funcionando normalmente.
-  if (!noCoreTest) startLocalCore();
+  if (!noCoreTest) {
+    startLocalCore();
+  } else {
+    coreProbeCompleted=true;
+  }
 
   // Sin Internet la app NO falla: conserva la última cola guardada.
   // Firebase se carga dinámicamente únicamente cuando está disponible.
@@ -399,25 +669,55 @@ async function startApp() {
       useFetchStreams: false
     });
     unsubscribe?.();
-    unsubscribe = onSnapshot(doc(db, "config", "estado"), snapshot => {
-      connectionDot.classList.add("online");
-      appError.hidden = true;
-      const data = snapshot.exists() ? snapshot.data() : {};
-      firebaseOnline = true;
-      latestFirebaseState = data;
-      if (!localCoreOnline) {
-        saveLastState(data);
-        render(data);
+
+    unsubscribe = onSnapshot(
+      doc(db, "config", "estado"),
+
+      snapshot => {
+        /*
+         * EGP_MUSICOS_FIREBASE_SERVER_ONLY_V2
+         * Un snapshot de IndexedDB/caché JAMÁS decide la cola visible.
+         */
+        if(snapshot.metadata?.fromCache===true){
+          return;
+        }
+
+        const data=
+          snapshot.exists()
+            ? snapshot.data()
+            : {};
+
+        firebaseOnline=true;
+        latestFirebaseState=data;
+
+        /*
+         * Core tiene prioridad dentro del router.
+         * Fuera del router, Firebase servidor toma la pantalla.
+         */
+        maybeRenderFirebase();
+      },
+
+      error => {
+        console.warn(
+          "Firebase músicos offline:",
+          error
+        );
+
+        firebaseOnline=false;
+
+        if(
+          !localCoreOnline &&
+          (
+            !lastCoreSuccessAt ||
+            Date.now()-lastCoreSuccessAt>3000
+          )
+        ){
+          connectionDot.classList.remove(
+            "online"
+          );
+        }
       }
-    }, error => {
-      console.warn("Firebase músicos offline:", error);
-      firebaseOnline = false;
-      if(!localCoreOnline) connectionDot.classList.remove("online");
-      if (!cachedState) {
-        emptyState.hidden = false;
-        emptyState.textContent = "Sin conexión · esperando último estado guardado";
-      }
-    });
+    );
 
     unsubscribeMonitorConfig?.();
 

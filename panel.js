@@ -28,7 +28,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
   const $$ = (s, p=document) => [...p.querySelectorAll(s)];
   const state = {
     songs: [], filtered: [], queue: [], played: new Set(), notes: {}, lyrics: {},
-    config: null, pendingConfirm: null, customSongs: [], customRepertoires: [], newSongElenaNotes: null, newSongDanielNotes: null, songEdits: {}, editSongElenaNotes: null, editSongDanielNotes: null
+    config: null, pendingConfirm: null, customSongs: [], customRepertoires: [], repertoireOverrides: {}, repertoireRevision: 0, newSongElenaNotes: null, newSongDanielNotes: null, songEdits: {}, editSongElenaNotes: null, editSongDanielNotes: null
   };
   const queueDragState={
     active:false,saving:false,pointerId:null,item:null,handle:null,ghost:null,timer:0,
@@ -340,6 +340,10 @@ document.documentElement.dataset.egmVersion="6.36.92";
    */
   let lastAppliedCoreShowSignature='';
   let currentAppliedShowSession='';
+
+  /* EGP_REPERTOIRE_CORE_AUTHORITY_V2 */
+  let localRepertoireAuthorityV2=false;
+
   const DEVICE_ID=sessionStorage.getItem('egm-device-id')||(`dev-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   sessionStorage.setItem('egm-device-id',DEVICE_ID);
 
@@ -526,7 +530,18 @@ document.documentElement.dataset.egmVersion="6.36.92";
           const b=data.biblioteca;
           pendingRemoteLibrary=b;
           if(b.songEdits&&typeof b.songEdits==='object') state.songEdits={...state.songEdits,...b.songEdits};
-          if(Array.isArray(b.customSongs)) mergeRemoteCustomSongs(b.customSongs);
+          if(Array.isArray(b.customSongs)){
+            mergeRemoteCustomSongs(b.customSongs);
+            if(localRepertoireAuthorityV2){
+              syncLocalCustomSongs().catch(()=>{});
+            }
+          }
+          if(!localRepertoireAuthorityV2 && Array.isArray(b.customRepertoires))state.customRepertoires=b.customRepertoires;
+          if(b.repertoireStateV2){
+            bridgeRemoteRepertoireV3(
+              b.repertoireStateV2
+            ).catch(()=>{});
+          }
           if(state.songs.length){
             /*
              * EGP_EXPLICIT_REPERTOIRE_LISTS_V1
@@ -542,6 +557,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
                     )
                   : song
             );
+
+            if(Number(state.repertoireRevision)>0)applyRepertoireStateV2(buildRepertoireStateV2());
 
             /*
              * EGP_REMOTE_CUSTOM_SONGS_VISIBLE_REFRESH_V1
@@ -765,7 +782,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
       biblioteca:{
         songEdits:state.songEdits,
         customSongs:state.customSongs,
-        customRepertoires:state.customRepertoires
+        customRepertoires:state.customRepertoires,
+        repertoireStateV2:buildRepertoireStateV2()
       },
       biblioteca_updated_at:Date.now()
     },{merge:true});
@@ -881,10 +899,22 @@ document.documentElement.dataset.egmVersion="6.36.92";
       );
     }
 
+    /* EGP_REPERTOIRE_CORE_AUTHORITY_V2 */
+    try{
+      const localRepertoires=await localQueueRequest('/api/repertoires');
+      if(localRepertoires?.ok && Number(localRepertoires.revision)>0){
+        applyRepertoireStateV2(localRepertoires);
+        localRepertoireAuthorityV2=true;
+        setTimeout(()=>{syncRemoteRepertoireStateV2().catch(()=>{});},1200);
+      }
+    }catch(err){console.warn('Repertorios Local Core no disponibles; Firebase continúa:',err);}
+
     if(pendingRemoteLibrary){
       const b=pendingRemoteLibrary;
       if(b.songEdits&&typeof b.songEdits==='object') state.songEdits={...state.songEdits,...b.songEdits};
       if(Array.isArray(b.customSongs)) mergeRemoteCustomSongs(b.customSongs);
+      if(!localRepertoireAuthorityV2 && Array.isArray(b.customRepertoires))state.customRepertoires=b.customRepertoires;
+      if(!localRepertoireAuthorityV2 && b.repertoireStateV2)applyRepertoireStateV2(b.repertoireStateV2);
 
       /*
        * EGP_EXPLICIT_REPERTOIRE_LISTS_V1
@@ -1027,6 +1057,367 @@ document.documentElement.dataset.egmVersion="6.36.92";
    *   personalizados `rep-*`, para no perder repertorios personalizados
    *   creados históricamente.
    */
+  /* EGP_REPERTOIRE_CORE_AUTHORITY_V2 */
+  function normalizeRepertoireStateV2(value){
+    const src=value?.repertoireStateV2 || value?.repertoireState || value || {};
+    const custom=Array.isArray(src.customRepertoires)
+      ? src.customRepertoires.filter(x=>x&&typeof x==='object'&&String(x.id||'')&&String(x.id)!=='todas').map(x=>({id:String(x.id),name:String(x.name||x.id)}))
+      : [];
+    const memberships={};
+    if(src.memberships&&typeof src.memberships==='object'){
+      Object.entries(src.memberships).forEach(([rid,ids])=>{
+        rid=String(rid||'');
+        if(!rid||rid==='todas'||!Array.isArray(ids))return;
+        memberships[rid]=[...new Set(ids.map(String).filter(Boolean))];
+      });
+    }
+    return {schema:2,revision:Number(src.revision||src.updated_at||0),customRepertoires:custom,memberships};
+  }
+
+  function buildRepertoireStateV2(){
+    return normalizeRepertoireStateV2({schema:2,revision:Number(state.repertoireRevision)||Date.now(),customRepertoires:state.customRepertoires,memberships:state.repertoireOverrides});
+  }
+
+  function applyRepertoireStateV2(value){
+    const next=normalizeRepertoireStateV2(value);
+    state.customRepertoires=next.customRepertoires;
+    state.repertoireOverrides=next.memberships;
+    state.repertoireRevision=next.revision;
+    Object.entries(next.memberships).forEach(([rid,ids])=>{
+      const selected=new Set(ids.map(String));
+      state.songs.forEach(song=>{
+        const lists=new Set((song.listas||[]).map(String));lists.add('todas');
+        selected.has(String(song.id))?lists.add(rid):lists.delete(rid);
+        song.listas=[...lists];
+      });
+    });
+    invalidateRepertoireCache();
+    return next;
+  }
+
+  async function syncLocalRepertoireStateV2(){
+    const result=await localQueueRequest('/api/repertoires',{repertoireState:buildRepertoireStateV2()});
+    if(!result?.ok)throw new Error('Local Core rechazó repertorios');
+    applyRepertoireStateV2(result);localRepertoireAuthorityV2=true;return result;
+  }
+
+  async function syncRemoteRepertoireStateV2(){
+    if(!remoteStateRef)await initRemoteSync(true);
+    if(!remoteStateRef||!window.__egmSetDoc)throw new Error('Firebase todavía no está listo');
+    const payload=buildRepertoireStateV2();
+    await window.__egmSetDoc(remoteStateRef,{biblioteca:{repertoireStateV2:payload},biblioteca_updated_at:Date.now()},{merge:true});
+    return payload;
+  }
+
+  /*
+   * EGP_REPERTOIRE_SYNC_LIVE_V3
+   *
+   * Rebuild desde state.songs[].listas:
+   * una canción nueva o Editar canción actualiza el mismo estado
+   * que usa el editor Repertorios.
+   */
+  function rebuildRepertoireOverridesV3(){
+    const memberships={};
+
+    allRepertoires()
+      .filter(rep=>rep.id!=='todas')
+      .forEach(rep=>{
+        memberships[String(rep.id)]=
+          state.songs
+            .filter(song=>
+              (song.listas||[])
+                .map(String)
+                .includes(String(rep.id))
+            )
+            .map(song=>String(song.id));
+      });
+
+    state.repertoireOverrides=
+      memberships;
+
+    state.repertoireRevision=
+      Math.max(
+        Date.now(),
+        Number(state.repertoireRevision)||0
+      );
+
+    return memberships;
+  }
+
+  function repertoireSemanticV3(value){
+    const next=normalizeRepertoireStateV2(value);
+    const memberships={};
+
+    Object.keys(next.memberships)
+      .sort()
+      .forEach(rid=>{
+        memberships[rid]=[
+          ...new Set(
+            next.memberships[rid]
+              .map(String)
+          )
+        ].sort();
+      });
+
+    return JSON.stringify({
+      customRepertoires:
+        next.customRepertoires
+          .map(r=>({
+            id:String(r.id),
+            name:String(r.name)
+          }))
+          .sort((a,b)=>
+            a.id.localeCompare(b.id)
+          ),
+      memberships
+    });
+  }
+
+  async function refreshActiveRepertoireV3(){
+    if(!state.config)return false;
+
+    const rid=
+      state.config.repertoire ||
+      'todas';
+
+    const ids=(
+      rid==='todas'
+        ? state.songs
+        : state.songs.filter(song=>
+            (song.listas||[])
+              .map(String)
+              .includes(String(rid))
+          )
+    ).map(song=>String(song.id));
+
+    invalidateRepertoireCache();
+    buildRepertoires();
+    filterSongs();
+
+    try{
+      await publishShowPatch({
+        lista_activa:rid,
+        listaActiva:rid,
+        repertorio_nombre:
+          state.config.repertoireName||'',
+        repertorio_activo_ids:ids,
+        repertorioActivoIds:ids
+      });
+
+      return true;
+    }catch(err){
+      console.warn(
+        'Repertorio activo pendiente:',
+        err
+      );
+      return false;
+    }
+  }
+
+  let egpRepertoirePollBusyV3=false;
+  let egpRepertoirePollAtV3=0;
+  let egpLocalCustomSignatureV3='';
+
+  function customSignatureV3(value){
+    return JSON.stringify(
+      (Array.isArray(value)?value:[])
+        .map(song=>[
+          String(song?.id||''),
+          String(song?.titulo||''),
+          (song?.listas||[])
+            .map(String)
+            .sort()
+            .join(',')
+        ])
+        .sort((a,b)=>
+          a[0].localeCompare(b[0])
+        )
+    );
+  }
+
+  async function bridgeRemoteRepertoireV3(
+    remoteValue
+  ){
+    if(!remoteValue)return;
+
+    const remote=
+      normalizeRepertoireStateV2(
+        remoteValue
+      );
+
+    const local=
+      buildRepertoireStateV2();
+
+    const same=
+      repertoireSemanticV3(remote)===
+      repertoireSemanticV3(local);
+
+    if(same){
+      state.repertoireRevision=
+        Math.max(
+          Number(state.repertoireRevision)||0,
+          Number(remote.revision)||0
+        );
+      return;
+    }
+
+    if(!localRepertoireAuthorityV2){
+      applyRepertoireStateV2(remote);
+      buildRepertoires();
+      if(state.config)filterSongs();
+      return;
+    }
+
+    if(
+      Number(remote.revision)<=
+      Number(state.repertoireRevision)
+    ){
+      return;
+    }
+
+    try{
+      await syncLocalCustomSongs();
+
+      const result=
+        await localQueueRequest(
+          '/api/repertoires',
+          {repertoireState:remote}
+        );
+
+      if(result?.ok){
+        applyRepertoireStateV2(result);
+        localRepertoireAuthorityV2=true;
+        buildRepertoires();
+        if(state.config)filterSongs();
+        await refreshActiveRepertoireV3();
+      }
+    }catch(err){
+      console.warn(
+        'Firebase -> Core repertorios pendiente:',
+        err
+      );
+    }
+  }
+
+  async function pollLocalLibraryV3(){
+    const now=Date.now();
+
+    if(
+      egpRepertoirePollBusyV3 ||
+      now-egpRepertoirePollAtV3<900
+    ){
+      return;
+    }
+
+    egpRepertoirePollAtV3=now;
+    egpRepertoirePollBusyV3=true;
+
+    let changed=false;
+
+    try{
+      const [reps,custom]=
+        await Promise.all([
+          localQueueRequest(
+            '/api/repertoires'
+          ),
+          localQueueRequest(
+            '/api/custom-songs'
+          )
+        ]);
+
+      if(reps?.ok){
+        localRepertoireAuthorityV2=true;
+
+        const remoteKey=
+          repertoireSemanticV3(reps);
+
+        const localKey=
+          repertoireSemanticV3(
+            buildRepertoireStateV2()
+          );
+
+        if(
+          remoteKey!==localKey ||
+          Number(reps.revision)>
+          Number(state.repertoireRevision)
+        ){
+          applyRepertoireStateV2(reps);
+          changed=true;
+        }
+      }
+
+      if(
+        Array.isArray(
+          custom?.customSongs
+        )
+      ){
+        const sig=
+          customSignatureV3(
+            custom.customSongs
+          );
+
+        if(
+          sig!==
+          egpLocalCustomSignatureV3
+        ){
+          mergeRemoteCustomSongs(
+            custom.customSongs
+          );
+
+          egpLocalCustomSignatureV3=sig;
+
+          if(reps?.ok){
+            applyRepertoireStateV2(
+              reps
+            );
+          }
+
+          changed=true;
+        }
+      }
+
+      if(changed){
+        invalidateRepertoireCache();
+        buildRepertoires();
+
+        if(state.config){
+          filterSongs();
+        }
+
+        saveStateLocalOnly();
+
+        refreshActiveRepertoireV3()
+          .catch(()=>{});
+
+        syncRemoteLibrary(true)
+          .catch(()=>{});
+      }
+
+    }catch(err){
+      /* Core temporalmente no disponible. */
+    }finally{
+      egpRepertoirePollBusyV3=false;
+    }
+  }
+
+  async function saveRepertoireStateV2(){
+    rebuildRepertoireOverridesV3();
+    saveStateLocalOnly();
+    let localError=null;
+    try{
+      await Promise.all([syncLocalCustomSongs(),syncLocalRepertoireStateV2()]);
+      syncRemoteRepertoireStateV2().catch(err=>console.warn('Firebase repertorios pendiente; Core ya guardó:',err));
+      await refreshActiveRepertoireV3();
+      return {ok:true,local:true};
+    }catch(err){localError=err;console.warn('Local Core repertorios no disponible:',err);}
+    try{
+      await syncRemoteRepertoireStateV2();
+      await refreshActiveRepertoireV3();
+      return {ok:true,remote:true};
+    }
+    catch(remoteError){throw new Error('No se pudo guardar repertorios en Core ni Firebase: '+String(localError?.message||remoteError?.message||'error'));}
+  }
+
   function mergeSongEditSafelyV1(song,edit){
     if(!song || !edit || typeof edit!=='object'){
       return song;
@@ -1035,6 +1426,9 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const incoming={...edit};
 
     if(Array.isArray(incoming.listas)){
+      if(Number(state.repertoireRevision)>0){
+        incoming.listas=Array.isArray(song.listas)?[...song.listas]:['todas'];
+      }else{
       const explicitRevision=
         Number(incoming._listasRevision)||0;
 
@@ -1071,6 +1465,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
             ...legacyCustomLists
           ])
         ];
+      }
       }
     }
 
@@ -2698,6 +3093,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
       try{
         applyLocalQueueSnapshot(snap);
+
+        pollLocalLibraryV3();
 
         /*
          * EGP_CORE_TO_FIREBASE_FULL_MIRROR_V1
@@ -6554,7 +6951,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       cancioneroDaniel:$('#newSongDanielLyrics').value.trim(),notasDaniel:state.newSongDanielNotes
     };
     askConfirm('Guardar nueva canción',`Se añadirá “${title}” a la base de canciones.`,async()=>{
-      song._sourceIndex=Math.max(-1,...state.songs.map(x=>Number(x._sourceIndex)||0))+1;state.customSongs.push(song);state.songs.push(song);sortMasterSongs();state.customSongs.sort((a,b)=>a.numero-b.numero);try{saveLibraryState();}catch(err){state.customSongs=state.customSongs.filter(s=>s.id!==song.id);state.songs=state.songs.filter(s=>s.id!==song.id);sortMasterSongs();return toast('La foto es demasiado pesada para guardarla. Prueba una imagen más pequeña.');}
+      song._sourceIndex=Math.max(-1,...state.songs.map(x=>Number(x._sourceIndex)||0))+1;state.customSongs.push(song);state.songs.push(song);sortMasterSongs();state.customSongs.sort((a,b)=>a.numero-b.numero);try{await saveRepertoireStateV2();await saveLibraryState(true);}catch(err){state.customSongs=state.customSongs.filter(s=>s.id!==song.id);state.songs=state.songs.filter(s=>s.id!==song.id);sortMasterSongs();return toast('La foto es demasiado pesada para guardarla. Prueba una imagen más pequeña.');}
       try{await syncElenaSongTextToImageEdit(song,'');}catch(err){console.error(err);toast('Canción guardada; la caja de Elena quedó pendiente');}
       try{await syncDanielSongTextToImageEdit(song,'');}catch(err){console.error(err);toast('Canción guardada; la caja de Daniel quedó pendiente');}
       buildRepertoires();dialogBaselines.delete($('#newSongDialog'));$('#newSongDialog').close();clearElenaNotesSelection();toast('Guardado exitosamente');
@@ -6628,7 +7025,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       const customIndex=state.customSongs.findIndex(s=>s.id===id);
       if(customIndex>=0)state.customSongs[customIndex]=updated;else state.songEdits[id]={...updated};
       sortMasterSongs();
-      try{saveLibraryState();}catch(err){return toast('La imagen es demasiado pesada para guardarla. Prueba una imagen más pequeña.');}
+      try{await saveRepertoireStateV2();await saveLibraryState(true);}catch(err){return toast('La imagen es demasiado pesada para guardarla. Prueba una imagen más pequeña.');}
       try{await syncElenaSongTextToImageEdit(updated,previousElenaText);}catch(err){console.error(err);toast('Canción guardada; la caja de Elena quedó pendiente');}
       try{await syncDanielSongTextToImageEdit(updated,previousDanielText);}catch(err){console.error(err);toast('Canción guardada; la caja de Daniel quedó pendiente');}
       buildRepertoires();dialogBaselines.delete($('#editSongDialog'));$('#editSongDialog').close();renderEditSongsList();if(state.config)filterSongs();toast('Guardado exitosamente');
@@ -6885,15 +7282,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   $('#repertoireSongSearch').addEventListener('input',renderRepertoireSongs);
 
-  $('#addRepertoireBtn').addEventListener('click',()=>{
+  $('#addRepertoireBtn').addEventListener('click',async()=>{
     const name=$('#newRepertoireName').value.trim();if(!name)return toast('Escribe un nombre');
     if(allRepertoires().some(r=>norm(r.name)===norm(name)))return toast('Ese repertorio ya existe');
     const id=`rep-${slug(name)}-${Date.now().toString().slice(-5)}`;
-    state.customRepertoires.push({id,name});
-    activeRepertoireId=id;
-    repertoireDraftIds=new Set();
-    $('#newRepertoireName').value='';
-    saveLibraryState();buildRepertoires();renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));toast('Guardado exitosamente');
+    state.customRepertoires.push({id,name});state.repertoireOverrides[id]=[];state.repertoireRevision=Date.now();activeRepertoireId=id;repertoireDraftIds=new Set();$('#newRepertoireName').value='';
+    try{await saveRepertoireStateV2();buildRepertoires();renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));toast('Guardado exitosamente');}
+    catch(err){console.error(err);toast('No se pudo guardar el repertorio.');}
   });
 
   $('#saveRepertoireBtn').addEventListener('click',()=>{
@@ -6905,41 +7300,13 @@ document.documentElement.dataset.egmVersion="6.36.92";
         ? repertoireDraftIds
         : repertoireSongIds(rep.id)
     );
-    askConfirm('Guardar repertorio',`Se actualizará “${name}” con ${checked.size} canciones.`,()=>{
-      let item=state.customRepertoires.find(r=>r.id===rep.id);
-      if(!item){item={id:rep.id,name:rep.name};state.customRepertoires.push(item);}
-      item.name=name;
-      const listasRevision=Date.now();
-
-      state.songs.forEach(song=>{
-        const listas=new Set(song.listas||[]);listas.add('todas');
-        checked.has(song.id)?listas.add(rep.id):listas.delete(rep.id);
-        song.listas=[...listas];
-
-        const ci=state.customSongs.findIndex(s=>s.id===song.id);
-
-        if(ci>=0){
-          state.customSongs[ci]={...song};
-        }else{
-          /*
-           * EGP_EXPLICIT_REPERTOIRE_LISTS_V1
-           * Este cambio SÍ proviene del editor de repertorios.
-           */
-          state.songEdits[song.id]={
-            ...song,
-            _listasRevision:listasRevision
-          };
-        }
-      });
-      if(state.config?.repertoire===rep.id)state.config.repertoireName=name;
-      invalidateRepertoireCache();
-      saveLibraryState(true);
-      buildRepertoires();
-      resetRepertoireDraft(rep.id);
-      renderRepertoireManager();
-      rememberDialogState($('#repertoiresDialog'));
-      if(state.config)filterSongs();
-      toast('Guardado exitosamente');
+    askConfirm('Guardar repertorio',`Se actualizará “${name}” con ${checked.size} canciones.`,async()=>{
+      let item=state.customRepertoires.find(r=>r.id===rep.id);if(!item){item={id:rep.id,name:rep.name};state.customRepertoires.push(item);}item.name=name;
+      state.repertoireOverrides[rep.id]=[...checked].map(String);state.repertoireRevision=Date.now();
+      state.songs.forEach(song=>{const listas=new Set(song.listas||[]);listas.add('todas');checked.has(song.id)?listas.add(rep.id):listas.delete(rep.id);song.listas=[...listas];const ci=state.customSongs.findIndex(s=>s.id===song.id);if(ci>=0)state.customSongs[ci]={...song};});
+      if(state.config?.repertoire===rep.id)state.config.repertoireName=name;invalidateRepertoireCache();
+      try{await saveRepertoireStateV2();buildRepertoires();resetRepertoireDraft(rep.id);renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));if(state.config)filterSongs();toast('Guardado exitosamente');}
+      catch(err){console.error(err);toast('No se pudo guardar el repertorio.');}
     },'Guardar');
   });
 
@@ -6950,72 +7317,23 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const baseName=`Copia de ${rep.name}`;
     let name=baseName, n=2;
     while(allRepertoires().some(r=>norm(r.name)===norm(name))) name=`${baseName} ${n++}`;
-    askConfirm('Duplicar repertorio',`Se creará “${name}” con ${sourceIds.size} canciones.`,()=>{
-      const id=`rep-${slug(name)}-${Date.now().toString().slice(-5)}`;
-      state.customRepertoires.push({id,name});
-      const listasRevision=Date.now();
-
-      state.songs.forEach(song=>{
-        const listas=new Set(song.listas||[]);listas.add('todas');
-        if(sourceIds.has(song.id))listas.add(id);
-        song.listas=[...listas];
-
-        const ci=state.customSongs.findIndex(s=>s.id===song.id);
-
-        if(ci>=0){
-          state.customSongs[ci]={...song};
-        }else{
-          state.songEdits[song.id]={
-            ...song,
-            _listasRevision:listasRevision
-          };
-        }
-      });
-      activeRepertoireId=id;
-      resetRepertoireDraft(id);
-      invalidateRepertoireCache();
-      saveLibraryState(true);buildRepertoires();renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));toast('Guardado exitosamente');
+    askConfirm('Duplicar repertorio',`Se creará “${name}” con ${sourceIds.size} canciones.`,async()=>{
+      const id=`rep-${slug(name)}-${Date.now().toString().slice(-5)}`;state.customRepertoires.push({id,name});state.repertoireOverrides[id]=[...sourceIds].map(String);state.repertoireRevision=Date.now();
+      state.songs.forEach(song=>{const listas=new Set(song.listas||[]);listas.add('todas');sourceIds.has(song.id)?listas.add(id):listas.delete(id);song.listas=[...listas];const ci=state.customSongs.findIndex(s=>s.id===song.id);if(ci>=0)state.customSongs[ci]={...song};});
+      activeRepertoireId=id;resetRepertoireDraft(id);invalidateRepertoireCache();
+      try{await saveRepertoireStateV2();buildRepertoires();renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));toast('Guardado exitosamente');}
+      catch(err){console.error(err);toast('No se pudo duplicar el repertorio.');}
     },'Duplicar');
   });
 
   $('#deleteSelectedRepertoireBtn').addEventListener('click',()=>{
     const rep=allRepertoires().find(r=>r.id===activeRepertoireId);if(!rep||rep.id==='todas')return;
-    askConfirm('Eliminar repertorio',`Se quitará “${rep.name}” de todas las canciones. Las canciones no serán eliminadas.`,()=>{
-      state.customRepertoires=state.customRepertoires.filter(r=>r.id!==rep.id);
-
-      const listasRevision=Date.now();
-
-      state.songs.forEach(song=>{
-        song.listas=[
-          ...new Set([
-            'todas',
-            ...(song.listas||[])
-              .filter(
-                id=>
-                  id!==rep.id &&
-                  id!=='todas'
-              )
-          ])
-        ];
-
-        const ci=
-          state.customSongs.findIndex(
-            s=>s.id===song.id
-          );
-
-        if(ci>=0){
-          state.customSongs[ci]={...song};
-        }else{
-          state.songEdits[song.id]={
-            ...song,
-            _listasRevision:listasRevision
-          };
-        }
-      });
-
-      if(state.config?.repertoire===rep.id){state.config.repertoire='todas';state.config.repertoireName='Todas las canciones';}
-      activeRepertoireId=allRepertoires().find(r=>r.id!=='todas')?.id||'todas';
-      saveLibraryState();buildRepertoires();renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));toast('Guardado exitosamente');
+    askConfirm('Eliminar repertorio',`Se quitará “${rep.name}” de todas las canciones. Las canciones no serán eliminadas.`,async()=>{
+      state.customRepertoires=state.customRepertoires.filter(r=>r.id!==rep.id);delete state.repertoireOverrides[rep.id];state.repertoireRevision=Date.now();
+      state.songs.forEach(song=>{song.listas=[...new Set(['todas',...(song.listas||[]).filter(id=>id!==rep.id&&id!=='todas')])];const ci=state.customSongs.findIndex(s=>s.id===song.id);if(ci>=0)state.customSongs[ci]={...song};});
+      if(state.config?.repertoire===rep.id){state.config.repertoire='todas';state.config.repertoireName='Todas las canciones';}activeRepertoireId=allRepertoires().find(r=>r.id!=='todas')?.id||'todas';
+      try{await saveRepertoireStateV2();buildRepertoires();renderRepertoireManager();rememberDialogState($('#repertoiresDialog'));toast('Guardado exitosamente');}
+      catch(err){console.error(err);toast('No se pudo eliminar el repertorio.');}
     },'Eliminar');
   });
 

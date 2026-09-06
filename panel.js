@@ -271,7 +271,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
   let remoteStateRef = null;
   let remoteDb = null;
   let remoteGetDoc = null;
-  let remoteGetDocFromServer = null;
   let remoteDoc = null;
   let remoteSetDoc = null;
   let remoteReady = false;
@@ -288,24 +287,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
   let activeViewerSongId=null, activeViewerType=null, activeImageOwner='elena', activeImageSongId=null, activeImageMode='image', returnToImageViewer=false, viewerRenderGeneration=0, pendingViewerRefresh=null;
   let applyingRemoteShowState=false;
   let latestRemoteState=null;
-
-  /*
-   * EGP_FAILOVER_VISUAL_STABILITY_V2
-   *
-   * latestRemoteState queda reservado para snapshots Firebase
-   * CONFIRMADOS por servidor. Un snapshot fromCache nunca puede
-   * convertirse en fuente de failover ni volver a entrar a Core.
-   */
-  let latestRemoteServerState=null;
-  let egpHadLocalCoreAuthority=false;
-
-  /*
-   * EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V2
-   * El Panel es cliente. Cloud Sync en la Mac es el único mediador
-   * Core <-> Firebase.
-   */
-  const EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V2=true;
-
   let egpPedidosPendientes=[];
   let egpPedidosFirebase=[];
   let egpPedidosLan=[];
@@ -466,7 +447,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
     remoteInitPromise=(async()=>{
     if(!navigator.onLine && !forceNetwork) throw new Error('Sin conexión a internet');
     try{
-      const [{ initializeApp }, { doc, collection, query, where, getDocs, initializeFirestore, onSnapshot, setDoc: firebaseSetDoc, getDoc, getDocFromServer, updateDoc, runTransaction }] = await Promise.all([
+      const [{ initializeApp }, { doc, collection, query, where, getDocs, initializeFirestore, onSnapshot, setDoc: firebaseSetDoc, getDoc, updateDoc, runTransaction }] = await Promise.all([
         import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
         import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js')
       ]);
@@ -479,7 +460,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
       remoteStateRef=doc(panelDb,'config','estado');
       window.__egmSetDoc=firebaseSetDoc;
       remoteGetDoc=getDoc;
-      remoteGetDocFromServer=getDocFromServer;
       remoteDoc=doc;
       remoteSetDoc=firebaseSetDoc;
       window.__egmUpdateDoc=updateDoc;
@@ -488,67 +468,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
       onSnapshot(remoteStateRef,snap=>{
         if(!snap.exists()) return;
         const data=snap.data()||{};
-        const egpRemoteDesdeCache=
-          snap?.metadata?.fromCache===true;
-
-        const egpFirebaseServerRevision=
-          egpFirebaseStateRevision(data);
-
-        if(!egpRemoteDesdeCache){
-          latestRemoteServerState=data;
-          latestRemoteState=data;
-        }
-
-        /*
-         * EGP_FAILOVER_VISUAL_STABILITY_V2
-         *
-         * 1. Si ya tuvimos Core durante ESTE runtime y estamos en vivo,
-         *    un snapshot Firebase DE CACHÉ jamás repinta la pantalla.
-         *
-         * 2. Si Core acaba de caer y Firebase servidor todavía está
-         *    detrás de la última revisión Core, tampoco repinta.
-         *
-         * LOCAL_QUEUE_MODE puede pasar a false inmediatamente:
-         * Firebase ya es el failover; solo esperamos un snapshot
-         * servidor suficientemente nuevo antes de cambiar la vista.
-         */
-        const egpHealthyLiveView=
-          document.body.classList.contains('live-mode') &&
-          Boolean(state.config);
-
-        const egpIgnoreCachedFirebaseDuringLive=
-          egpRemoteDesdeCache &&
-          egpHadLocalCoreAuthority &&
-          egpHealthyLiveView;
-
-        const egpWaitFirebaseCatchup=
-          !egpRemoteDesdeCache &&
-          egpHadLocalCoreAuthority &&
-          LOCAL_QUEUE_MODE!==true &&
-          egpHealthyLiveView &&
-          Number(lastAppliedCoreRevision)>0 &&
-          egpFirebaseServerRevision>0 &&
-          egpFirebaseServerRevision<Number(lastAppliedCoreRevision);
-
-        if(
-          egpIgnoreCachedFirebaseDuringLive ||
-          egpWaitFirebaseCatchup
-        ){
-          remoteReady=true;
-
-          console.info(
-            'EGP failover visual: conservando último estado sano',
-            {
-              fromCache:egpRemoteDesdeCache,
-              firebaseRevision:egpFirebaseServerRevision,
-              coreRevision:Number(lastAppliedCoreRevision)||0,
-              localQueueMode:LOCAL_QUEUE_MODE===true
-            }
-          );
-
-          return;
-        }
-
         const queueBeforeSnapshot=[...state.queue];
 
         /*
@@ -581,12 +500,11 @@ document.documentElement.dataset.egmVersion="6.36.92";
           if(queueSnapshotApplied)state.queue=canonicalQueueOrder(incomingQueue,incomingPlayedOrder);
         }
 
-        /*
-         * latestRemoteState NO se asigna aquí:
-         * ya se guardó arriba únicamente si el snapshot vino del servidor.
-         */
+        latestRemoteState=data;
+
         egpSyncPedidosFromRemote(data);
 
+        const egpRemoteDesdeCache=snap?.metadata?.fromCache===true;
         applyRemotePanelState(data,{skipQueue:true,skipPlayed:true,preserveLocalRequests:egpRemoteDesdeCache});
 
         if(!LOCAL_QUEUE_MODE&&!queueDragState.active&&!queueDragState.saving){
@@ -601,7 +519,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
           typeof data.biblioteca==='object' &&
           (
             lastAppliedRemoteLibraryRevision===null ||
-            remoteLibraryRevision>lastAppliedRemoteLibraryRevision
+            remoteLibraryRevision!==lastAppliedRemoteLibraryRevision
           )
         ){
           lastAppliedRemoteLibraryRevision=remoteLibraryRevision;
@@ -801,7 +719,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
         /*
          * Firebase sigue en paralelo para web publica/respaldo.
          */
-        if(!EGP_AUDIT_LOCAL && !EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V2){
+        if(!EGP_AUDIT_LOCAL){
           (async()=>{
             try{
               if(!remoteStateRef)await initRemoteSync(true);
@@ -1549,7 +1467,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
   function egpBridgeFirebaseQueueToCore(data={}){
-    if(EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V2)return;
     if(
       EGP_AUDIT_LOCAL ||
       !LOCAL_QUEUE_MODE
@@ -1979,7 +1896,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
   function egpBridgeFirebaseStateToCore(data={}){
-    if(EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V2)return;
     if(
       EGP_AUDIT_LOCAL ||
       !LOCAL_QUEUE_MODE
@@ -2052,7 +1968,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
 
   function egpMirrorQueueLanToFirebase(){
-    if(EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V2)return Promise.resolve();
     if(
       EGP_AUDIT_LOCAL ||
       egpFirebaseStateBridgeActive ||
@@ -2113,7 +2028,6 @@ document.documentElement.dataset.egmVersion="6.36.92";
    * el snapshot completo de Core en Firebase.
    */
   function egpMirrorCoreSnapshotToFirebase(snapshot){
-    if(EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V2)return;
     if(
       EGP_AUDIT_LOCAL ||
       egpFirebaseStateBridgeActive ||
@@ -2666,36 +2580,11 @@ document.documentElement.dataset.egmVersion="6.36.92";
         snap=await localQueueRequest('/api/state');
       }catch(err){
         const wasLocal=LOCAL_QUEUE_MODE;
-
-        /*
-         * Firebase toma el rol de failover INMEDIATAMENTE.
-         * La vista, sin embargo, solo cambia si tenemos un snapshot
-         * confirmado por servidor y no más viejo que el último Core.
-         */
         LOCAL_QUEUE_MODE=false;
 
-        const failoverState=
-          latestRemoteServerState;
-
-        const failoverRevision=
-          failoverState
-            ? egpFirebaseStateRevision(failoverState)
-            : 0;
-
-        const coreRevision=
-          Number(lastAppliedCoreRevision)||0;
-
-        const failoverReady=
-          Boolean(failoverState) &&
-          (
-            !coreRevision ||
-            !failoverRevision ||
-            failoverRevision>=coreRevision
-          );
-
-        if(wasLocal&&failoverReady){
-          const q=Array.isArray(failoverState.cola)?failoverState.cola.map(String):[];
-          const p=Array.isArray(failoverState.tocadas)?[...new Set(failoverState.tocadas.map(String))]:[];
+        if(wasLocal&&latestRemoteState){
+          const q=Array.isArray(latestRemoteState.cola)?latestRemoteState.cola.map(String):[];
+          const p=Array.isArray(latestRemoteState.tocadas)?[...new Set(latestRemoteState.tocadas.map(String))]:[];
 
           state.played=new Set(p);
           applyRemoteQueueSnapshot(q);
@@ -2706,10 +2595,10 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
           /*
            * EGP_CORE_SHOW_AUTHORITY_V1
-           * Core cayó: Firebase servidor confirmado asume el show.
+           * Core cayó: Firebase vuelve a ser failover del show.
            */
           applyRemotePanelState(
-            failoverState,
+            latestRemoteState,
             {
               skipQueue:true,
               skipPlayed:true,
@@ -2717,27 +2606,10 @@ document.documentElement.dataset.egmVersion="6.36.92";
               authority:'firebase'
             }
           );
-
-        }else if(wasLocal){
-          /*
-           * No hay snapshot servidor listo o todavía está atrasado.
-           * No vaciar ni reducir la pantalla: conservar el último
-           * estado Core hasta que onSnapshot entregue uno válido.
-           */
-          console.warn(
-            'EGP failover: Firebase toma control; UI conserva último Core hasta sincronizar',
-            {
-              hasServerSnapshot:Boolean(failoverState),
-              firebaseRevision:failoverRevision,
-              coreRevision
-            }
-          );
         }
 
         return;
       }
-
-      egpHadLocalCoreAuthority=true;
 
       const enteringLocalQueueMode=
         LOCAL_QUEUE_MODE!==true;
@@ -3413,549 +3285,40 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
   refreshPanelProfileControls();
 
-  /*
-   * EGP_SINGLE_SHOW_PANEL_GUARD_V2
-   */
-  async function egpReadCoreAuthorityV2(){
-    try{
-      return {reachable:true,data:await localQueueRequest('/api/state')};
-    }catch(error){
-      return {reachable:false,data:null,error};
-    }
-  }
-
-  async function egpReadFirebaseAuthorityV2(){
-    try{
-      if(!remoteStateRef)await initRemoteSync(true);
-      if(!remoteStateRef)return {reachable:false,data:null};
-
-      const getter=
-        remoteGetDocFromServer ||
-        remoteGetDoc;
-
-      if(!getter)return {reachable:false,data:null};
-
-      const snap=await getter(remoteStateRef);
-      if(!snap.exists())return {reachable:true,data:{}};
-
-      return {
-        reachable:true,
-        data:snap.data()||{}
-      };
-    }catch(error){
-      return {reachable:false,data:null,error};
-    }
-  }
-
-  async function egpWaitCoreCatchupV2(session,revision,timeoutMs=3600){
-    const deadline=Date.now()+timeoutMs;
-
-    while(Date.now()<deadline){
-      try{
-        const snap=await localQueueRequest('/api/state');
-        const currentSession=egpCoreShowSession(snap);
-        const currentRevision=egpCoreSemanticRevision(snap);
-
-        if(
-          snap?.show?.active===true &&
-          (!session || currentSession===session) &&
-          (!revision || currentRevision>=revision)
-        ){
-          return snap;
-        }
-      }catch(_){}
-
-      await new Promise(resolve=>setTimeout(resolve,300));
-    }
-
-    return null;
-  }
-
-  async function egpResolvePanelAuthorityV2({
-    startup=false,
-    showConfigWhenInactive=false
-  }={}){
-    const [coreResult,remoteResult]=await Promise.all([
-      egpReadCoreAuthorityV2(),
-      egpReadFirebaseAuthorityV2()
-    ]);
-
-    let core=coreResult.data;
-    const remote=remoteResult.data;
-
-    let coreActive=core?.show?.active===true;
-    const remoteActive=remote?.show_activo===true;
-
-    const coreSession=egpCoreShowSession(core||{});
-    const remoteSession=egpRemoteShowSession(remote||{});
-
-    if(
-      startup &&
-      coreResult.reachable &&
-      remoteResult.reachable &&
-      remoteActive &&
-      (
-        !coreActive ||
-        (
-          coreSession &&
-          remoteSession &&
-          coreSession===remoteSession &&
-          egpFirebaseStateRevision(remote)>
-            egpCoreSemanticRevision(core)
-        )
-      )
-    ){
-      const caught=await egpWaitCoreCatchupV2(
-        remoteSession,
-        egpFirebaseStateRevision(remote)
-      );
-
-      if(caught){
-        core=caught;
-        coreActive=true;
-      }
-    }
-
-    if(coreActive){
-      LOCAL_QUEUE_MODE=true;
-      egpHadLocalCoreAuthority=true;
-      applyLocalQueueSnapshot(core,{force:true});
-
-      return {
-        reachable:true,
-        active:true,
-        authority:'core',
-        coreReachable:true,
-        firebaseReachable:remoteResult.reachable,
-        session:egpCoreShowSession(core)
-      };
-    }
-
-    if(remoteActive){
-      /*
-       * Si Core responde, estamos dentro de la LAN y Core sigue siendo
-       * la autoridad visual. Firebase activo solo bloquea crear otro show
-       * mientras Cloud Sync termina de llevar esa sesión a Core.
-       */
-      if(coreResult.reachable){
-        return {
-          reachable:true,
-          active:true,
-          syncing:true,
-          authority:'core-pending-firebase',
-          coreReachable:true,
-          firebaseReachable:true,
-          session:egpRemoteShowSession(remote)
-        };
-      }
-
-      LOCAL_QUEUE_MODE=false;
-      latestRemoteServerState=remote;
-      latestRemoteState=remote;
-
-      applyRemotePanelState(
-        remote,
-        {authority:'firebase',allowWhileLocal:true}
-      );
-
-      return {
-        reachable:true,
-        active:true,
-        authority:'firebase',
-        coreReachable:false,
-        firebaseReachable:true,
-        session:egpRemoteShowSession(remote)
-      };
-    }
-
-    if(coreResult.reachable || remoteResult.reachable){
-      showActiveConfirmed=false;
-      currentAppliedShowSession='';
-      localDesiredShowActive=null;
-      localShowTransitionUntil=0;
-      state.config=null;
-      state.queue=[];
-      state.played.clear();
-      setStatus(false);
-      saveStateLocalOnly();
-
-      if(
-        showConfigWhenInactive &&
-        panelAuthValid() &&
-        $('#panelLogin').hidden
-      ){
-        showConfig(false);
-      }
-
-      return {
-        reachable:true,
-        active:false,
-        authority:coreResult.reachable?'core':'firebase',
-        coreReachable:coreResult.reachable,
-        firebaseReachable:remoteResult.reachable,
-        session:''
-      };
-    }
-
-    return {
-      reachable:false,
-      active:false,
-      authority:'',
-      coreReachable:false,
-      firebaseReachable:false,
-      session:''
-    };
-  }
-
-  async function egpClaimCoreShowV2(payload){
-    const response=await fetch(
-      `${LOCAL_CORE_URL}/api/public-config`,
-      {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        cache:'no-store',
-        body:JSON.stringify(payload)
-      }
-    );
-
-    const data=await response.json();
-
-    if(!response.ok || data?.ok===false){
-      const error=new Error(
-        data?.error ||
-        data?.message ||
-        `Local Core HTTP ${response.status}`
-      );
-      error.code=data?.error||'CORE_CLAIM_FAILED';
-      throw error;
-    }
-
-    return data;
-  }
-
-  const EGP_CORE_SYNC_HEARTBEAT_MAX_AGE_V2=30000;
-
-  function egpFirebaseHeartbeatFreshV2(data){
-    const heartbeat=Number(data?.core_sync_heartbeat)||0;
-    if(!heartbeat)return false;
-    const age=Date.now()-heartbeat;
-    return age>=-5000 && age<=EGP_CORE_SYNC_HEARTBEAT_MAX_AGE_V2;
-  }
-
-  async function egpClaimFirebaseShowV2(
-    payload,
-    {requireFreshHeartbeat=false}={}
-  ){
-    if(!remoteStateRef)await initRemoteSync(true);
-
-    if(
-      !remoteStateRef ||
-      !remoteRunTransaction ||
-      !remoteDb
-    ){
-      throw new Error(
-        'Firebase no está listo para reservar el show'
-      );
-    }
-
-    await remoteRunTransaction(
-      remoteDb,
-      async transaction=>{
-        const snap=await transaction.get(remoteStateRef);
-        const current=snap.exists()?snap.data()||{}:{};
-
-        if(current.show_activo===true){
-          const error=new Error('SHOW_ALREADY_ACTIVE');
-          error.code='SHOW_ALREADY_ACTIVE';
-          error.current=current;
-          throw error;
-        }
-
-        if(
-          requireFreshHeartbeat &&
-          !egpFirebaseHeartbeatFreshV2(current)
-        ){
-          const error=new Error('CORE_SYNC_STALE');
-          error.code='CORE_SYNC_STALE';
-          error.current=current;
-          throw error;
-        }
-
-        transaction.set(
-          remoteStateRef,
-          payload,
-          {merge:true}
-        );
-      }
-    );
-
-    latestRemoteServerState=payload;
-    latestRemoteState=payload;
-    return true;
-  }
-
-  let egpStartingShowV2=false;
-
-  $('#showForm').addEventListener('submit',async e=>{
+  $('#showForm').addEventListener('submit',e=>{
     e.preventDefault();
-
-    if(egpStartingShowV2)return;
-
     const venue=$('#venueInput').value.trim();
-    if(!venue)return toast('Escribe el lugar del show');
+    if(!venue) return toast('Escribe el lugar del show');
+    const config={venue,repertoire:$('#repertoireSelect').value,repertoireName:$('#repertoireSelect').selectedOptions[0].dataset.name||$('#repertoireSelect').selectedOptions[0].textContent,profile:$('#profileSelect').value,whatsapp:$('#whatsappToggle').checked===true,requests:$('#requestsToggle')?.checked===true,requestsMode:$('#requestsModeSelect')?.value==='uno_por_turno'?'uno_por_turno':'libre',publicQueue:$('#publicQueueToggle').checked,advertising:$('#advertisingToggle').checked,startedAt:new Date().toISOString()};
+    if(config.requests===true){config.whatsapp=false;$('#whatsappToggle').checked=false;}
+    askConfirm('Comenzar nuevo show','Se guardará esta configuración y se reiniciará la cola del show anterior.',()=>{
+      // Entrada inmediata: no esperar una lectura de verificación para mostrar Control en vivo.
+      remoteShowGeneration++;localDesiredShowActive=true;showActiveConfirmed=true;localShowTransitionUntil=Date.now()+10000;
 
-    const preflight=await egpResolvePanelAuthorityV2();
+      /*
+       * EGP_NEW_SHOW_REARMS_UI_V3
+       * Registrar la misma identidad que publicaremos a Core/Firebase.
+       */
+      currentAppliedShowSession=
+        `show-${new Date(config.startedAt).getTime()}`;
+      configOpenedFromLive=false;
+      window.__egpAutoEntrarShowActivoLanV1=false;
 
-    if(preflight.active){
-      toast('Ya existe un show activo. Entrando al show actual.');
-      return;
-    }
+      state.config=config;state.queue=[];state.played.clear();addVenueOption(venue);
+      startNewShowTimer();
+      saveStateLocalOnly();
+      setStatus(true);showLive();egpPublicarConfigLan({show_activo:true,inicio_show:new Date(config.startedAt).getTime(),pedidos_whatsapp:config.whatsapp===true,pedidos_panel:config.requests===true,pedidos_modo:config.requestsMode});
+      toast(`Show iniciado. Repertorio activo: ${config.repertoireName}.`);
 
-    if(!preflight.reachable){
-      toast(
-        'No se pudo comprobar ni Core ni Firebase. No se creará otro show.'
-      );
-      return;
-    }
-
-    askConfirm(
-      'Comenzar nuevo show',
-      'Se verificará nuevamente que no exista otro show activo.',
-      async()=>{
-        if(egpStartingShowV2)return;
-        egpStartingShowV2=true;
-
-        const startBtn=$('#showForm .start-btn');
-        if(startBtn)startBtn.disabled=true;
-
-        try{
-          const finalCheck=
-            await egpResolvePanelAuthorityV2();
-
-          if(finalCheck.active){
-            toast('Otro dispositivo ya inició un show. Entrando a ese show.');
-            return;
-          }
-
-          if(!finalCheck.reachable){
-            toast(
-              'No se pudo verificar la autoridad. Show NO iniciado.'
-            );
-            return;
-          }
-
-          const config={
-            venue,
-            repertoire:$('#repertoireSelect').value,
-            repertoireName:
-              $('#repertoireSelect').selectedOptions[0].dataset.name ||
-              $('#repertoireSelect').selectedOptions[0].textContent,
-            profile:$('#profileSelect').value,
-            whatsapp:$('#whatsappToggle').checked===true,
-            requests:$('#requestsToggle')?.checked===true,
-            requestsMode:
-              $('#requestsModeSelect')?.value==='uno_por_turno'
-                ? 'uno_por_turno'
-                : 'libre',
-            publicQueue:$('#publicQueueToggle').checked,
-            advertising:$('#advertisingToggle').checked,
-            startedAt:new Date().toISOString()
-          };
-
-          if(config.requests===true){
-            config.whatsapp=false;
-            $('#whatsappToggle').checked=false;
-          }
-
-          const startedAt=
-            new Date(config.startedAt).getTime();
-
-          const session=`show-${startedAt}`;
-
-          const ids=(
-            config.repertoire==='todas'
-              ? state.songs
-              : state.songs.filter(song=>
-                  Array.isArray(song.listas) &&
-                  song.listas.includes(config.repertoire)
-                )
-          ).map(song=>String(song.id));
-
-          const payload={
-            show_active:true,
-            show_activo:true,
-            show_id:String(startedAt),
-            show_session_id:session,
-            show_revision:startedAt,
-            show_writer:DEVICE_ID,
-            updated_at:startedAt,
-
-            lista_activa:config.repertoire,
-            listaActiva:config.repertoire,
-            repertorio_nombre:config.repertoireName,
-            repertorio_activo_ids:ids,
-            repertorioActivoIds:ids,
-
-            lugar:config.venue,
-            perfil_clientes:config.profile,
-            pedidos_whatsapp:
-              config.requests===true
-                ? false
-                : config.whatsapp===true,
-            pedidos_panel:config.requests===true,
-            pedidos_modo:config.requestsMode,
-            mostrar_cola:config.publicQueue!==false,
-            uso_publicidad:config.advertising===true,
-
-            inicio_show:startedAt,
-            cronometro_schema:SHOW_TIMER_SCHEMA,
-            cronometro_elapsed_ms:0,
-            cronometro_running:true,
-            cronometro_started_at:startedAt,
-
-            cola:[],
-            tocadas:[]
-          };
-
-          let claimed='';
-
-          if(
-            finalCheck.coreReachable &&
-            finalCheck.firebaseReachable
-          ){
-            /*
-             * Con Internet: Firebase reserva PRIMERO la única sesión.
-             * Dos Panels concurrentes compiten en una transacción y solo
-             * uno puede ganar. Después esa MISMA sesión entra a Core.
-             */
-            await egpClaimFirebaseShowV2(payload);
-
-            try{
-              await egpClaimCoreShowV2(payload);
-              claimed='core+firebase';
-
-              egpPublicarConfigLan(payload).catch(err=>{
-                console.warn(
-                  'Config secundaria LAN pendiente:',
-                  err
-                );
-              });
-
-            }catch(error){
-              const current=
-                await egpResolvePanelAuthorityV2();
-
-              if(current.active){
-                toast(
-                  'Otro dispositivo ya inició el show. Entrando al actual.'
-                );
-                return;
-              }
-
-              throw error;
-            }
-
-          }else if(finalCheck.coreReachable){
-            /*
-             * Sin Internet pero dentro de EGP: Core puede iniciar.
-             * Los Panels externos verán heartbeat vencido y NO podrán
-             * crear otra sesión hasta que la Mac vuelva a sincronizar.
-             */
-            await egpClaimCoreShowV2(payload);
-            claimed='core-offline';
-
-            egpPublicarConfigLan(payload).catch(err=>{
-              console.warn(
-                'Config secundaria LAN pendiente:',
-                err
-              );
-            });
-
-          }else if(finalCheck.firebaseReachable){
-            /*
-             * Panel solo por Internet: solo puede crear show si Firebase
-             * acaba de ser confirmado por la Mac/Core mediante heartbeat.
-             */
-            await egpClaimFirebaseShowV2(
-              payload,
-              {requireFreshHeartbeat:true}
-            );
-            claimed='firebase';
-
-          }else{
-            throw new Error(
-              'No existe autoridad disponible para iniciar el show'
-            );
-          }
-
-          remoteShowGeneration++;
-          localDesiredShowActive=true;
-          showActiveConfirmed=true;
-          localShowTransitionUntil=Date.now()+10000;
-          currentAppliedShowSession=session;
-          configOpenedFromLive=false;
-          window.__egpAutoEntrarShowActivoLanV1=false;
-
-          state.config=config;
-          state.queue=[];
-          state.played.clear();
-          addVenueOption(venue);
-
-          startNewShowTimer();
-          saveStateLocalOnly();
-          setStatus(true);
-          showLive();
-
-          if(claimed.startsWith('core')){
-            LOCAL_QUEUE_MODE=true;
-            egpHadLocalCoreAuthority=true;
-            toast(
-              `Show iniciado. ${config.repertoireName}.`
-            );
-          }else{
-            LOCAL_QUEUE_MODE=false;
-            toast(
-              `Show iniciado por Internet. ${config.repertoireName}.`
-            );
-          }
-
-          localDesiredShowActive=null;
-          localShowTransitionUntil=0;
-
-        }catch(error){
-          console.error(
-            'No se pudo reservar una única sesión de show:',
-            error
-          );
-
-          if(
-            error?.code==='SHOW_ALREADY_ACTIVE' ||
-            String(error?.message||'').includes('SHOW_ALREADY_ACTIVE')
-          ){
-            await egpResolvePanelAuthorityV2();
-            toast(
-              'Ya existe un show activo. No se creó otro.'
-            );
-          }else if(
-            error?.code==='CORE_SYNC_STALE' ||
-            String(error?.message||'').includes('CORE_SYNC_STALE')
-          ){
-            toast(
-              'No se puede iniciar otro show: la Mac/Core no ha confirmado estado reciente.'
-            );
-          }else{
-            toast(
-              'Show NO iniciado: '+
-              (error?.message||'error de sincronización')
-            );
-          }
-        }finally{
-          egpStartingShowV2=false;
-          if(startBtn)startBtn.disabled=false;
-        }
-      },
-      'Comenzar'
-    );
+      // Publicación en segundo plano. Los demás dispositivos reciben el show por onSnapshot.
+      syncRemoteState(true).then(()=>{
+        localDesiredShowActive=null;localShowTransitionUntil=0;
+        toast('Configuración sincronizada en todos los dispositivos.');
+      }).catch(err=>{
+        console.error('No se pudo publicar el show activo:',err);
+        toast('Show iniciado localmente. Se sincronizará cuando vuelva la conexión.');
+      });
+    },'Comenzar');
   });
 
   function showLive(){
@@ -10329,11 +9692,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
         showLive();
       }else if(latestRemoteState){
         applyRemotePanelState(latestRemoteState);
-      }else if(
-        !document.documentElement.classList.contains(
-          'egp-show-resolving-v2'
-        )
-      ){
+      }else{
         showConfig();
       }
     }else{
@@ -10341,100 +9700,22 @@ document.documentElement.dataset.egmVersion="6.36.92";
     }
   });
   loadData().then(async()=>{
-    /*
-     * EGP_BOOTSTRAP_AUTHORITY_GATE_V2
-     * Nunca enseñar Config mientras aún estamos averiguando
-     * si el show vive en Core o Firebase.
-     */
-    let resolved=null;
-
-    const resolveStartup=async()=>{
-      resolved=await egpResolvePanelAuthorityV2({
-        startup:true,
-        showConfigWhenInactive:true
-      });
-      return resolved;
-    };
+    let sharedStateResolved=false;
 
     try{
-      for(let attempt=0;attempt<3;attempt++){
-        await resolveStartup();
+      await initRemoteSync(true);
 
-        if(
-          resolved?.reachable &&
-          !resolved?.syncing
-        )break;
+      if(remoteGetDoc&&remoteStateRef){
+        const snap=await remoteGetDoc(remoteStateRef);
 
-        await new Promise(
-          resolve=>setTimeout(resolve,450)
-        );
-      }
-
-      /*
-       * Si Firebase ya tiene un show pero Core aún está poniéndose al día,
-       * conservar la pantalla de Sincronizando; NUNCA enseñar Config.
-       */
-      if(resolved?.syncing){
-        for(let extra=0;extra<20 && resolved?.syncing;extra++){
-          await new Promise(
-            resolve=>setTimeout(resolve,500)
-          );
-          await resolveStartup();
+        if(snap.exists()){
+          latestRemoteState=snap.data()||{};
+          sharedStateResolved=true;
+          applyRemotePanelState(latestRemoteState);
         }
       }
-
-      if(!resolved?.reachable){
-        console.warn(
-          'Core y Firebase no respondieron durante el arranque.'
-        );
-
-        state.config=null;
-        state.queue=[];
-        state.played.clear();
-        showActiveConfirmed=false;
-        currentAppliedShowSession='';
-        saveStateLocalOnly();
-
-        if(
-          panelAuthValid() &&
-          $('#panelLogin').hidden
-        ){
-          showConfig(false);
-        }
-      }
-
-      if(resolved?.syncing){
-        console.warn(
-          'Show remoto pendiente de confirmación en Core; se mantiene la pantalla de sincronización.'
-        );
-
-        const retry=setInterval(async()=>{
-          try{
-            const again=await resolveStartup();
-            if(again?.reachable && !again?.syncing){
-              clearInterval(retry);
-              document.documentElement.classList.remove(
-                'egp-show-resolving-v2'
-              );
-            }
-          }catch(_){}
-        },1000);
-
-      }else{
-        document.documentElement.classList.remove(
-          'egp-show-resolving-v2'
-        );
-      }
-
     }catch(err){
-      console.warn(
-        'No se pudo resolver todavía el estado del show.',
-        err
-      );
-
-      document.documentElement.classList.remove(
-        'egp-show-resolving-v2'
-      );
+      console.warn('No se pudo leer todavía el estado compartido del show.',err);
     }
 
     egpPedidosLanPanelV85();

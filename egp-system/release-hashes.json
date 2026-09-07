@@ -1,6 +1,6 @@
 {
   "release_id": "EGP-SYSTEM-2026.09.07-R1",
-  "release_json_sha256": "e93a74440557c3d1bbedb9234a1b3ab52dfc4e43413af78dfd73f3563d0d7ca8",
+  "release_json_sha256": "3be266a2cab569923d2ca9eb170b0842b34bd277b1fd58ace3465922322a8316",
   "panel": {
     "panel.html": "2196900cdd19b3b3e7d6ccfd1e48f486ea4e282f74454338e1632e511ffaef6d",
     "panel.js": "d3f45e7218b59e9d02f6bfc4fdc77f2bcaea027c2268775a8b43d77a41ca07d6",
@@ -26,5 +26,7 @@
   "bridge": {
     "mode": "verify_only",
     "launcher_sha256": "1451dc3d8b23d1af4bb14752345449131a536fc78fd0df8a3c62acdebe7a80bf"
-  }
+  },
+  "payload_ref": "f6075b2c84ff34b9bb2859cc4faead73fb816bb5",
+  "manifest_revision": 2
 }

@@ -2258,5 +2258,11 @@
       "target": "caddy_config",
       "reload": "caddy"
     }
-  ]
+  ],
+  "manifest_revision": 2,
+  "source_repository": "danieldelgado29/egp-web-pruebas-2026-08-19",
+  "payload_ref": "f6075b2c84ff34b9bb2859cc4faead73fb816bb5",
+  "payload_policy": "immutable_commit",
+  "manifest_url_policy": "main_only_for_discovery",
+  "payload_integrity": "sha256_required"
 }

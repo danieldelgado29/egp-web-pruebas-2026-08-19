@@ -30,3 +30,14 @@ Sí participa en la verificación de compatibilidad mediante
 8. Si falla la aplicación o verificación, se revierte.
 9. Las PWAs deben actualizarse sin limpieza manual de caché ni reinstalación.
 10. Bridge se bloquea solo si el contrato Core requerido deja de ser compatible.
+
+## Descarga inmutable
+
+`release.json` se descubre desde `main`, pero los archivos de una release
+se descargan exclusivamente desde `payload_ref`, que es un commit Git
+inmutable. El agente nunca instala archivos directamente desde el `main`
+móvil. Cada archivo debe coincidir con su SHA-256 declarado antes de aplicar.
+
+Esto evita una release mezclada si `main` cambia mientras una Mac está
+descargando una actualización.
+

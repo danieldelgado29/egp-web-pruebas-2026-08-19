@@ -1,0 +1,2262 @@
+{
+  "schema": 1,
+  "authority": "internet_github",
+  "release_id": "EGP-SYSTEM-2026.09.07-R1",
+  "release_generation": 2026090701,
+  "created_at": "2026-09-07T17:16:05.924199+00:00",
+  "base_commit": "677dda28de6a41f789805a3aff074799fcabb188",
+  "update_mode": "stage_verify_apply_rollback",
+  "offline_policy": "keep_last_complete_release",
+  "bridge_policy": {
+    "mode": "verify_only",
+    "auto_update": false,
+    "compatibility_file": "egp-system/bridge/compatibility.json",
+    "launcher_sha256": "1451dc3d8b23d1af4bb14752345449131a536fc78fd0df8a3c62acdebe7a80bf",
+    "core_contract": "EGP_CORE_BRIDGE_CONTRACT_V1"
+  },
+  "surfaces": {
+    "caddy_web": "Caddy local web root",
+    "lan_web": "Local Core panel-real",
+    "core_runtime": "Local Core Python runtime",
+    "cloud_sync_runtime": "Cloud Sync runtime",
+    "caddy_config": "Caddy infrastructure config"
+  },
+  "web_files": [
+    {
+      "source": "assets/anotaciones/afuera.jpeg",
+      "sha256": "803fa447a642c0af5e945af81fa685b5d430daeb550f21e21efacecab674122e",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/afuera.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/afuera.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/ahora-te-puedes-marchar.jpeg",
+      "sha256": "a317fe9ab0afcd267170c4cc907d9d792d51cfbace6bc85233320cd06de9282c",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/ahora-te-puedes-marchar.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/ahora-te-puedes-marchar.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/aint-no-sunshine.jpeg",
+      "sha256": "4b5deaedd086c2a4d857972fe91cef542c69de4ebf5f702b4919c9a037b9ce15",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/aint-no-sunshine.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/aint-no-sunshine.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/all-about-that-bass.jpeg",
+      "sha256": "db886a0bbfc7e3643d4c1681e61b8bf558f81d191b54ac19fb5a75d4a4438763",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/all-about-that-bass.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/all-about-that-bass.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/american-woman.jpeg",
+      "sha256": "ae611753881dbee94a4c2930301272595a662425fa9a55f4b3d698b017c9d95a",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/american-woman.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/american-woman.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/amor-prohibido.jpeg",
+      "sha256": "25aceae6d2df01a623b5b1c1817c64112afb1a58a207d677e7efdb57368e0176",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/amor-prohibido.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/amor-prohibido.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/amy-amy-amy.jpeg",
+      "sha256": "71bafd7f6dff31b2025f4bd9316685f63cfedfea8b82a26f4e8df5794b78735d",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/amy-amy-amy.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/amy-amy-amy.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/another-one-bites-the-dust.jpeg",
+      "sha256": "3769011fd85ad2d7772e1668965a7ef6b953977d0870e5374aca93bd3fcb325d",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/another-one-bites-the-dust.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/another-one-bites-the-dust.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/asi-es-la-vida.jpeg",
+      "sha256": "d846718605f9af9d6074f82c0fc51e85cb97dcf7b8f4ba7dde88a92d8d6ebdf8",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/asi-es-la-vida.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/asi-es-la-vida.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/at-last-2.jpeg",
+      "sha256": "22de81135cef023d2b24293cd2ff34f01ae51ebe31d5811f70d0c0ef0f7ac2a0",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/at-last-2.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/at-last-2.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/at-last.jpeg",
+      "sha256": "bedc3cc90ff3ba692b9e12f1b329bc0bb39c5c2aaa4d31b0261ab0319be97b86",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/at-last.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/at-last.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/bang-bang-my-baby-shot-me-down.jpeg",
+      "sha256": "ead032e205d68d55ab4a9c654299cda412a5aa16c330de306bd79967a4eae830",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/bang-bang-my-baby-shot-me-down.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/bang-bang-my-baby-shot-me-down.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/baracunatana.jpeg",
+      "sha256": "ce26ccdd16f01d7a314ee53b794ebe6fb8de56e7ddeeaf5fe2f7f9f31f01b6dc",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/baracunatana.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/baracunatana.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/chica-de-humo.jpeg",
+      "sha256": "d081f1f81403ff91cabb7ca833fec001dd659c4b7fe9f6be73d62f5a3c69b72a",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/chica-de-humo.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/chica-de-humo.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/clavado-en-un-bar.jpeg",
+      "sha256": "3b2696c4c370e2f0df8ef31c0d3799df8a23d574ae7c6633d827ac7081db905e",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/clavado-en-un-bar.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/clavado-en-un-bar.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/come-together.jpeg",
+      "sha256": "101b356c5e77a31e6798a41a5720c3c9c54316d73c3241eaeace043a40543248",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/come-together.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/come-together.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/como-la-flor.jpeg",
+      "sha256": "efffa63798401b6b2d091575f8f9ff477d4669b65d9e3fe7c1bcef8a6d3d3978",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/como-la-flor.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/como-la-flor.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/como-te-voy-a-olvidar.jpeg",
+      "sha256": "3405c66bd286f0dd2150f748e08a3543b15b26a890f2e3a192b6f5dc421bfb66",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/como-te-voy-a-olvidar.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/como-te-voy-a-olvidar.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/corazon.jpeg",
+      "sha256": "42ddd3f98b5a2e95a0e8e811f212d63249f1546998be47642dae5ebedb89e393",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/corazon.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/corazon.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/dont-look-back-in-anger.jpeg",
+      "sha256": "7c5e116adf47ce09a0de3801b1d50087145e7841a8646830a4399de36c7d6134",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/dont-look-back-in-anger.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/dont-look-back-in-anger.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/dont-stop-me-now.jpeg",
+      "sha256": "07b4d7b277ad4d53faa865b76ffd2d893f5a9d7ea86104b50b7acc0fadd289a6",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/dont-stop-me-now.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/dont-stop-me-now.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/el-embrujo.jpeg",
+      "sha256": "2fbebd75c620d78d267f9ea46d8235e006c90584c0ee262f0ec7bdb777cb61e6",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/el-embrujo.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/el-embrujo.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/enter-sandman.jpeg",
+      "sha256": "f41d21d2231a6bbe0ab4794eb1c778d96fa4a424743f06720f991a17fabb5dc8",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/enter-sandman.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/enter-sandman.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/es-mejor-asi.jpeg",
+      "sha256": "f12659375875e460557e653ed504d4f96a02dddab20558ebad235a68254c6b1d",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/es-mejor-asi.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/es-mejor-asi.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/every-breath-you-take.jpeg",
+      "sha256": "4308868374fb1d36993a55a3a93b1378d40151e6901be0b4bb38ec7bd38d2600",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/every-breath-you-take.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/every-breath-you-take.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/feeling-good.jpeg",
+      "sha256": "30b3139c80c385173fbfc9a09e3f199fac10a1f11ce257ef3ddc15b121bf8c52",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/feeling-good.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/feeling-good.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/felicidad.jpeg",
+      "sha256": "a357b38287f411900d5a20dc1cf380064a3ba5cd4dfcd506086162a209499e28",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/felicidad.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/felicidad.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/fever 2.jpeg",
+      "sha256": "89fbe02aafe78bc453e4979ffd92788f6fd0e2bdd86fafe77feb2fe2ab309bd1",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/fever 2.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/fever 2.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/fever.jpeg",
+      "sha256": "731f8faa4bf77eca20512c0f5362f76d20222c073873c0ec1354047a5b2b61f7",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/fever.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/fever.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/fuck me.jpeg",
+      "sha256": "42bf83062edef96a4ede084a60a5913ab0869d25f17ac5fa0bd1c104b55479e1",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/fuck me.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/fuck me.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/fuck-me-pumps.jpeg",
+      "sha256": "3f7223a938d5d66323678ac5f61239197e16c21b7f6704bd931c2cfd9dedf929",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/fuck-me-pumps.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/fuck-me-pumps.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/godspeed.jpeg",
+      "sha256": "4910eb1a0d25311bf9b23767bbbcc10d2928541985f83323e35163c1c06f0174",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/godspeed.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/godspeed.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/heart-of-glass.jpeg",
+      "sha256": "5c5edc146311b8e4928064571911e7a005b852885cac012cd223d985dd7eb052",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/heart-of-glass.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/heart-of-glass.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/hey-little-rich-girl.jpeg",
+      "sha256": "c1e81a6da369368d721d332fe01bec6dc41a7ca0f35220b9880344724a02ac8f",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/hey-little-rich-girl.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/hey-little-rich-girl.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/hit-me-with-your-best-shot.jpeg",
+      "sha256": "75aeb93bea929d8cae1e4c85f3b984210881b141b508e221ce6064246737b62c",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/hit-me-with-your-best-shot.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/hit-me-with-your-best-shot.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/hit-the-road-jack.jpeg",
+      "sha256": "bc24f9e629bc4a25f43d257e2b428f92bb9e7e9616a1d84c4d83382701302c0b",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/hit-the-road-jack.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/hit-the-road-jack.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/i am not the only one.jpeg",
+      "sha256": "6af8e4191ceef2e22965eccdcba49a3c39982730905271b0b70cd8f3d124a6da",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/i am not the only one.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/i am not the only one.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/i love you more.jpeg",
+      "sha256": "bdf0bfd03173961035e7af0e7df17b40dab5e336f16bc661d74e12609908f02d",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/i love you more.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/i love you more.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/i-don-t-want-to-miss.jpeg",
+      "sha256": "9f5d7bc3d775a88ebddc6f97efb1d303b532905426500d9303227b40d232e813",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/i-don-t-want-to-miss.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/i-don-t-want-to-miss.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/i-put-a-spell-on-you.jpeg",
+      "sha256": "a1d4a6ca159337bc83c05616c26de58ad878940d600338f78a5bf6a662e76ac2",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/i-put-a-spell-on-you.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/i-put-a-spell-on-you.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/i-will-survive.jpeg",
+      "sha256": "3e990216c729668027a1ae9c36ba12b8d5198e4d381cfe0b4c74286eccd54957",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/i-will-survive.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/i-will-survive.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/id-rather-go-blind.jpeg",
+      "sha256": "f3a40e1fbe9472f3aba540112e54383bd4113ecdc45112f34139d091025113b4",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/id-rather-go-blind.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/id-rather-go-blind.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/ill-take-care-of-you.jpeg",
+      "sha256": "91471d7567bf39734170cc3ee2cc1ff8a27fc137163a1d6a9693f9e4d1297d61",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/ill-take-care-of-you.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/ill-take-care-of-you.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/index.json",
+      "sha256": "bd0b4666fa2c6e8c538f906b934d64b0915a76fad3eaeccb04c4e45d4da5b96b",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/index.json"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/index.json"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/its-a-pitty.jpeg",
+      "sha256": "28fc99d6629b16234605fb9fa2e7c127177ced86cff74c2f962599c63cd8bab6",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/its-a-pitty.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/its-a-pitty.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/just-friends.jpeg",
+      "sha256": "1875bd63176c4db927022e96ffdf4594cdee829ba5907ed3bb3081fc60909416",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/just-friends.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/just-friends.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/killing-in-the-name.jpeg",
+      "sha256": "53a38aeb0a4b6e6301de0e587fd462e6820de9683f2e56fa16a61021ce8c8e58",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/killing-in-the-name.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/killing-in-the-name.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/la-guitarra.jpeg",
+      "sha256": "d34ba0f1dd1d704248b90eb4557aa1dbb05f8ac07b8b4e8058377498591a6de4",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/la-guitarra.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/la-guitarra.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/la-muralla.jpeg",
+      "sha256": "745f72b6816faf0c322a7fd3f597090463630d2b5ee82e0a380539ff689ed763",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/la-muralla.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/la-muralla.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/lamento-boliviano.jpeg",
+      "sha256": "b62a530533534f45ee2cf2e5173bb6aeea3531bf9ada1b7d01859b1773f96fb5",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/lamento-boliviano.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/lamento-boliviano.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/let-it-be.jpeg",
+      "sha256": "a7b51f55dbe393c97c5e33c7632f72248e9d74f91e8a82ed99fbed89ce8c7d84",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/let-it-be.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/let-it-be.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/like-a-stone.jpeg",
+      "sha256": "5b10205bf58dc512560af767f0cbba75d221f5218fbfd1a40d468272c3e186e8",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/like-a-stone.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/like-a-stone.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/love is a losing game.jpeg",
+      "sha256": "6e5c3b037817277b495586f46fd550150536efa0e6026dbf3b459979dc5aa80f",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/love is a losing game.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/love is a losing game.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/love-is-a-losing-game.jpeg",
+      "sha256": "80d127e97cc78530e0803b94852012f0a77dfc910a725d5eb366330fc605850c",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/love-is-a-losing-game.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/love-is-a-losing-game.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/luna-de-miel.jpeg",
+      "sha256": "82c14b729db72d6bc4b68dc8e719988733dfc48450bceef7ff51cac0bd6af616",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/luna-de-miel.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/luna-de-miel.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/me-mr-jones.jpeg",
+      "sha256": "59917565abee0a0fc186eb24e1829d6871403b66ac3227663f018bd7ed33c67d",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/me-mr-jones.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/me-mr-jones.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/mentirosa.jpeg",
+      "sha256": "4031d2777ff4eb1b46d8dc25e535baa2b7acf22b0e2be8cfd5a4e1bb11b45055",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/mentirosa.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/mentirosa.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/mercy.jpeg",
+      "sha256": "0a86de952ffb9093871a6392df78b86eaadc4620e3e8cb3417452257cc28a510",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/mercy.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/mercy.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/mil-horas.jpeg",
+      "sha256": "9acb48ac1b88db0dcfe555a4e41db9fa516ffee6bd9bcfe49654d2c5caf97fc8",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/mil-horas.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/mil-horas.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/natural-mystic.jpeg",
+      "sha256": "879238d45ae37c33a9d801f8b184d811ac91c32aa16abd9c4111bb8744d0338a",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/natural-mystic.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/natural-mystic.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/nunca-es-suficiente.jpeg",
+      "sha256": "b2bb11f477965944243d84a537ce8b7de7ccb12a88325b4ee64fc92b0f44da74",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/nunca-es-suficiente.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/nunca-es-suficiente.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/ode too my family.jpeg",
+      "sha256": "3ac843566d39d389e08beaec16ae038cf7ea7fe57cd29532688f914504c690fb",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/ode too my family.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/ode too my family.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/our-day-will-come.jpeg",
+      "sha256": "ca5c720f944d4b1bd43c75d0c2aa7ac4adbbdf84f621c0e5a96578d688c4fc3f",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/our-day-will-come.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/our-day-will-come.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/oye-mi-amor.jpeg",
+      "sha256": "0c2b5ae509046a820119003cd19c1b7cdc2159811569b6c8ec061c279edab03e",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/oye-mi-amor.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/oye-mi-amor.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/para-no-verte-mas.jpeg",
+      "sha256": "56e9b0dc1d6a84f0f78ea74e3bf011fd06f331db6b8e813fb3d3db0c91ea57c2",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/para-no-verte-mas.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/para-no-verte-mas.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/persiana-americana.jpeg",
+      "sha256": "89ca3eb19dbdc3bcf5cd7e2bf5d6edf5faa1846382b3ad60efbd7645acf5c597",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/persiana-americana.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/persiana-americana.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/personal-jesus.jpeg",
+      "sha256": "3ef3d2a77a3dbfc05a7c647a5468d5a301a56a6628c4e4ffa35ccefd0b82b135",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/personal-jesus.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/personal-jesus.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/puto.jpeg",
+      "sha256": "6c89c6a9549cae96333f14098632146f77f9f74e972e353c773c8479960f8b62",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/puto.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/puto.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/que-bello.jpeg",
+      "sha256": "9f6ba58119b6bebda9b04e5ffeb7a9532119a13033df43f294d59f02c5a55063",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/que-bello.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/que-bello.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/red-red-wine.jpeg",
+      "sha256": "52b968464d8c75cf8af3d639ca48ebeebb499210cca0922c8c03b33737bec8f9",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/red-red-wine.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/red-red-wine.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/sent me.jpeg",
+      "sha256": "9846a0aa8f7afe7ff37c768d05fbbc3b706ce2eee0571301704938dd6ec50a18",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/sent me.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/sent me.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/sentimiento-original.jpeg",
+      "sha256": "f1e1c5e073518e13636b5f2dd5890bb242e0937f0516d6e5f14962f95b83593e",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/sentimiento-original.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/sentimiento-original.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/si-antes-te-hubiera-conocido.jpeg",
+      "sha256": "5d49cfd5b579dfec517161d7cc60adae232550e715c1033719deadebe8e12361",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/si-antes-te-hubiera-conocido.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/si-antes-te-hubiera-conocido.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/si-una-vez-dije-que-te-amaba.jpeg",
+      "sha256": "00fc59cb24ebdc0d199eb491dc7c727d74ca90115954f1443a57301a27afb7e6",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/si-una-vez-dije-que-te-amaba.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/si-una-vez-dije-que-te-amaba.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/sin-documentos.jpeg",
+      "sha256": "0e2daaeaca161ddfdac07630dfcc0c48a64fa1c6688a05f622a5c53ae7168e49",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/sin-documentos.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/sin-documentos.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/sinners-prayer.jpeg",
+      "sha256": "2b5315017a20f09d55419dfd9bd691c47484271de9288ece276e80809dd7fdc3",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/sinners-prayer.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/sinners-prayer.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/softly.jpeg",
+      "sha256": "05e25e68155b6a2cf309d0458a9938ecd60ce51eca17c537263a2b9bb14d9d61",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/softly.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/softly.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/some-unholy-war.jpeg",
+      "sha256": "a52121a3c68f433eee161c693d31f9db313d9259a379e8e282d4c79c656176b4",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/some-unholy-war.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/some-unholy-war.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/somebodys-watching-me.jpeg",
+      "sha256": "f7e1203b795119fda4dd0f29a6a1af02c07533b8e2f314a14d379a7d0104aaa8",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/somebodys-watching-me.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/somebodys-watching-me.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/stand-by-me.jpeg",
+      "sha256": "b9c8b7006ac860de2ab6ae094fd0b75452d3ead308bd380f298e4a9a64741703",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/stand-by-me.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/stand-by-me.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/still-got-the-blues.jpeg",
+      "sha256": "7e0ab73dcc54b88abf0875765ee96c35597f73ba1be0adfdd7faf231da36251c",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/still-got-the-blues.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/still-got-the-blues.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/stronger-than-me.jpeg",
+      "sha256": "73185bc39030b20ab4bf3304997d076e9b14514b14f48b9ceda120df9a611d5e",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/stronger-than-me.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/stronger-than-me.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/summertime.jpeg",
+      "sha256": "496ec65f0ed3bee9810e548a46d7274d9647ca0cca53e47c5f1565044e529697",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/summertime.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/summertime.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/sweet-dreams.jpeg",
+      "sha256": "d24fb4c813f7b36e7d1d114984892f0e9e393b755134562f685f64aebbff0dd4",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/sweet-dreams.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/sweet-dreams.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/take-the-box.jpeg",
+      "sha256": "178892280df284c13bc703cc15c3f63df085010402b4be2b0e63b92f9e10f87a",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/take-the-box.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/take-the-box.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/te-vas.jpeg",
+      "sha256": "d330e3057a38d2c43dca3c4c8e28c3a841c9e0217c246e919ed063abcb5acc6e",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/te-vas.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/te-vas.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/tears-dry-on-their-own.jpeg",
+      "sha256": "aaba24559686c386c958154986434c03acfbd7060156f5d7fec9efea55589251",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/tears-dry-on-their-own.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/tears-dry-on-their-own.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/these-boots-are-made-for-walkin.jpeg",
+      "sha256": "cb035ee01013a7570297d6cbe95148694135cbcbb54f941b391eccd631e092ca",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/these-boots-are-made-for-walkin.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/these-boots-are-made-for-walkin.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/thriller.jpeg",
+      "sha256": "3c0bc57d9becb65f529f764afcdfbfba6200385ec6cd70f647cb87ee6db79975",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/thriller.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/thriller.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/to the church.jpeg",
+      "sha256": "4da2986be7ca28e99bf0056512d8b281d32e7a67fe1ba490cf5ca1f8399bc846",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/to the church.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/to the church.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/toxic.jpeg",
+      "sha256": "2e04c63822ea4e4c2a1b3287d7ab6e9d9fa423b76e56ed9efd8dc8c7d6c8902d",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/toxic.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/toxic.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/tu-carcel.jpeg",
+      "sha256": "cc91f0286702a85faf016f0f5037a0ab547f1f0e35632740e5608773e334059c",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/tu-carcel.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/tu-carcel.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/tu-sin-mi.jpeg",
+      "sha256": "d048b9d695d9d007ce40e020d776e378233b3aba7c60ab56a7f7dd142c07b152",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/tu-sin-mi.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/tu-sin-mi.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/valio-la-pena.jpeg",
+      "sha256": "aa9dc6e69f7ed0d7a5297599ba591ccfd2eb313378522608ef159a5729efb142",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/valio-la-pena.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/valio-la-pena.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/wake-up-alone.jpeg",
+      "sha256": "6d833bf047d32aee9bbac37a6b311f7a937e75611af6311c69dddd201eb46425",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/wake-up-alone.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/wake-up-alone.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/we-will-rock-you.jpeg",
+      "sha256": "5f84f0d7f3d1d3bd4e9bff697b131c83abb0e6d55984e9377bbcb550519af906",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/we-will-rock-you.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/we-will-rock-you.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/what a wonderful world.jpeg",
+      "sha256": "c664ea83a2a1c22ccb2c4b10c2c0fc6c714d6f11441e0197219bf433074166e5",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/what a wonderful world.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/what a wonderful world.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/why-dont-you-do-right.jpeg",
+      "sha256": "10b699befc5e831048f605f5c0ae21c20b2dd6b0dee32c21fdd2a1a1394ae625",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/why-dont-you-do-right.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/why-dont-you-do-right.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/will-you-still-love-me-tomorrow.jpeg",
+      "sha256": "7bbe8eb19d7d912b3ca0ef0c03c00cd71723ba2142ef915a66e9ccc1d4c02f4a",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/will-you-still-love-me-tomorrow.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/will-you-still-love-me-tomorrow.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/wonderwall.jpeg",
+      "sha256": "270bd2dcbed9fbf084315291cecbda8e0da84edf59d0ff74550bfc6b988bae99",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/wonderwall.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/wonderwall.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/work-song.jpeg",
+      "sha256": "e018052598e6fda5c5d1960b61fbef861e3ab714c49bd79e51d604a489d9f4ab",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/work-song.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/work-song.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/yesterday.jpeg",
+      "sha256": "232d06a18b6f90d7c14218760a969a23e86899c480bbd722d54b9acec9b8e682",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/yesterday.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/yesterday.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/you-dont-love-me.jpeg",
+      "sha256": "ab4d90c5c8f3b76d46dd759e6f900a5b86b3f84c0ad4ed334a3765346a17d8a4",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/you-dont-love-me.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/you-dont-love-me.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/you-oughta-know.jpeg",
+      "sha256": "2a73651364f30f476f8e74b13dab83f1648ff7b3f9e52c87a6509dc2da6d0c11",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/you-oughta-know.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/you-oughta-know.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/anotaciones/you-sent-me-flying.jpeg",
+      "sha256": "367c52889cd4560b1b48aec1d624de8ad50575265ae45e283273730132539463",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/anotaciones/you-sent-me-flying.jpeg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/anotaciones/you-sent-me-flying.jpeg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/app-icon-192.png",
+      "sha256": "8e42cb8f71ede8e3011c22eb12aaa60abfce1fb59ff42964f43fbc822e2d5f8e",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/app-icon-192.png"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/app-icon-192.png"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/app-icon-512.png",
+      "sha256": "a879f438e1f47b27675f1c96f9b9bc5d490dcc57a0bd308132745988400223b1",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/app-icon-512.png"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/app-icon-512.png"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/apple-touch-icon-180.png",
+      "sha256": "24b49c6b714d3802eda6b465a1b8308bd6548a08981ee65d801c86ec3407d5f2",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/apple-touch-icon-180.png"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/apple-touch-icon-180.png"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/biblioteca-fotos-originales/foto-banda-original-desktop.jpg",
+      "sha256": "afa0029f791b971e0833f4eb23c930b12d92ae9a0f2f1d655ce02f6239496423",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/biblioteca-fotos-originales/foto-banda-original-desktop.jpg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/biblioteca-fotos-originales/foto-banda-original-desktop.jpg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/biblioteca-fotos-originales/foto-banda-original-mobile.jpg",
+      "sha256": "afa0029f791b971e0833f4eb23c930b12d92ae9a0f2f1d655ce02f6239496423",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/biblioteca-fotos-originales/foto-banda-original-mobile.jpg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/biblioteca-fotos-originales/foto-banda-original-mobile.jpg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/biblioteca-fotos-originales/hero-original-desktop.jpg",
+      "sha256": "36f9e5693d64e8132992bc255d34ecb08c7d5bd2cf354f9ce6ac38bf21e5dc3d",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/biblioteca-fotos-originales/hero-original-desktop.jpg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/biblioteca-fotos-originales/hero-original-desktop.jpg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/biblioteca-fotos-originales/hero-original-mobile.jpg",
+      "sha256": "49a4d8e6857e5438b0400a1b089d2d16dab0159cd26b05bd540c0fbf61c62e5e",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/biblioteca-fotos-originales/hero-original-mobile.jpg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/biblioteca-fotos-originales/hero-original-mobile.jpg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/favicon.png",
+      "sha256": "0aa555c9a7c838be0164281113ea75500365c823fabe0f740af9ff1c8e252231",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/favicon.png"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/favicon.png"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/foto-banda-mobile.jpg",
+      "sha256": "afa0029f791b971e0833f4eb23c930b12d92ae9a0f2f1d655ce02f6239496423",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/foto-banda-mobile.jpg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/foto-banda-mobile.jpg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/foto-banda.jpg",
+      "sha256": "afa0029f791b971e0833f4eb23c930b12d92ae9a0f2f1d655ce02f6239496423",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/foto-banda.jpg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/foto-banda.jpg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/hero-mobile.jpg",
+      "sha256": "36f9e5693d64e8132992bc255d34ecb08c7d5bd2cf354f9ce6ac38bf21e5dc3d",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/hero-mobile.jpg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/hero-mobile.jpg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "assets/hero.jpg",
+      "sha256": "36f9e5693d64e8132992bc255d34ecb08c7d5bd2cf354f9ce6ac38bf21e5dc3d",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "assets/hero.jpg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "assets/hero.jpg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "canciones.json",
+      "sha256": "3774f6b6021fd79e4d559009fb16c0c85f7ea53ae092a616d5d702b7a89c4e38",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "canciones.json"
+        },
+        {
+          "surface": "lan_web",
+          "path": "canciones.json"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "configuracion.json",
+      "sha256": "5f0347d910de54d25e54de303fc6f9ae11eed4211d91c8f0d1c9428f79d3efa7",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "configuracion.json"
+        },
+        {
+          "surface": "lan_web",
+          "path": "configuracion.json"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "data/letras.json",
+      "sha256": "6ed981a39fc61a7dabce045a803be603cd6e71a9a798836fddcf93ef7efba776",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "data/letras.json"
+        },
+        {
+          "surface": "lan_web",
+          "path": "data/letras.json"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "egp-photo-responsive.js",
+      "sha256": "1c676e5f7c04ea62242d060d8cbf5d4a72a0a12f7a5546771351e40554a5abcb",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "egp-photo-responsive.js"
+        },
+        {
+          "surface": "lan_web",
+          "path": "egp-photo-responsive.js"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "favicon.png",
+      "sha256": "0aa555c9a7c838be0164281113ea75500365c823fabe0f740af9ff1c8e252231",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "favicon.png"
+        },
+        {
+          "surface": "lan_web",
+          "path": "favicon.png"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "foto-banda-mobile.jpg",
+      "sha256": "afa0029f791b971e0833f4eb23c930b12d92ae9a0f2f1d655ce02f6239496423",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "foto-banda-mobile.jpg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "foto-banda-mobile.jpg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "foto-banda.jpg",
+      "sha256": "afa0029f791b971e0833f4eb23c930b12d92ae9a0f2f1d655ce02f6239496423",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "foto-banda.jpg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "foto-banda.jpg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "gallery-panel-firebase-sync.js",
+      "sha256": "1aa531c8c44662b669c2bcd0746932a233c43a21ab092c5788aa2c89a54d67d7",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "gallery-panel-firebase-sync.js"
+        },
+        {
+          "surface": "lan_web",
+          "path": "gallery-panel-firebase-sync.js"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "hero-mobile.jpg",
+      "sha256": "49a4d8e6857e5438b0400a1b089d2d16dab0159cd26b05bd540c0fbf61c62e5e",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "hero-mobile.jpg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "hero-mobile.jpg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "hero.jpg",
+      "sha256": "36f9e5693d64e8132992bc255d34ecb08c7d5bd2cf354f9ce6ac38bf21e5dc3d",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "hero.jpg"
+        },
+        {
+          "surface": "lan_web",
+          "path": "hero.jpg"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "index.html",
+      "sha256": "19ffe5e7ba5e247a1bed62d0d10a00c832d88cc8d9b64e5e1aff1160711dd802",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "index.html"
+        },
+        {
+          "surface": "lan_web",
+          "path": "index.html"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "manifest.json",
+      "sha256": "aad33c98bcdc4bade9a0584db06afd93c37447ef62331361316f926bc31fafdd",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "manifest.json"
+        },
+        {
+          "surface": "lan_web",
+          "path": "manifest.json"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "musicos/app.js",
+      "sha256": "90a7d8adb9ab1f7d62cda3718532f8c78f9570fc0da3179856a19a45e9ad5fdf",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "musicos/app.js"
+        },
+        {
+          "surface": "lan_web",
+          "path": "musicos/app.js"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "musicos/apple-touch-icon.png",
+      "sha256": "028e11c7b5a880087aeb719497c6d30806bd31b37fa8e5927abbfcd7b1d87cc0",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "musicos/apple-touch-icon.png"
+        },
+        {
+          "surface": "lan_web",
+          "path": "musicos/apple-touch-icon.png"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "musicos/icon-192.png",
+      "sha256": "e16448fe80696ff6bcffc7ca0e12de8b9153fe919f7de833429b93ce77cab53b",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "musicos/icon-192.png"
+        },
+        {
+          "surface": "lan_web",
+          "path": "musicos/icon-192.png"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "musicos/icon-512.png",
+      "sha256": "c5299ad4ffef15f89436beb9bc3679a1b14526084d1058c5c9df1f59d58ba4c8",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "musicos/icon-512.png"
+        },
+        {
+          "surface": "lan_web",
+          "path": "musicos/icon-512.png"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "musicos/index.html",
+      "sha256": "22350c5977c840e6a5ba3b262ec3718a96b8aa8e38b7e091e94db548d5c9ecbc",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "musicos/index.html"
+        },
+        {
+          "surface": "lan_web",
+          "path": "musicos/index.html"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "musicos/limpiar.html",
+      "sha256": "c0eb19d2d347434b8355745ec0a1a0e4d02f67316a577370d52b0a7332b7797e",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "musicos/limpiar.html"
+        },
+        {
+          "surface": "lan_web",
+          "path": "musicos/limpiar.html"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "musicos/manifest.webmanifest",
+      "sha256": "b5110f50ab60d7692f561d7cb04936f41a2ad1d3168823f2349334bb7621039e",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "musicos/manifest.webmanifest"
+        },
+        {
+          "surface": "lan_web",
+          "path": "musicos/manifest.webmanifest"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "musicos/qr-musicos.png",
+      "sha256": "ddaf2cb16164f98ba9f1d2424afac2e84744215147612926a6eab5866e1c215d",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "musicos/qr-musicos.png"
+        },
+        {
+          "surface": "lan_web",
+          "path": "musicos/qr-musicos.png"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "musicos/service-worker.js",
+      "sha256": "6e8f716398684a642fdd3e9efe562cb1d248ff1e44978f79e04be4f9c32bc766",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "musicos/service-worker.js"
+        },
+        {
+          "surface": "lan_web",
+          "path": "musicos/service-worker.js"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "musicos/style.css",
+      "sha256": "6bbefb0e66c60bb0b84b52e0f2020c9763c6e94a57201aa28a4ccac95e33002c",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "musicos/style.css"
+        },
+        {
+          "surface": "lan_web",
+          "path": "musicos/style.css"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "panel-profile-switch-20260901.js",
+      "sha256": "392c2c9338d2529acd42b639e648d39e27209894fcfecfe84a94ee9c901af575",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "panel-profile-switch-20260901.js"
+        },
+        {
+          "surface": "lan_web",
+          "path": "panel-profile-switch-20260901.js"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "panel.css",
+      "sha256": "139153ba003665daffef5cf977faddb161447c5551d77b1a0df4797dd67a8333",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "panel.css"
+        },
+        {
+          "surface": "lan_web",
+          "path": "panel.css"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "panel.html",
+      "sha256": "2196900cdd19b3b3e7d6ccfd1e48f486ea4e282f74454338e1632e511ffaef6d",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "panel.html"
+        },
+        {
+          "surface": "lan_web",
+          "path": "panel.html"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "panel.js",
+      "sha256": "d3f45e7218b59e9d02f6bfc4fdc77f2bcaea027c2268775a8b43d77a41ca07d6",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "panel.js"
+        },
+        {
+          "surface": "lan_web",
+          "path": "panel.js"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "pwa.js",
+      "sha256": "18bf514d842d52dcd4ffce920249ae01d0e3d3f496b1740b4629e126d0430902",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "pwa.js"
+        },
+        {
+          "surface": "lan_web",
+          "path": "pwa.js"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "script.js",
+      "sha256": "f8aba7965d64b307a906bc02f62ec887ab9c8ac395b63ad86329981d99294a63",
+      "targets": [
+        {
+          "surface": "lan_web",
+          "path": "script.js"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "style.css",
+      "sha256": "411444c9f647b47f7cd0ce1d253debc923c60f9043a5b3fa27d28a7c5be740fb",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "style.css"
+        },
+        {
+          "surface": "lan_web",
+          "path": "style.css"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "version.json",
+      "sha256": "8b852d977190c1a8271756914b607bd6ee23bb1cfadec4ec3e9df69fa85e34ff",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "version.json"
+        },
+        {
+          "surface": "lan_web",
+          "path": "version.json"
+        }
+      ],
+      "policy": "canonical"
+    },
+    {
+      "source": "egp-system/variants/caddy-public/script.js",
+      "sha256": "e901b76b9312105422c9a158cc8e121748b3e63a893bd6d73adb36fb17b8b312",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "script.js"
+        }
+      ],
+      "policy": "declared_variant"
+    }
+  ],
+  "runtime_files": [
+    {
+      "component": "core",
+      "source": "egp-system/runtime/core/egp_local_core.py",
+      "sha256": "ed95bcb0b5acb32febb8bd0207f769a38dedf155ca8a6408d64e50bd6d37f618",
+      "target": "core_runtime",
+      "restart": "com.egp.localcore.once",
+      "contract": "EGP_CORE_BRIDGE_CONTRACT_V1"
+    },
+    {
+      "component": "cloud_sync",
+      "source": "egp-system/runtime/cloud-sync/egp_cloud_sync.py",
+      "sha256": "ff0ffdfd59c2b1efca69f399dc5c5cde8e2522d525124afd893b4497d0dfc101",
+      "target": "cloud_sync_runtime",
+      "restart": "com.egp.cloud-sync"
+    },
+    {
+      "component": "caddy_config",
+      "source": "egp-system/runtime/caddy/Caddyfile",
+      "sha256": "e53e147b87a1b4c011fa81d696ede196fe503b51a6a4b7e62d5be41c8958afa9",
+      "target": "caddy_config",
+      "reload": "caddy"
+    }
+  ]
+}

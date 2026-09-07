@@ -1,0 +1,139 @@
+{
+    key_type rsa2048
+
+    preferred_chains {
+        root_common_name "ISRG Root X1"
+    }
+
+    storage file_system "/Library/Application Support/EGP-Network/caddy-storage"
+}
+
+
+elenagirjoaba.com {
+    handle_path /__egp_lan/* {
+        reverse_proxy 127.0.0.1:8790
+    }
+
+    @egpUiPatched path /__egp_ui/mixer.html /__egp_ui/phone.html
+
+    handle @egpUiPatched {
+        uri strip_prefix /__egp_ui
+        root * "/Library/Application Support/EGP-Network/ui24r-patched"
+        header Cache-Control "no-store"
+        file_server
+    }
+
+    handle_path /__egp_ui/* {
+        reverse_proxy http://10.10.10.10 {
+            header_up Host 10.10.10.10
+        }
+    }
+
+    @egpUiSocket path /socket.io/*
+
+    handle @egpUiSocket {
+        reverse_proxy http://10.10.10.10 {
+            header_up Host 10.10.10.10
+        }
+    }
+
+    handle_path /__egp_core/* {
+        reverse_proxy 127.0.0.1:8788
+    }
+
+    root * "/Library/Application Support/EGP-Network/web-cliente"
+
+    file_server
+
+    tls {
+        dns cloudflare {env.CF_API_TOKEN}
+        resolvers 1.1.1.1
+    }
+}
+
+core.elenagirjoaba.com {
+    reverse_proxy 127.0.0.1:8788
+
+    tls {
+        dns cloudflare {env.CF_API_TOKEN}
+        resolvers 1.1.1.1
+    }
+}
+
+ui.elenagirjoaba.com {
+    # EGP_MAC_UI24R_HEALTH_V4
+    @egpMacUiHealth path /__egp_health
+    handle @egpMacUiHealth {
+        rewrite * /
+        header {
+            Access-Control-Allow-Origin "*"
+            Cache-Control "no-store, no-cache, must-revalidate"
+        }
+        reverse_proxy http://10.10.10.10 {
+            header_up Host 10.10.10.10
+        }
+    }
+
+    @launcher path /
+
+    handle @launcher {
+        root * "/Library/Application Support/EGP-Network/ui24r-launcher"
+        file_server
+    }
+
+    @musicosLauncher path /musicos.html
+
+    handle @musicosLauncher {
+        root * "/Library/Application Support/EGP-Network/ui24r-launcher"
+        header Cache-Control "no-store"
+        file_server
+    }
+
+    @ui24rpatched path /mixer.html /phone.html
+
+    handle @ui24rpatched {
+        root * "/Library/Application Support/EGP-Network/ui24r-patched"
+        header Cache-Control "no-store"
+        file_server
+    }
+
+    handle {
+        reverse_proxy http://10.10.10.10 {
+            header_up Host 10.10.10.10
+        }
+    }
+
+    tls {
+        dns cloudflare {env.CF_API_TOKEN}
+        resolvers 1.1.1.1
+    }
+}
+
+http://ui.elenagirjoaba.com:8081 {
+    @launcher8081 path /
+
+    handle @launcher8081 {
+        root * "/Library/Application Support/EGP-Network/ui24r-http-launcher"
+        header Cache-Control "no-store"
+        file_server
+    }
+
+    handle {
+        reverse_proxy http://10.10.10.10 {
+            header_up Host 10.10.10.10
+        }
+    }
+}
+
+
+http://10.10.10.2 {
+    reverse_proxy http://10.10.10.10 {
+        header_up Host 10.10.10.10
+    }
+}
+
+http://10.10.10.2:8091 {
+    reverse_proxy http://10.10.10.10 {
+        header_up Host 10.10.10.10
+    }
+}

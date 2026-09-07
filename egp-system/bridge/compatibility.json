@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "policy": "verify_only",
+  "auto_update": false,
+  "launcher_path": "ABRIR-BRIDGE-LOGIC.command",
+  "launcher_sha256": "1451dc3d8b23d1af4bb14752345449131a536fc78fd0df8a3c62acdebe7a80bf",
+  "core_contract": "EGP_CORE_BRIDGE_CONTRACT_V1",
+  "required_core_endpoints": [
+    "/api/health",
+    "/api/state"
+  ],
+  "notes": "Bridge participa en compatibilidad, pero no se actualiza automaticamente con EGP SYSTEM."
+}

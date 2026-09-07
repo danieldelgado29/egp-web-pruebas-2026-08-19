@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "name": "EGP REGRESION V1",
+  "purpose": "Bloquear una entrega si rompe contratos críticos automatizables.",
+  "production_policy": "read_only",
+  "destructive_tests": "sandbox_only",
+  "manual_rules": [
+    "Editor iPhone: pinch/zoom/dibujo/borrador",
+    "Editor Android: gestos táctiles",
+    "Mac trackpad + mouse",
+    "Windows mouse/touchpad",
+    "Ui24R real",
+    "Logic STOP -> cerrar -> 2 s -> abrir siguiente",
+    "PWA instalada real en iPhone/Android",
+    "Transiciones reales de red del show",
+    "Dynamic Island / Safe Area"
+  ],
+  "completion_rule": "Una función nueva no se considera terminada si REGRESION AUTOMATICA no queda APROBADA."
+}

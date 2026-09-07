@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "name": "caddy-public-script",
+  "base_source": "script.js",
+  "base_source_sha256": "f8aba7965d64b307a906bc02f62ec887ab9c8ac395b63ad86329981d99294a63",
+  "variant_source": "egp-system/variants/caddy-public/script.js",
+  "variant_sha256": "e901b76b9312105422c9a158cc8e121748b3e63a893bd6d73adb36fb17b8b312",
+  "reviewed_at_head": "fffd9aa5f5a7de9ec3be7fde955889556ac47fb7",
+  "policy": "If script.js changes, this metadata must be deliberately rebased/reviewed; never assume the Caddy variant stayed compatible."
+}

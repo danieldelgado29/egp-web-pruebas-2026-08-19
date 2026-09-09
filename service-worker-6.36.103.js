@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-publicidad-match-pedidos-20260909-r8";
+const VERSION = "egm-v6.36.103-principal-diario-build-20260909-r9";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [

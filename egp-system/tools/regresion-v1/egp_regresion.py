@@ -732,7 +732,7 @@ def main():
         ("PNL012", REPO/"panel.js", ["EGP_SHOW_SYNC_REAL_PROGRESS_V1", "Buscando conexión por Internet", "Conectando con Firebase", "Leyendo estado del show", "Estado recibido", "Aplicando estado del show"], "Progreso de Internet ligado a hitos reales"),
         # EGP_REG_PUBLICIDAD_CONFIG_DOM_V2
         ("PNL013", REPO/"panel.js", ["EGP_PUBLICIDAD_CONFIG_DOM_V2", "publicidadConfigGroup", "appendChild(adCard)", "appendChild(profileField)"], "Publicidad mueve físicamente controles en orden"),
-        ("PNL014", REPO/"panel.js", ["EGP_REPERTORIO_PRINCIPAL_DIARIO_DEFAULT_V2", "principal diario", "repertoireSelect"], "Principal Diario por defecto"),
+        ("PNL014", REPO/"panel.js", ["EGP_REPERTORIO_PRINCIPAL_DIARIO_DEFAULT_V2", "EGP_REPERTORIO_PRINCIPAL_DIARIO_BUILD_V3", "principalDiarioOption", "savedExists", "principal diario"], "Principal Diario se decide dentro de buildRepertoires sin depender de timing"),
         ("PNL015", REPO/"panel.html", ["EGP_PUBLICIDAD_CONFIG_DOM_V2_STYLE", "publicidadConfigHeader", "publicidadConfigBody"], "Desplegable Publicidad estilizado"),
         # EGP_REG_STATIC_CONFIG_BOOT_V3
         ("PNL016", REPO/"panel.html", ["EGP_PUBLICIDAD_CONFIG_STATIC_V3", "publicidadConfigGroup", "advertisingToggle", "profileSelect"], "Publicidad existe físicamente en HTML"),

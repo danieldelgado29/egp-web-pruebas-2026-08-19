@@ -92,7 +92,8 @@ document.documentElement.dataset.egmVersion="6.36.92";
 (function egpPrincipalDiarioDefaultV2(){
   const apply=()=>{
     const select=document.getElementById('repertoireSelect');
-    if(!select||select.value)return false;
+    if(!select)return false;
+    if(select.value)return true;
 
     const principal=[...select.options].find(option=>
       String(option.dataset?.name||option.textContent||'')
@@ -3081,10 +3082,28 @@ document.documentElement.dataset.egmVersion="6.36.92";
         option=>option.value===savedRepertoire
       );
 
+    /* EGP_REPERTORIO_PRINCIPAL_DIARIO_BUILD_V3
+     * Fuente única del default: se decide dentro de buildRepertoires(),
+     * después de crear todas las opciones.
+     * No depende del timing de MutationObserver/Safari.
+     */
+    const principalDiarioOption=
+      [...select.options].find(option=>
+        String(option.dataset?.name||'')
+          .trim()
+          .toLocaleLowerCase('es')==='principal diario'
+      ) ||
+      [...select.options].find(option=>
+        String(option.textContent||'')
+          .replace(/ · .*$/,'')
+          .trim()
+          .toLocaleLowerCase('es')==='principal diario'
+      );
+
     select.value=
       savedExists
         ? savedRepertoire
-        : '';
+        : (principalDiarioOption?.value||'');
   }
 
   function titleFromId(id){ return id.split('-').map(w=>w[0]?.toUpperCase()+w.slice(1)).join(' '); }

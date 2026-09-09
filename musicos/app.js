@@ -209,6 +209,183 @@ let localCoreTimer = null;
 let firebaseOnline = false;
 let latestFirebaseState = null;
 
+/*
+ * EGP_MUSICOS_CORE_FIREBASE_RELAY_V1
+ *
+ * Músicos continúa siendo consumidor de Core/Firebase para su UI.
+ * Además puede actuar como transporte Core -> Firebase si tiene ambas redes.
+ * No escribe hacia Core y no cambia la autoridad del show.
+ */
+const EGP_MUSICOS_CORE_FIREBASE_RELAY_V1 = true;
+const EGP_MUSICOS_RELAY_OWN_HEARTBEAT_MS = 9000;
+const EGP_MUSICOS_RELAY_STALE_MS = 22000;
+let egpMusicosFirebaseSetDoc = null;
+let egpMusicosFirebaseStateRef = null;
+let egpMusicosRelayKey = "";
+let egpMusicosRelayBusy = false;
+let egpMusicosRelayRetryAt = 0;
+const EGP_MUSICOS_DEVICE_ID = (() => {
+  const key = "egp-musicos-device-id-v1";
+  try {
+    const old = localStorage.getItem(key);
+    if (old) return old;
+    const id = `mus-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(key, id);
+    return id;
+  } catch (_) {
+    return `mus-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+})();
+
+function egpMusicosCoreRevision(raw = {}) {
+  const pc = raw?.publicConfig && typeof raw.publicConfig === "object"
+    ? raw.publicConfig
+    : {};
+  const rows = Array.isArray(raw?.queue) ? raw.queue : [];
+  return Math.max(
+    Number(pc.show_revision) || 0,
+    Number(pc.updated_at) || 0,
+    ...rows.map(row => Number(row?.updated_at) || 0),
+    0
+  );
+}
+
+function egpMusicosCoreSemanticKey(raw = {}) {
+  const pc = raw?.publicConfig && typeof raw.publicConfig === "object"
+    ? raw.publicConfig
+    : {};
+  const show = raw?.show && typeof raw.show === "object" ? raw.show : {};
+  const rows = (Array.isArray(raw?.queue) ? raw.queue : [])
+    .slice()
+    .sort((a,b)=>(Number(a?.position)||0)-(Number(b?.position)||0));
+  const active = show.active === true;
+  return JSON.stringify({
+    session:String(pc.show_session_id || pc.show_id || ""),
+    active,
+    repertoire:String(pc.lista_activa || pc.listaActiva || "principal-diario"),
+    repertoireName:String(pc.repertorio_nombre || ""),
+    repertoireIds:Array.isArray(pc.repertorio_activo_ids)
+      ? pc.repertorio_activo_ids.map(String)
+      : [],
+    requests:active && pc.pedidos_panel === true,
+    whatsapp:active && pc.pedidos_whatsapp === true,
+    requestsMode:pc.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre",
+    publicQueue:pc.mostrar_cola !== false,
+    venue:String(pc.lugar || show.venue || ""),
+    profile:String(pc.perfil_clientes || "medio"),
+    advertising:pc.uso_publicidad === true,
+    startedAt:active ? Number(pc.inicio_show || pc.show_id || 0) : 0,
+    timer:active ? [
+      Number(pc.cronometro_schema) || 0,
+      pc.cronometro_running === true,
+      pc.cronometro_running === true
+        ? Number(pc.cronometro_started_at) || 0
+        : Math.max(0, Number(pc.cronometro_elapsed_ms) || 0)
+    ] : [0,false,0],
+    queue:active ? rows.map(row=>[
+      String(row?.id || ""),
+      Number(row?.position) || 0,
+      row?.played === true
+    ]) : []
+  });
+}
+
+async function egpMusicosMirrorCoreToFirebase(raw = {}) {
+  if (!EGP_MUSICOS_CORE_FIREBASE_RELAY_V1) return;
+  if (!egpMusicosFirebaseSetDoc || !egpMusicosFirebaseStateRef) return;
+  if (!raw || raw.ok !== true || !raw.show || !raw.publicConfig) return;
+  if (egpMusicosRelayBusy || Date.now() < egpMusicosRelayRetryAt) return;
+
+  const pc = raw.publicConfig || {};
+  const show = raw.show || {};
+  const rows = (Array.isArray(raw.queue) ? raw.queue : [])
+    .slice()
+    .sort((a,b)=>(Number(a?.position)||0)-(Number(b?.position)||0));
+  const revision = egpMusicosCoreRevision(raw);
+  if (!revision) return;
+
+  /* Nunca pisar desde Músicos una mutación Firebase semánticamente posterior. */
+  const remoteRevision = Math.max(
+    Number(latestFirebaseState?.show_revision) || 0,
+    Number(latestFirebaseState?.updated_at) || 0
+  );
+  if (remoteRevision > revision) return;
+
+  const key = egpMusicosCoreSemanticKey(raw);
+  const now = Date.now();
+  const remoteHeartbeat = Number(latestFirebaseState?.core_sync_heartbeat) || 0;
+  const remoteHost = String(latestFirebaseState?.core_sync_host || "");
+  const relayHost = `musicos-relay:${EGP_MUSICOS_DEVICE_ID}`;
+  const age = remoteHeartbeat
+    ? Math.max(0, now - remoteHeartbeat)
+    : Number.POSITIVE_INFINITY;
+  const heartbeatDue = !remoteHeartbeat || (
+    remoteHost === relayHost
+      ? age >= EGP_MUSICOS_RELAY_OWN_HEARTBEAT_MS
+      : age >= EGP_MUSICOS_RELAY_STALE_MS
+  );
+  const semanticChanged =
+    key !== egpMusicosRelayKey &&
+    remoteRevision < revision;
+  if (!semanticChanged && !heartbeatDue) return;
+
+  const active = show.active === true;
+  const queue = rows.map(row=>String(row?.id || "")).filter(Boolean);
+  const played = rows.filter(row=>row?.played === true)
+    .map(row=>String(row?.id || "")).filter(Boolean);
+  const showId = active ? String(pc.show_id || pc.inicio_show || "") : "";
+  const session = active
+    ? String(pc.show_session_id || (showId ? `show-${showId}` : ""))
+    : "";
+
+  const payload = {
+    lista_activa:String(pc.lista_activa || pc.listaActiva || "principal-diario"),
+    listaActiva:String(pc.listaActiva || pc.lista_activa || "principal-diario"),
+    repertorio_nombre:String(pc.repertorio_nombre || ""),
+    repertorio_activo_ids:Array.isArray(pc.repertorio_activo_ids)
+      ? pc.repertorio_activo_ids.map(String) : [],
+    repertorioActivoIds:Array.isArray(pc.repertorioActivoIds)
+      ? pc.repertorioActivoIds.map(String)
+      : (Array.isArray(pc.repertorio_activo_ids) ? pc.repertorio_activo_ids.map(String) : []),
+    show_activo:active,
+    show_id:showId,
+    show_session_id:session,
+    lugar:String(pc.lugar || show.venue || ""),
+    perfil_clientes:String(pc.perfil_clientes || "medio"),
+    pedidos_whatsapp:active && pc.pedidos_whatsapp === true,
+    pedidos_panel:active && pc.pedidos_panel === true,
+    pedidos_modo:pc.pedidos_modo === "uno_por_turno" ? "uno_por_turno" : "libre",
+    mostrar_cola:pc.mostrar_cola !== false,
+    uso_publicidad:pc.uso_publicidad === true,
+    inicio_show:active ? Number(pc.inicio_show || pc.show_id || 0) : 0,
+    cronometro_schema:Number(pc.cronometro_schema) || 0,
+    cronometro_elapsed_ms:active ? Math.max(0, Number(pc.cronometro_elapsed_ms) || 0) : 0,
+    cronometro_running:active && pc.cronometro_running === true,
+    cronometro_started_at:active && pc.cronometro_running === true
+      ? Number(pc.cronometro_started_at) || 0 : 0,
+    cola:active ? queue : [],
+    tocadas:active ? played : [],
+    updated_at:revision,
+    show_revision:revision,
+    show_writer:String(pc.show_writer || relayHost),
+    core_sync_heartbeat:heartbeatDue ? now : remoteHeartbeat,
+    core_sync_host:heartbeatDue ? relayHost : remoteHost
+  };
+  if (!active) payload.pedidos_panel_lista = [];
+
+  egpMusicosRelayBusy = true;
+  try {
+    await egpMusicosFirebaseSetDoc(egpMusicosFirebaseStateRef, payload, {merge:true});
+    egpMusicosRelayKey = key;
+    egpMusicosRelayRetryAt = 0;
+  } catch (error) {
+    egpMusicosRelayRetryAt = Date.now() + 3000;
+    console.warn("Músicos relay Core -> Firebase pendiente:", error);
+  } finally {
+    egpMusicosRelayBusy = false;
+  }
+}
+
 function saveLastState(data){ try{ localStorage.setItem(LAST_STATE_KEY,JSON.stringify(data||{})); }catch(_){} }
 function loadLastState(){ try{ return JSON.parse(localStorage.getItem(LAST_STATE_KEY)||"null"); }catch(_){ return null; } }
 
@@ -244,6 +421,7 @@ async function pollLocalCore(){
     appError.hidden = true;
     saveLastState(data);
     render(data);
+    void egpMusicosMirrorCoreToFirebase(raw);
   }catch(_){
     const wasLocal = localCoreOnline;
     localCoreOnline = false;
@@ -389,7 +567,7 @@ async function startApp() {
   // Firebase se carga dinámicamente únicamente cuando está disponible.
   try {
     if (!cfg?.firebase) throw new Error("Firebase no disponible");
-    const [{ initializeApp }, { initializeFirestore, doc, onSnapshot }] = await Promise.all([
+    const [{ initializeApp }, { initializeFirestore, doc, onSnapshot, setDoc }] = await Promise.all([
       import("https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js"),
       import("https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js")
     ]);
@@ -398,8 +576,10 @@ async function startApp() {
       experimentalAutoDetectLongPolling: true,
       useFetchStreams: false
     });
+    egpMusicosFirebaseSetDoc = setDoc;
+    egpMusicosFirebaseStateRef = doc(db, "config", "estado");
     unsubscribe?.();
-    unsubscribe = onSnapshot(doc(db, "config", "estado"), snapshot => {
+    unsubscribe = onSnapshot(egpMusicosFirebaseStateRef, snapshot => {
       connectionDot.classList.add("online");
       appError.hidden = true;
       const data = snapshot.exists() ? snapshot.data() : {};

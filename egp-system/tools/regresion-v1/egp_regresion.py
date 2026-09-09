@@ -722,6 +722,7 @@ def main():
         ("PNL003", REPO/"panel.js", ["EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V2"], "Panel no compite con Cloud Sync"),
         ("PNL004", REPO/"panel.js", ["EGP_FAILOVER_VISUAL_STABILITY_V2"], "Failover no repinta estado viejo"),
         ("PNL005", REPO/"panel.js", ["EGP_CORE_SHOW_AUTHORITY_V1"], "Core conserva autoridad de show en LAN"),
+        ("PNL006", REPO/"panel.js", ["EGP_DEVICE_CORE_FIREBASE_RELAY_V1", "EGP_DEVICE_RELAY_HEARTBEAT_V1", "core_sync_heartbeat", "core_sync_host", "pedidos_panel_lista"], "Panel puede relevar Core completo a Firebase sin cambiar autoridad"),
         ("PWA001", REPO/"pwa.js", ["registrationRef.update()", "controllerchange", "SKIP_WAITING", "updateViaCache"], "Panel auto-update PWA"),
         ("PWA002", REPO/"service-worker-6.36.103.js", ["skipWaiting", "clients.claim", "networkFirst", "ignoreSearch"], "Panel SW actualización/offline"),
         ("MUS001", REPO/"musicos/app.js", ['const LOCAL_CORE = "https://core.elenagirjoaba.com"', "firebaseOnline", "latestFirebaseState"], "Músicos Core primero + Firebase fallback"),
@@ -729,6 +730,7 @@ def main():
         ("MUS003", REPO/"musicos/app.js", ["serviceWorker.register", 'updateViaCache: "none"', "registration.update"], "Músicos auto-update SW"),
         ("MUS004", REPO/"musicos/index.html", ["monitorSetup", "egpUi24rOverlay", "ui.elenagirjoaba.com"], "Músicos monitoreo Ui24R"),
         ("MUS005", REPO/"musicos/service-worker.js", ["skipWaiting", "clients.claim", "egp-musicos-"], "Músicos SW limpia versiones viejas"),
+        ("MUS006", REPO/"musicos/app.js", ["EGP_MUSICOS_CORE_FIREBASE_RELAY_V1", "egpMusicosMirrorCoreToFirebase", "core_sync_heartbeat", "core_sync_host", "pedidos_panel_lista"], "Músicos puede relevar Core completo a Firebase"),
         ("PUB001", REPO/"egp-system/variants/caddy-public/script.js", ["lanAutoritativa", "EGP_CORE_PUBLIC_URL", "/__egp_core", "/__egp_lan"], "Cliente Caddy prioriza LAN/Core"),
         ("COR001", REPO/"egp-system/runtime/core/egp_local_core.py", ["EGP_SINGLE_SHOW_SESSION_GUARD_V2", "EGP_UNIFIED_SHOW_STATE_CORE_V1"], "Core un solo show + estado unificado"),
         ("COR002", REPO/"egp-system/runtime/core/egp_local_core.py", ["/api/queue/add", "/api/queue/played", "/api/queue/remove", "/api/queue/reorder", "/api/queue/clear"], "Core endpoints de cola"),
@@ -745,6 +747,43 @@ def main():
             fail(rid, label, "faltan: " + ", ".join(miss))
         else:
             pass_(rid, label)
+
+    # EGP_REG_RELAY_INTERNET_V1
+    # El relay es SOLO Core -> Firebase; el puente bidireccional viejo del
+    # Panel debe seguir desactivado por EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V2.
+    try:
+        panel_text=(REPO/"panel.js").read_text(encoding="utf-8")
+        musicos_text=(REPO/"musicos/app.js").read_text(encoding="utf-8")
+        if (
+            "const EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V2=true;" in panel_text and
+            "const EGP_DEVICE_CORE_FIREBASE_RELAY_V1=true;" in panel_text and
+            "function egpMirrorCoreSnapshotToFirebase(snapshot){\n    if(!EGP_DEVICE_CORE_FIREBASE_RELAY_V1)return;" in panel_text
+        ):
+            pass_("PNL007", "Relay Panel no reactiva puente bidireccional antiguo")
+        else:
+            fail("PNL007", "Relay Panel no reactiva puente bidireccional antiguo")
+
+        required_fields=[
+            "lista_activa", "repertorio_activo_ids", "show_activo",
+            "show_session_id", "pedidos_whatsapp", "pedidos_panel",
+            "pedidos_modo", "mostrar_cola", "cronometro_elapsed_ms",
+            "cronometro_running", "cola", "tocadas",
+            "core_sync_heartbeat", "core_sync_host"
+        ]
+        missing_panel=[x for x in required_fields if x not in panel_text]
+        missing_mus=[x for x in required_fields if x not in musicos_text]
+        if not missing_panel:
+            pass_("PNL008", "Relay Panel conserva contrato completo Core -> Firebase")
+        else:
+            fail("PNL008", "Relay Panel conserva contrato completo Core -> Firebase", ", ".join(missing_panel))
+        if not missing_mus:
+            pass_("MUS007", "Relay Músicos conserva contrato completo Core -> Firebase")
+        else:
+            fail("MUS007", "Relay Músicos conserva contrato completo Core -> Firebase", ", ".join(missing_mus))
+    except Exception as e:
+        fail("PNL007", "Relay Panel no reactiva puente bidireccional antiguo", e)
+        fail("PNL008", "Relay Panel conserva contrato completo Core -> Firebase", e)
+        fail("MUS007", "Relay Músicos conserva contrato completo Core -> Firebase", e)
 
     # Python syntax without .pyc.
     check_code_syntax_python(REPO/"egp-system/runtime/core/egp_local_core.py", "SYN002", "Sintaxis Core Python")

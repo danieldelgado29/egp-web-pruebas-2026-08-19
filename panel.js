@@ -306,6 +306,19 @@ document.documentElement.dataset.egmVersion="6.36.92";
    */
   const EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V2=true;
 
+  /*
+   * EGP_DEVICE_CORE_FIREBASE_RELAY_V1
+   *
+   * Cloud Sync sigue siendo el sincronizador principal/bidireccional.
+   * Panel NO se convierte en autoridad ni activa el puente antiguo.
+   * Esta bandera habilita únicamente un relevo Core -> Firebase:
+   * cualquier Panel que vea Core y además tenga Internet puede reflejar
+   * el mismo estado completo que Core ya publica.
+   */
+  const EGP_DEVICE_CORE_FIREBASE_RELAY_V1=true;
+  const EGP_DEVICE_RELAY_OWN_HEARTBEAT_MS=9000;
+  const EGP_DEVICE_RELAY_STALE_MS=22000;
+
   let egpPedidosPendientes=[];
   let egpPedidosFirebase=[];
   let egpPedidosLan=[];
@@ -2113,7 +2126,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
    * el snapshot completo de Core en Firebase.
    */
   function egpMirrorCoreSnapshotToFirebase(snapshot){
-    if(EGP_AUTONOMOUS_CORE_FIREBASE_SYNC_V2)return;
+    if(!EGP_DEVICE_CORE_FIREBASE_RELAY_V1)return;
     if(
       EGP_AUDIT_LOCAL ||
       egpFirebaseStateBridgeActive ||
@@ -2247,8 +2260,52 @@ document.documentElement.dataset.egmVersion="6.36.92";
           : []
     });
 
+    /*
+     * EGP_DEVICE_RELAY_HEARTBEAT_V1
+     *
+     * Si Cloud Sync (u otro relevo) mantiene un heartbeat fresco, este
+     * dispositivo solo escribe cuando cambia el estado semántico.
+     * Si el heartbeat queda viejo, cualquier Panel con Core+Internet puede
+     * tomar el relevo y renovar el latido sin quitar autoridad a Core.
+     */
+    const relayNow=Date.now();
+    const relayRemote=
+      latestRemoteServerState &&
+      typeof latestRemoteServerState==='object'
+        ? latestRemoteServerState
+        : {};
+    const relayHeartbeat=
+      Number(relayRemote.core_sync_heartbeat)||0;
+    const relayRemoteHost=
+      String(relayRemote.core_sync_host||'');
+    const relayRemoteRevision=Math.max(
+      Number(relayRemote.show_revision)||0,
+      Number(relayRemote.updated_at)||0
+    );
+    /*
+     * Un relevo de salida NUNCA pisa una mutación Firebase posterior.
+     * Cloud Sync sigue siendo quien puede reconciliar Firebase -> Core.
+     */
+    if(relayRemoteRevision>revision){
+      return;
+    }
+    const relayHost=`panel-relay:${DEVICE_ID}`;
+    const relayHeartbeatAge=relayHeartbeat
+      ? Math.max(0,relayNow-relayHeartbeat)
+      : Number.POSITIVE_INFINITY;
+    const relayHeartbeatDue=
+      !relayHeartbeat ||
+      (
+        relayRemoteHost===relayHost
+          ? relayHeartbeatAge>=EGP_DEVICE_RELAY_OWN_HEARTBEAT_MS
+          : relayHeartbeatAge>=EGP_DEVICE_RELAY_STALE_MS
+      );
+    const relaySemanticChanged=
+      key!==egpCoreFirebaseMirrorKey &&
+      relayRemoteRevision<revision;
+
     if(
-      key===egpCoreFirebaseMirrorKey ||
+      (!relaySemanticChanged && !relayHeartbeatDue) ||
       egpCoreFirebaseMirrorBusy ||
       Date.now()<egpCoreFirebaseMirrorRetryAt
     ){
@@ -2350,8 +2407,23 @@ document.documentElement.dataset.egmVersion="6.36.92";
       show_writer:String(
         pub.show_writer||DEVICE_ID
       ),
-      updated_at:revision
+      updated_at:revision,
+
+      /* El latido de Cloud Sync se conserva mientras esté fresco. */
+      core_sync_heartbeat:
+        relayHeartbeatDue
+          ? relayNow
+          : relayHeartbeat,
+      core_sync_host:
+        relayHeartbeatDue
+          ? relayHost
+          : relayRemoteHost
     };
+
+    /* Igual que Cloud Sync: al cerrar show, limpiar pedidos públicos vivos. */
+    if(!active){
+      payload.pedidos_panel_lista=[];
+    }
 
     (async()=>{
       try{

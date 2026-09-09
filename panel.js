@@ -3562,10 +3562,35 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
     startup=false,
     showConfigWhenInactive=false
   }={}){
-    const [coreResult,remoteResult]=await Promise.all([
-      egpReadCoreAuthorityV2(),
-      egpReadFirebaseAuthorityV2()
-    ]);
+    /* EGP_CORE_FIRST_STARTUP_V1
+     * Arranque:
+     *   Core disponible -> manda inmediatamente y Firebase NO bloquea UI.
+     *   Core ausente    -> recién entonces Firebase resuelve el show.
+     * Las resoluciones no-startup conservan la comparación completa.
+     */
+    let coreResult,remoteResult;
+
+    if(startup){
+      coreResult=await egpReadCoreAuthorityV2();
+
+      if(coreResult.reachable){
+        remoteResult={reachable:false,data:null};
+
+        // Firebase queda como sincronización secundaria. No se espera.
+        queueMicrotask(()=>{
+          egpReadFirebaseAuthorityV2().catch(error=>{
+            console.warn('Firebase background después de Core local',error);
+          });
+        });
+      }else{
+        remoteResult=await egpReadFirebaseAuthorityV2();
+      }
+    }else{
+      [coreResult,remoteResult]=await Promise.all([
+        egpReadCoreAuthorityV2(),
+        egpReadFirebaseAuthorityV2()
+      ]);
+    }
 
     let core=coreResult.data;
     const remote=remoteResult.data;

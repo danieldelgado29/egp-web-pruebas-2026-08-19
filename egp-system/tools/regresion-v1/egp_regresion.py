@@ -725,6 +725,9 @@ def main():
         ("PNL006", REPO/"panel.js", ["EGP_DEVICE_CORE_FIREBASE_RELAY_V1", "EGP_DEVICE_RELAY_HEARTBEAT_V1", "core_sync_heartbeat", "core_sync_host", "pedidos_panel_lista"], "Panel puede relevar Core completo a Firebase sin cambiar autoridad"),
         ("PNL009", REPO/"panel.js", ["EGP_INSTALLED_PWA_AUTH_BYPASS_V1", "egpInstalledPwaContextV1", "display-mode: standalone", "navigator.standalone", "android-app://"], "PWA instalada puede saltar login por contexto standalone"),
         ("PWA003", REPO/"panel.html", ["EGP_INSTALLED_PWA_AUTH_BOOT_V1", "egp-installed-pwa", "display-mode: standalone", "navigator.standalone"], "PWA oculta login desde bootstrap sin flash"),
+        # EGP_REG_CORE_FIRST_STARTUP_V1
+        ("PNL011", REPO/"panel.js", ["EGP_CORE_FIRST_STARTUP_V1", "if(startup){", "coreResult=await egpReadCoreAuthorityV2()", "queueMicrotask", "remoteResult=await egpReadFirebaseAuthorityV2()"], "Arranque Panel prioriza Core y no espera Firebase"),
+        ("PWA005", REPO/"panel.html", ["EGP_SHOW_SYNC_PROGRESS_V1", 'content:"Sincronizando show"', "egpShowSyncBar", "egpShowSyncReveal"], "Sincronizando show sin puntos y con barra solo tras demora"),
         ("PWA001", REPO/"pwa.js", ["registrationRef.update()", "controllerchange", "SKIP_WAITING", "updateViaCache"], "Panel auto-update PWA"),
         ("PWA002", REPO/"service-worker-6.36.103.js", ["skipWaiting", "clients.claim", "networkFirst", "ignoreSearch"], "Panel SW actualización/offline"),
         ("MUS001", REPO/"musicos/app.js", ['const LOCAL_CORE = "https://core.elenagirjoaba.com"', "firebaseOnline", "latestFirebaseState"], "Músicos Core primero + Firebase fallback"),

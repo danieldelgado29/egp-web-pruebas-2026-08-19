@@ -1719,8 +1719,105 @@ html.egp-android-panel body:not(.live-mode)
       box-sizing:border-box;
     }
   </style>
+
+  <style id="EGP_BOOT_LOADER_FIRST_PIXEL_V3_STYLE">
+    html.egp-show-resolving-v2,
+    html.egp-show-resolving-v2 body{
+      margin:0!important;
+      background:#050505!important;
+      overflow:hidden!important;
+    }
+
+    html.egp-show-resolving-v2 #panelLogin{
+      visibility:hidden!important;
+      opacity:0!important;
+      pointer-events:none!important;
+    }
+
+    html.egp-show-resolving-v2 .app-shell,
+    html.egp-show-resolving-v2 dialog,
+    html.egp-show-resolving-v2 #toast{
+      visibility:hidden!important;
+      pointer-events:none!important;
+    }
+
+    html.egp-show-resolving-v2 #egpShowSyncOverlayV1{
+      display:flex!important;
+      visibility:visible!important;
+      opacity:1!important;
+      pointer-events:auto!important;
+      z-index:2147483647!important;
+    }
+
+    #publicidadConfigGroup{
+      grid-column:1/-1!important;
+      width:100%!important;
+    }
+
+    #publicidadConfigBody{
+      display:grid!important;
+      grid-template-columns:1fr!important;
+      gap:10px!important;
+      padding:0 0 12px!important;
+    }
+
+    #publicidadConfigBody .switch-card,
+    #publicidadConfigBody .field{
+      width:100%!important;
+      margin:0!important;
+      box-sizing:border-box!important;
+    }
+  </style>
 </head>
 <body data-build="6.36.100">
+  <!-- EGP_BOOT_LOADER_FIRST_PIXEL_V3 -->
+  <div id="egpShowSyncOverlayV1" role="status" aria-live="polite" style="--egp-sync-progress:4%">
+    <div class="egp-show-sync-box">
+      <div class="egp-show-sync-title">Sincronizando show</div>
+      <div class="egp-show-sync-stage">Iniciando Panel</div>
+      <div class="egp-show-sync-track" aria-hidden="true">
+        <div class="egp-show-sync-fill"></div>
+      </div>
+      <div class="egp-show-sync-percent">4%</div>
+    </div>
+  </div>
+  <script id="EGP_BOOT_LOADER_REMOVE_V3">
+  (() => {
+    const root=document.documentElement;
+
+    const finish=()=>{
+      if(root.classList.contains('egp-show-resolving-v2'))return;
+
+      const overlay=document.getElementById('egpShowSyncOverlayV1');
+      if(!overlay)return;
+
+      overlay.style.setProperty('--egp-sync-progress','100%');
+
+      const stage=overlay.querySelector('.egp-show-sync-stage');
+      const percent=overlay.querySelector('.egp-show-sync-percent');
+
+      if(stage)stage.textContent='Listo';
+      if(percent)percent.textContent='100%';
+
+      setTimeout(()=>overlay.remove(),120);
+    };
+
+    const observer=new MutationObserver(()=>{
+      if(!root.classList.contains('egp-show-resolving-v2')){
+        observer.disconnect();
+        finish();
+      }
+    });
+
+    observer.observe(
+      root,
+      {attributes:true,attributeFilter:['class']}
+    );
+
+    finish();
+  })();
+  </script>
+
 
   <section id="panelLogin" class="panel-login" aria-label="Acceso al panel">
     <form id="panelLoginForm" class="panel-login__card" autocomplete="off">
@@ -1759,16 +1856,7 @@ html.egp-android-panel body:not(.live-mode)
             <select id="repertoireSelect" aria-label="Repertorio" required></select>
           </label>
 
-          <label class="field egp-config-field-inline">
-            <select id="profileSelect" aria-label="Perfil del cliente">
-              <option value="">Perfil del cliente</option>
-              <option value="alto">Alto potencial</option>
-              <option value="medio">Potencial medio</option>
-              <option value="bajo">Bajo potencial</option>
-            </select>
-          </label>
-
-          <select id="panelUserSelect" hidden aria-hidden="true" tabindex="-1">
+<select id="panelUserSelect" hidden aria-hidden="true" tabindex="-1">
             <option value="elena">Elena</option>
             <option value="daniel">Daniel</option>
           </select>
@@ -1834,13 +1922,33 @@ html.egp-android-panel body:not(.live-mode)
             </div>
           </div>
 
-          <div class="switch-card egp-config-muted-title">
+          <!-- EGP_PUBLICIDAD_CONFIG_STATIC_V3 -->
+          <details id="publicidadConfigGroup" class="egp-publicidad-group">
+            <summary id="publicidadConfigHeader">
+              <span>Publicidad</span>
+              <span class="egp-publicidad-arrow" aria-hidden="true">⌄</span>
+            </summary>
+            <div id="publicidadConfigBody">
+              <div class="switch-card egp-config-muted-title">
             <div>
               <strong>Uso de publicidad</strong>
               <small>Usar visitantes de este show para publicidad</small>
             </div>
             <label class="switch"><input id="advertisingToggle" type="checkbox"><span></span></label>
           </div>
+              <label class="field egp-config-field-inline">
+            <select id="profileSelect" aria-label="Perfil del cliente">
+              <option value="">Perfil del cliente</option>
+              <option value="alto">Alto potencial</option>
+              <option value="medio">Potencial medio</option>
+              <option value="bajo">Bajo potencial</option>
+            </select>
+          </label>
+            </div>
+          </details>
+
+
+
 
           <button id="continueShowBtn" class="primary-btn continue-show-btn" type="button" hidden>Continuar show</button>
           <button class="primary-btn start-btn" type="submit">Guardar configuración y comenzar show</button>
@@ -2623,7 +2731,7 @@ html.egp-android-panel body:not(.live-mode)
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="panel.js?v=publicidad-config-20260909-v2"></script>
+  <script type="module" src="panel.js?v=static-config-boot-20260909-v3"></script>
   <script type="module" src="./panel-profile-switch-20260901.js?v=blanco-v2-20260901"></script>
 <script id="EGP_MAC_SWITCH_POSITION_V1">
 (function(){

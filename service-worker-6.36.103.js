@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-publicidad-config-20260909-v2";
+const VERSION = "egm-v6.36.103-static-config-boot-20260909-v3";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [

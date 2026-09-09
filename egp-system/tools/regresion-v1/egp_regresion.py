@@ -734,6 +734,9 @@ def main():
         ("PNL013", REPO/"panel.js", ["EGP_PUBLICIDAD_CONFIG_DOM_V2", "publicidadConfigGroup", "appendChild(adCard)", "appendChild(profileField)"], "Publicidad mueve físicamente controles en orden"),
         ("PNL014", REPO/"panel.js", ["EGP_REPERTORIO_PRINCIPAL_DIARIO_DEFAULT_V2", "principal diario", "repertoireSelect"], "Principal Diario por defecto"),
         ("PNL015", REPO/"panel.html", ["EGP_PUBLICIDAD_CONFIG_DOM_V2_STYLE", "publicidadConfigHeader", "publicidadConfigBody"], "Desplegable Publicidad estilizado"),
+        # EGP_REG_STATIC_CONFIG_BOOT_V3
+        ("PNL016", REPO/"panel.html", ["EGP_PUBLICIDAD_CONFIG_STATIC_V3", "publicidadConfigGroup", "advertisingToggle", "profileSelect"], "Publicidad existe físicamente en HTML"),
+        ("PWA006", REPO/"panel.html", ["EGP_BOOT_LOADER_FIRST_PIXEL_V3", "EGP_BOOT_LOADER_FIRST_PIXEL_V3_STYLE", "egpShowSyncOverlayV1", "Iniciando Panel"], "Loader existe desde el primer HTML"),
         ("PWA001", REPO/"pwa.js", ["registrationRef.update()", "controllerchange", "SKIP_WAITING", "updateViaCache"], "Panel auto-update PWA"),
         ("PWA002", REPO/"service-worker-6.36.103.js", ["skipWaiting", "clients.claim", "networkFirst", "ignoreSearch"], "Panel SW actualización/offline"),
         ("MUS001", REPO/"musicos/app.js", ['const LOCAL_CORE = "https://core.elenagirjoaba.com"', "firebaseOnline", "latestFirebaseState"], "Músicos Core primero + Firebase fallback"),

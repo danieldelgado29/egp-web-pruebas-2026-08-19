@@ -1768,6 +1768,47 @@ html.egp-android-panel body:not(.live-mode)
       box-sizing:border-box!important;
     }
   </style>
+
+  <style id="EGP_PUBLICIDAD_MATCH_PEDIDOS_V2">
+    #configView #pedidosConfigGroup,
+    #configView #publicidadConfigGroup{
+      grid-column:1!important;
+      width:100%!important;
+      max-width:100%!important;
+      justify-self:stretch!important;
+      align-self:stretch!important;
+      margin-left:0!important;
+      margin-right:0!important;
+      box-sizing:border-box!important;
+    }
+
+    #configView #publicidadConfigGroup{
+      border-top:1px solid var(--line,#2a2e37)!important;
+      border-bottom:1px solid var(--line,#2a2e37)!important;
+    }
+
+    #configView #publicidadConfigHeader{
+      list-style:none!important;
+      width:100%!important;
+      min-height:52px!important;
+      padding:0 4px!important;
+      border:0!important;
+      background:transparent!important;
+      box-sizing:border-box!important;
+      display:flex!important;
+      align-items:center!important;
+      justify-content:space-between!important;
+      gap:12px!important;
+      cursor:pointer!important;
+      text-align:left!important;
+    }
+
+    #configView #publicidadConfigHeader > span:first-child{
+      font-size:16px!important;
+      font-weight:850!important;
+      color:var(--muted,#949aa7)!important;
+    }
+  </style>
 </head>
 <body data-build="6.36.100">
   <!-- EGP_BOOT_LOADER_FIRST_PIXEL_V3 -->
@@ -2731,7 +2772,7 @@ html.egp-android-panel body:not(.live-mode)
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="panel.js?v=static-config-boot-20260909-v3"></script>
+  <script type="module" src="panel.js?v=static-config-boot-20260909-r8"></script>
   <script type="module" src="./panel-profile-switch-20260901.js?v=blanco-v2-20260901"></script>
 <script id="EGP_MAC_SWITCH_POSITION_V1">
 (function(){

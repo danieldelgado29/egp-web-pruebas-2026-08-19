@@ -736,6 +736,8 @@ def main():
         ("PNL015", REPO/"panel.html", ["EGP_PUBLICIDAD_CONFIG_DOM_V2_STYLE", "publicidadConfigHeader", "publicidadConfigBody"], "Desplegable Publicidad estilizado"),
         # EGP_REG_STATIC_CONFIG_BOOT_V3
         ("PNL016", REPO/"panel.html", ["EGP_PUBLICIDAD_CONFIG_STATIC_V3", "publicidadConfigGroup", "advertisingToggle", "profileSelect"], "Publicidad existe físicamente en HTML"),
+        # EGP_REG_PUBLICIDAD_MATCH_PEDIDOS_V2
+        ("PNL017", REPO/"panel.html", ["EGP_PUBLICIDAD_MATCH_PEDIDOS_V2", "#configView #pedidosConfigGroup,", "#configView #publicidadConfigGroup{", "grid-column:1!important", "justify-self:stretch!important"], "Publicidad usa misma caja que Pedidos"),
         ("PWA006", REPO/"panel.html", ["EGP_BOOT_LOADER_FIRST_PIXEL_V3", "EGP_BOOT_LOADER_FIRST_PIXEL_V3_STYLE", "egpShowSyncOverlayV1", "Iniciando Panel"], "Loader existe desde el primer HTML"),
         ("PWA001", REPO/"pwa.js", ["registrationRef.update()", "controllerchange", "SKIP_WAITING", "updateViaCache"], "Panel auto-update PWA"),
         ("PWA002", REPO/"service-worker-6.36.103.js", ["skipWaiting", "clients.claim", "networkFirst", "ignoreSearch"], "Panel SW actualización/offline"),

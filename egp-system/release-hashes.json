@@ -1,14 +1,14 @@
 {
-  "release_id": "EGP-SYSTEM-2026.09.09-R2",
-  "release_json_sha256": "371c588ad3b8e66d49398e2e418e53fa88597590986158f11288a8211b5854d4",
+  "release_id": "EGP-SYSTEM-2026.09.09-R3",
+  "release_json_sha256": "11a028a3f80ae6675516c01ee475f5c13d90838846fa18aeb2e384462fa1544c",
   "panel": {
-    "panel.html": "38dba799e06e291d820623083f606ea2893b9e3bcb9042b4c5ec6d7e69a60c58",
-    "panel.js": "0d60460427acc8e12864c05387dcdca7618a8899bdbc94beae1b26b5950b4ddf",
+    "panel.html": "e4df869c9f095ef042370b6012d49a080ca5446d97910decf732e061b911f986",
+    "panel.js": "6ea45723d0f1303133b44ab371d8ab6545277b5aa30299f2606c675111014d06",
     "panel.css": "139153ba003665daffef5cf977faddb161447c5551d77b1a0df4797dd67a8333",
     "pwa.js": "18bf514d842d52dcd4ffce920249ae01d0e3d3f496b1740b4629e126d0430902",
     "manifest.json": "aad33c98bcdc4bade9a0584db06afd93c37447ef62331361316f926bc31fafdd",
     "version.json": "8b852d977190c1a8271756914b607bd6ee23bb1cfadec4ec3e9df69fa85e34ff",
-    "service-worker-6.36.103.js": "cafddcb2d23bdb8dd5fe2769ff49b3c1c00ad4250a7c48437afa9d2df0a5ad43"
+    "service-worker-6.36.103.js": "d64dfa004fb426e668ca6cc4dbcaa131c65aef1b35fbee074c85442885c50cf1"
   },
   "musicos": {
     "index.html": "c1d56041b2bd28aa943b50bbb94630bd2b4f18841c61c9f592c0f6dec9f57612",
@@ -27,6 +27,6 @@
     "mode": "verify_only",
     "launcher_sha256": "1451dc3d8b23d1af4bb14752345449131a536fc78fd0df8a3c62acdebe7a80bf"
   },
-  "payload_ref": "e6923d3f9a1d836ea7d9762e8dee7523fac6136f",
-  "manifest_revision": 3
+  "payload_ref": "21e35c93c244ec568f82e5774042c52828940b43",
+  "manifest_revision": 4
 }

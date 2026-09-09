@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "authority": "internet_github",
-  "release_id": "EGP-SYSTEM-2026.09.09-R2",
-  "release_generation": 2026090901,
-  "created_at": "2026-09-09T17:50:58.388454+00:00",
-  "base_commit": "e6923d3f9a1d836ea7d9762e8dee7523fac6136f",
+  "release_id": "EGP-SYSTEM-2026.09.09-R3",
+  "release_generation": 2026090902,
+  "created_at": "2026-09-09T20:45:32.722245+00:00",
+  "base_commit": "21e35c93c244ec568f82e5774042c52828940b43",
   "update_mode": "stage_verify_apply_rollback",
   "offline_policy": "keep_last_complete_release",
   "bridge_policy": {
@@ -2139,7 +2139,7 @@
     },
     {
       "source": "panel.html",
-      "sha256": "38dba799e06e291d820623083f606ea2893b9e3bcb9042b4c5ec6d7e69a60c58",
+      "sha256": "e4df869c9f095ef042370b6012d49a080ca5446d97910decf732e061b911f986",
       "targets": [
         {
           "surface": "caddy_web",
@@ -2154,7 +2154,7 @@
     },
     {
       "source": "panel.js",
-      "sha256": "0d60460427acc8e12864c05387dcdca7618a8899bdbc94beae1b26b5950b4ddf",
+      "sha256": "6ea45723d0f1303133b44ab371d8ab6545277b5aa30299f2606c675111014d06",
       "targets": [
         {
           "surface": "caddy_web",
@@ -2259,9 +2259,9 @@
       "reload": "caddy"
     }
   ],
-  "manifest_revision": 3,
+  "manifest_revision": 4,
   "source_repository": "danieldelgado29/egp-web-pruebas-2026-08-19",
-  "payload_ref": "e6923d3f9a1d836ea7d9762e8dee7523fac6136f",
+  "payload_ref": "21e35c93c244ec568f82e5774042c52828940b43",
   "payload_policy": "immutable_commit",
   "manifest_url_policy": "main_only_for_discovery",
   "payload_integrity": "sha256_required"

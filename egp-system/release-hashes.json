@@ -1,6 +1,6 @@
 {
-  "release_id": "EGP-SYSTEM-2026.09.09-R9",
-  "release_json_sha256": "912b1e4582ab8fd7e54eb4fd0c183e2d9edf65230232f74444f6d3d4a4708ddb",
+  "release_id": "EGP-SYSTEM-2026.09.09-R10",
+  "release_json_sha256": "c99cb3b05a29821567d098e2a689a73665e86516c1f1810f0953dd52e1fba3be",
   "panel": {
     "panel.html": "ec1b0284c4190406fd0b37f69a8adaaacab145538f5ed6883ea71f0c42b49e7a",
     "panel.js": "a393e9216c9501c105a5e84c967945a6dcc2856ef037a7f54573b00b50dfb8c0",
@@ -8,7 +8,11 @@
     "pwa.js": "18bf514d842d52dcd4ffce920249ae01d0e3d3f496b1740b4629e126d0430902",
     "manifest.json": "aad33c98bcdc4bade9a0584db06afd93c37447ef62331361316f926bc31fafdd",
     "version.json": "8b852d977190c1a8271756914b607bd6ee23bb1cfadec4ec3e9df69fa85e34ff",
-    "service-worker-6.36.103.js": "252009c3b4846800cd6bf7a0d88d3500e6aa53d6f64e1f0da244edb946d97402"
+    "service-worker-6.36.103.js": "cf2fbc1ac46e10302628e9a5a404153fe5ca999102c8d5b1f398aafee1767235"
+  },
+  "public_web": {
+    "script.js": "f1b9191fecbb85ad829a6985872d6b72edcd1a11566a23de72e105fed988a66e",
+    "musica/index.html": "bdb9bb4471eb9a31a4749bf06210ee937c43fb0e7c01aab5ae34483aeaccd7b8"
   },
   "musicos": {
     "index.html": "c1d56041b2bd28aa943b50bbb94630bd2b4f18841c61c9f592c0f6dec9f57612",
@@ -27,6 +31,6 @@
     "mode": "verify_only",
     "launcher_sha256": "1451dc3d8b23d1af4bb14752345449131a536fc78fd0df8a3c62acdebe7a80bf"
   },
-  "payload_ref": "eb7da9370f952433d5fef87e58dae1c017c955ad",
-  "manifest_revision": 10
+  "payload_ref": "89a3170ad4bc36d4b147ca99b7e610633dedebf3",
+  "manifest_revision": 11
 }

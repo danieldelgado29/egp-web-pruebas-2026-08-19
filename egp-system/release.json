@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "authority": "internet_github",
-  "release_id": "EGP-SYSTEM-2026.09.09-R9",
-  "release_generation": 2026090908,
-  "created_at": "2026-09-09T22:26:30.602604+00:00",
-  "base_commit": "eb7da9370f952433d5fef87e58dae1c017c955ad",
+  "release_id": "EGP-SYSTEM-2026.09.09-R10",
+  "release_generation": 2026090909,
+  "created_at": "2026-09-09T23:34:39.467124+00:00",
+  "base_commit": "89a3170ad4bc36d4b147ca99b7e610633dedebf3",
   "update_mode": "stage_verify_apply_rollback",
   "offline_policy": "keep_last_complete_release",
   "bridge_policy": {
@@ -2184,7 +2184,7 @@
     },
     {
       "source": "script.js",
-      "sha256": "f8aba7965d64b307a906bc02f62ec887ab9c8ac395b63ad86329981d99294a63",
+      "sha256": "f1b9191fecbb85ad829a6985872d6b72edcd1a11566a23de72e105fed988a66e",
       "targets": [
         {
           "surface": "lan_web",
@@ -2233,6 +2233,21 @@
         }
       ],
       "policy": "declared_variant"
+    },
+    {
+      "source": "musica/index.html",
+      "sha256": "bdb9bb4471eb9a31a4749bf06210ee937c43fb0e7c01aab5ae34483aeaccd7b8",
+      "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "musica/index.html"
+        },
+        {
+          "surface": "lan_web",
+          "path": "musica/index.html"
+        }
+      ],
+      "policy": "canonical"
     }
   ],
   "runtime_files": [
@@ -2259,9 +2274,9 @@
       "reload": "caddy"
     }
   ],
-  "manifest_revision": 10,
+  "manifest_revision": 11,
   "source_repository": "danieldelgado29/egp-web-pruebas-2026-08-19",
-  "payload_ref": "eb7da9370f952433d5fef87e58dae1c017c955ad",
+  "payload_ref": "89a3170ad4bc36d4b147ca99b7e610633dedebf3",
   "payload_policy": "immutable_commit",
   "manifest_url_policy": "main_only_for_discovery",
   "payload_integrity": "sha256_required"

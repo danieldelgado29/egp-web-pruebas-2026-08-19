@@ -730,6 +730,10 @@ def main():
         # EGP_REG_SHOW_SYNC_REAL_PROGRESS_V1
         ("PWA005", REPO/"panel.html", ["EGP_SHOW_SYNC_PROGRESS_V1", "EGP_SHOW_SYNC_REAL_PROGRESS_STYLE_V1", "egp-show-sync-track", "egp-show-sync-fill"], "Sincronizando show usa barra funcional por etapas"),
         ("PNL012", REPO/"panel.js", ["EGP_SHOW_SYNC_REAL_PROGRESS_V1", "Buscando conexión por Internet", "Conectando con Firebase", "Leyendo estado del show", "Estado recibido", "Aplicando estado del show"], "Progreso de Internet ligado a hitos reales"),
+        # EGP_REG_PUBLICIDAD_CONFIG_DOM_V2
+        ("PNL013", REPO/"panel.js", ["EGP_PUBLICIDAD_CONFIG_DOM_V2", "publicidadConfigGroup", "appendChild(adCard)", "appendChild(profileField)"], "Publicidad mueve físicamente controles en orden"),
+        ("PNL014", REPO/"panel.js", ["EGP_REPERTORIO_PRINCIPAL_DIARIO_DEFAULT_V2", "principal diario", "repertoireSelect"], "Principal Diario por defecto"),
+        ("PNL015", REPO/"panel.html", ["EGP_PUBLICIDAD_CONFIG_DOM_V2_STYLE", "publicidadConfigHeader", "publicidadConfigBody"], "Desplegable Publicidad estilizado"),
         ("PWA001", REPO/"pwa.js", ["registrationRef.update()", "controllerchange", "SKIP_WAITING", "updateViaCache"], "Panel auto-update PWA"),
         ("PWA002", REPO/"service-worker-6.36.103.js", ["skipWaiting", "clients.claim", "networkFirst", "ignoreSearch"], "Panel SW actualización/offline"),
         ("MUS001", REPO/"musicos/app.js", ['const LOCAL_CORE = "https://core.elenagirjoaba.com"', "firebaseOnline", "latestFirebaseState"], "Músicos Core primero + Firebase fallback"),

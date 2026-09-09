@@ -22,6 +22,108 @@ document.documentElement.dataset.egmVersion="6.36.92";
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",harden,{once:true});
   else harden();
 })();
+
+/* EGP_PUBLICIDAD_CONFIG_DOM_V2
+ * Mueve físicamente los controles para que el orden visual sea:
+ * Pedidos / Cola pública
+ * Publicidad ▼
+ *   Uso de publicidad
+ *   Perfil del cliente
+ */
+(function egpPublicidadConfigDomV2(){
+  const build=()=>{
+    const pedidos=document.getElementById('pedidosConfigGroup');
+    const profile=document.getElementById('profileSelect');
+    const advertising=document.getElementById('advertisingToggle');
+
+    if(!pedidos||!profile||!advertising)return false;
+
+    profile.required=false;
+    const empty=[...profile.options].find(o=>o.value==='');
+    if(empty){
+      empty.disabled=false;
+      empty.textContent='Perfil del cliente';
+    }
+
+    const profileField=profile.closest('label.field') || profile.parentElement;
+    const adCard=advertising.closest('.switch-card') || advertising.parentElement;
+    if(!profileField||!adCard)return false;
+
+    let group=document.getElementById('publicidadConfigGroup');
+    if(!group){
+      group=document.createElement('details');
+      group.id='publicidadConfigGroup';
+      group.className='egp-publicidad-group';
+      group.innerHTML=`
+        <summary id="publicidadConfigHeader">
+          <span>Publicidad</span>
+          <span class="egp-publicidad-arrow" aria-hidden="true">⌄</span>
+        </summary>
+        <div id="publicidadConfigBody"></div>
+      `;
+      pedidos.insertAdjacentElement('afterend',group);
+    }
+
+    const body=group.querySelector('#publicidadConfigBody');
+    if(!body)return false;
+
+    body.appendChild(adCard);
+    body.appendChild(profileField);
+    return true;
+  };
+
+  const start=()=>{
+    if(build())return;
+    const observer=new MutationObserver(()=>{
+      if(build())observer.disconnect();
+    });
+    observer.observe(document.documentElement,{childList:true,subtree:true});
+    setTimeout(()=>observer.disconnect(),4000);
+  };
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',start,{once:true});
+  }else{
+    start();
+  }
+})();
+
+/* EGP_REPERTORIO_PRINCIPAL_DIARIO_DEFAULT_V2 */
+(function egpPrincipalDiarioDefaultV2(){
+  const apply=()=>{
+    const select=document.getElementById('repertoireSelect');
+    if(!select||select.value)return false;
+
+    const principal=[...select.options].find(option=>
+      String(option.dataset?.name||option.textContent||'')
+        .replace(/ · .*$/,'')
+        .trim()
+        .toLocaleLowerCase('es')==='principal diario'
+    );
+
+    if(!principal)return false;
+    select.value=principal.value;
+    return true;
+  };
+
+  const start=()=>{
+    if(apply())return;
+    const select=document.getElementById('repertoireSelect');
+    if(!select)return;
+    const observer=new MutationObserver(()=>{
+      if(apply())observer.disconnect();
+    });
+    observer.observe(select,{childList:true,subtree:true});
+    setTimeout(()=>observer.disconnect(),5000);
+  };
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',start,{once:true});
+  }else{
+    start();
+  }
+})();
+
 (() => {
   'use strict';
   const $ = (s, p=document) => p.querySelector(s);
@@ -716,7 +818,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       pedidos_modo:cfg.requestsMode==='uno_por_turno'?'uno_por_turno':'libre',
       mostrar_cola:cfg.publicQueue!==false,
       lugar:cfg.venue||'',
-      perfil_clientes:cfg.profile||'medio',
+      perfil_clientes:cfg.profile||'',
       repertorio_nombre:cfg.repertoireName||'',
       uso_publicidad:cfg.advertising===true,
       show_activo:active,
@@ -1203,7 +1305,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
     (saved.venues || []).forEach(v => addVenueOption(v));
     if(state.config){
       $('#venueInput').value = state.config.venue || '';
-      $('#profileSelect').value = state.config.profile || 'alto';
+      $('#profileSelect').value = state.config.profile || '';
       $('#whatsappToggle').checked = false; // EGP_DEFAULT_PEDIDOS_OFF_V1: no restaurar preferencia vieja
       const requestsToggle=document.getElementById('requestsToggle');
       if(requestsToggle)requestsToggle.checked=state.config.requests===true;
@@ -2214,7 +2316,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
       venue:String(pub.lugar||''),
 
       profile:String(
-        pub.perfil_clientes||'medio'
+        pub.perfil_clientes||''
       ),
 
       advertising:
@@ -2369,7 +2471,7 @@ document.documentElement.dataset.egmVersion="6.36.92";
         pub.mostrar_cola!==false,
       lugar:String(pub.lugar||''),
       perfil_clientes:String(
-        pub.perfil_clientes||'medio'
+        pub.perfil_clientes||''
       ),
       uso_publicidad:
         pub.uso_publicidad===true,
@@ -3156,7 +3258,7 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
       ),
       String(data.repertorio_nombre||''),
       String(data.lugar||''),
-      String(data.perfil_clientes||'medio'),
+      String(data.perfil_clientes||''),
       data.pedidos_whatsapp===true,
       data.pedidos_panel===true,
       String(data.pedidos_modo||'libre'),
@@ -3306,7 +3408,7 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
         state.config={
           venue:data.lugar||'', repertoire,
           repertoireName:data.repertorio_nombre||option?.dataset?.name||option?.textContent?.replace(/ · .*$/,'')||titleFromId(repertoire),
-          profile:data.perfil_clientes||'medio', whatsapp:remoteWhatsapp,
+          profile:data.perfil_clientes||'', whatsapp:remoteWhatsapp,
           requests:remoteRequests,
           requestsMode:data.pedidos_modo==='uno_por_turno'?'uno_por_turno':'libre',
           publicQueue:data.mostrar_cola!==false,
@@ -9807,9 +9909,9 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
     const profile=
       ('perfil_clientes' in data)
         ? String(
-            data.perfil_clientes||'medio'
+            data.perfil_clientes||''
           )
-        : String(cfg.profile||'medio');
+        : String(cfg.profile||'');
 
     const advertising=
       ('uso_publicidad' in data)

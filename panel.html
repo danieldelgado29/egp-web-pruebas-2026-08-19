@@ -1674,6 +1674,51 @@ html.egp-android-panel body:not(.live-mode)
     })();
   </script>
 
+
+  <style id="EGP_PUBLICIDAD_CONFIG_DOM_V2_STYLE">
+    #publicidadConfigGroup{
+      grid-column:1/-1;
+      width:100%;
+      border-bottom:1px solid var(--line,#2a2e37);
+    }
+    #publicidadConfigHeader{
+      list-style:none;
+      min-height:52px;
+      width:100%;
+      box-sizing:border-box;
+      padding:0 4px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      cursor:pointer;
+      color:var(--muted,#949aa7);
+      font-size:16px;
+      font-weight:850;
+      user-select:none;
+    }
+    #publicidadConfigHeader::-webkit-details-marker{display:none}
+    #publicidadConfigHeader::marker{content:""}
+    #publicidadConfigHeader .egp-publicidad-arrow{
+      font-size:21px;
+      line-height:1;
+      transition:transform .18s ease;
+    }
+    #publicidadConfigGroup[open] .egp-publicidad-arrow{
+      transform:rotate(180deg);
+    }
+    #publicidadConfigBody{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+      padding:0 0 12px;
+    }
+    #publicidadConfigBody .switch-card,
+    #publicidadConfigBody .field{
+      width:100%;
+      margin:0;
+      box-sizing:border-box;
+    }
+  </style>
 </head>
 <body data-build="6.36.100">
 
@@ -1715,8 +1760,8 @@ html.egp-android-panel body:not(.live-mode)
           </label>
 
           <label class="field egp-config-field-inline">
-            <select id="profileSelect" aria-label="Perfil del cliente" required>
-              <option value="" disabled selected>Perfil del cliente</option>
+            <select id="profileSelect" aria-label="Perfil del cliente">
+              <option value="">Perfil del cliente</option>
               <option value="alto">Alto potencial</option>
               <option value="medio">Potencial medio</option>
               <option value="bajo">Bajo potencial</option>
@@ -2578,7 +2623,7 @@ html.egp-android-panel body:not(.live-mode)
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="panel.js?v=sync-progress-20260909-v1"></script>
+  <script type="module" src="panel.js?v=publicidad-config-20260909-v2"></script>
   <script type="module" src="./panel-profile-switch-20260901.js?v=blanco-v2-20260901"></script>
 <script id="EGP_MAC_SWITCH_POSITION_V1">
 (function(){

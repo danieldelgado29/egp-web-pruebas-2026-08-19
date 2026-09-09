@@ -739,6 +739,8 @@ def main():
         # EGP_REG_PUBLICIDAD_MATCH_PEDIDOS_V2
         ("PNL017", REPO/"panel.html", ["EGP_PUBLICIDAD_MATCH_PEDIDOS_V2", "#configView #pedidosConfigGroup,", "#configView #publicidadConfigGroup{", "grid-column:1!important", "justify-self:stretch!important"], "Publicidad usa misma caja que Pedidos"),
         ("PWA006", REPO/"panel.html", ["EGP_BOOT_LOADER_FIRST_PIXEL_V3", "EGP_BOOT_LOADER_FIRST_PIXEL_V3_STYLE", "egpShowSyncOverlayV1", "Iniciando Panel"], "Loader existe desde el primer HTML"),
+        # EGP_REG_PUBLIC_NO_FLICKER_V1
+        ("PWA007", REPO/"script.js", ["EGP_PUBLIC_UI_NO_FLICKER_V1", "egpFirmaVisualListaPublica", "egpFirmaVisualEstadoPublico", "renderizar(false)", "firmaRenderPublico", "firmaEstadoPublico"], "Web pública evita rerender y animación en sincronización idéntica"),
         ("PWA001", REPO/"pwa.js", ["registrationRef.update()", "controllerchange", "SKIP_WAITING", "updateViaCache"], "Panel auto-update PWA"),
         ("PWA002", REPO/"service-worker-6.36.103.js", ["skipWaiting", "clients.claim", "networkFirst", "ignoreSearch"], "Panel SW actualización/offline"),
         ("MUS001", REPO/"musicos/app.js", ['const LOCAL_CORE = "https://core.elenagirjoaba.com"', "firebaseOnline", "latestFirebaseState"], "Músicos Core primero + Firebase fallback"),

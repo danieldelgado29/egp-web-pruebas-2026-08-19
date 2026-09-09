@@ -164,7 +164,9 @@ const estado = {
   agregarLetraTipo: null,
   nuevaCancionAbierta: false,
   cancionGritaActivaId: null,
-  firmaEstadoRemoto: ""
+  firmaEstadoRemoto: "",
+  firmaEstadoPublico: "",
+  firmaRenderPublico: ""
 };
 
 const DOM = {};
@@ -1152,13 +1154,13 @@ function estadoCancion(id) {
   return "disponible";
 }
 
-function crearTarjeta(cancion, indice) {
+function crearTarjeta(cancion, indice, animar = true) {
   const situacion = estadoCancion(cancion.id);
   const pedidosPendientes = cantidadPedidosPanelCancion(cancion.id);
   const yaPidioEstaCancion = pedidoPropioYaEnviado(cancion.id);
   const articulo = document.createElement("article");
 
-  articulo.className = "cancion cancion-enter";
+  articulo.className = animar ? "cancion cancion-enter" : "cancion";
   if (estado.cancionGritaActivaId === cancion.id) {
     articulo.classList.add("is-grita-activa");
   }
@@ -1311,9 +1313,59 @@ function crearTarjeta(cancion, indice) {
   return articulo;
 }
 
-function renderizar() {
-  estado.visibles = obtenerVisibles();
+/* EGP_PUBLIC_UI_NO_FLICKER_V1
+ * Sincronización sí; reconstrucción visual innecesaria no.
+ * La firma contiene únicamente datos que cambian la tarjeta pública.
+ */
+function egpFirmaVisualListaPublica(visibles = []) {
+  const pedidos = egpPedidosCombinadosV85()
+    .map(p => String(p?.cancion_id || ""))
+    .filter(Boolean)
+    .sort();
+
+  return JSON.stringify({
+    modo: estado.modo,
+    mostrar: Boolean(estado.mostrar),
+    categoria: estado.categoria || "",
+    consulta: normalizar(estado.consulta),
+    vistaClientes: Boolean(estado.vistaClientes),
+    pedidosWhatsapp: Boolean(estado.configRemota.pedidos_whatsapp),
+    pedidosPanel: Boolean(egpPedidosPanelActivoV85()),
+    pedidosModo: egpPedidosModoActualV4(),
+    inicioShow: String(estado.configRemota.inicio_show || ""),
+    grita: estado.cancionGritaActivaId || "",
+    pedidos,
+    canciones: visibles.map(cancion => [
+      String(cancion.id || ""),
+      String(cancion.titulo || ""),
+      String(cancion.artista || ""),
+      (Array.isArray(cancion.categorias) ? cancion.categorias : []).join("|"),
+      numeroCancionEnLista(cancion.id),
+      estadoCancion(cancion.id),
+      cantidadPedidosPanelCancion(cancion.id),
+      tieneLetra(cancion.id),
+      pedidoPropioYaEnviado(cancion.id)
+    ])
+  });
+}
+
+function renderizar(animar = true, forzar = false) {
+  const nuevasVisibles = obtenerVisibles();
+  const firmaVisual = egpFirmaVisualListaPublica(nuevasVisibles);
+
+  if (
+    !forzar &&
+    firmaVisual === estado.firmaRenderPublico &&
+    DOM.lista?.dataset?.egpRenderReady === "1"
+  ) {
+    estado.visibles = nuevasVisibles;
+    return false;
+  }
+
+  estado.firmaRenderPublico = firmaVisual;
+  estado.visibles = nuevasVisibles;
   DOM.lista.innerHTML = "";
+  DOM.lista.dataset.egpRenderReady = "1";
 
   const listaCompleta =
     estado.mostrar &&
@@ -1329,7 +1381,7 @@ function renderizar() {
   const fragmento = document.createDocumentFragment();
 
   estado.visibles.forEach((cancion, indice) => {
-    fragmento.appendChild(crearTarjeta(cancion, indice));
+    fragmento.appendChild(crearTarjeta(cancion, indice, animar));
   });
 
   DOM.lista.appendChild(fragmento);
@@ -1351,6 +1403,8 @@ function renderizar() {
     DOM.contador.textContent =
       `${estado.visibles.length} canciones encontradas.`;
   }
+
+  return true;
 }
 
 function sincronizarInterfazRemota() {
@@ -1372,7 +1426,7 @@ function sincronizarInterfazRemota() {
   }
 
   if (estado.visibles.length || estado.mostrar || estado.categoria || estado.consulta) {
-    renderizar();
+    renderizar(false);
   }
 }
 
@@ -1556,7 +1610,7 @@ async function egpSincronizarLanV85(forzar = false) {
     egpPedidosCombinadosV85().map(p => String(p?.id || "")).sort()
   );
 
-  if ((botonAntes !== botonDespues || firmaAntes !== firmaDespues) && DOM.lista) renderizar();
+  if ((botonAntes !== botonDespues || firmaAntes !== firmaDespues) && DOM.lista) renderizar(false);
 }
 
 function egpProgramarLanV85(delay = 2500) {
@@ -1818,7 +1872,50 @@ function actualizarPosicionMenuPublico() {
   );
 }
 
+function egpFirmaVisualEstadoPublico() {
+  const tocadas = new Set(
+    (Array.isArray(estado.configRemota.tocadas)
+      ? estado.configRemota.tocadas
+      : []
+    ).map(String)
+  );
+
+  const cola = (Array.isArray(estado.configRemota.cola)
+    ? estado.configRemota.cola
+    : []
+  )
+    .map(String)
+    .filter(id => !tocadas.has(id))
+    .map(id => {
+      const cancion = obtenerCancion(id);
+      return [
+        id,
+        numeroCancionEnLista(id),
+        String(cancion?.titulo || "")
+      ];
+    });
+
+  return JSON.stringify({
+    mostrar: estado.configRemota.mostrar_cola !== false,
+    cola
+  });
+}
+
 function renderizarEstadoPublico() {
+  const firmaVisual = egpFirmaVisualEstadoPublico();
+
+  if (
+    firmaVisual === estado.firmaEstadoPublico &&
+    DOM.estadoShowPublico?.dataset?.egpPublicReady === "1"
+  ) {
+    return false;
+  }
+
+  estado.firmaEstadoPublico = firmaVisual;
+  if (DOM.estadoShowPublico) {
+    DOM.estadoShowPublico.dataset.egpPublicReady = "1";
+  }
+
   // La cola debe aparecer también en teléfonos y en el enlace ?lista=todas.
   // Solo se oculta cuando Elena la desactiva desde el Panel Maestro.
   if (!estado.configRemota.mostrar_cola) {
@@ -1829,7 +1926,6 @@ function renderizarEstadoPublico() {
   }
 
   DOM.estadoShowPublico.hidden = false;
-  document.body.classList.add("cola-publica-visible");
 
   // Cliente público: una canción ya Tocada no debe seguir apareciendo
   // dentro de "Canciones a la cola", aunque su ID permanezca físicamente
@@ -1874,6 +1970,7 @@ function renderizarEstadoPublico() {
   );
 
   requestAnimationFrame(actualizarPosicionMenuPublico);
+  return true;
 }
 
 function mostrarApp() {

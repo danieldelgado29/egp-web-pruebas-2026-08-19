@@ -727,7 +727,9 @@ def main():
         ("PWA003", REPO/"panel.html", ["EGP_INSTALLED_PWA_AUTH_BOOT_V1", "egp-installed-pwa", "display-mode: standalone", "navigator.standalone"], "PWA oculta login desde bootstrap sin flash"),
         # EGP_REG_CORE_FIRST_STARTUP_V1
         ("PNL011", REPO/"panel.js", ["EGP_CORE_FIRST_STARTUP_V1", "if(startup){", "coreResult=await egpReadCoreAuthorityV2()", "queueMicrotask", "remoteResult=await egpReadFirebaseAuthorityV2()"], "Arranque Panel prioriza Core y no espera Firebase"),
-        ("PWA005", REPO/"panel.html", ["EGP_SHOW_SYNC_PROGRESS_V1", 'content:"Sincronizando show"', "egpShowSyncBar", "egpShowSyncReveal"], "Sincronizando show sin puntos y con barra solo tras demora"),
+        # EGP_REG_SHOW_SYNC_REAL_PROGRESS_V1
+        ("PWA005", REPO/"panel.html", ["EGP_SHOW_SYNC_PROGRESS_V1", "EGP_SHOW_SYNC_REAL_PROGRESS_STYLE_V1", "egp-show-sync-track", "egp-show-sync-fill"], "Sincronizando show usa barra funcional por etapas"),
+        ("PNL012", REPO/"panel.js", ["EGP_SHOW_SYNC_REAL_PROGRESS_V1", "Buscando conexión por Internet", "Conectando con Firebase", "Leyendo estado del show", "Estado recibido", "Aplicando estado del show"], "Progreso de Internet ligado a hitos reales"),
         ("PWA001", REPO/"pwa.js", ["registrationRef.update()", "controllerchange", "SKIP_WAITING", "updateViaCache"], "Panel auto-update PWA"),
         ("PWA002", REPO/"service-worker-6.36.103.js", ["skipWaiting", "clients.claim", "networkFirst", "ignoreSearch"], "Panel SW actualización/offline"),
         ("MUS001", REPO/"musicos/app.js", ['const LOCAL_CORE = "https://core.elenagirjoaba.com"', "firebaseOnline", "latestFirebaseState"], "Músicos Core primero + Firebase fallback"),

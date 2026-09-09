@@ -3511,8 +3511,82 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
     }
   }
 
-  async function egpReadFirebaseAuthorityV2(){
+  /* EGP_SHOW_SYNC_REAL_PROGRESS_V1
+   * Barra REAL por hitos del proceso Internet/Firebase.
+   * No simula tiempo ni avanza sola.
+   */
+  let egpShowSyncProgressValueV1=0;
+  let egpShowSyncProgressObserverV1=null;
+
+  function egpShowSyncProgressV1(percent,label){
+    const next=Math.max(
+      egpShowSyncProgressValueV1,
+      Math.max(0,Math.min(100,Number(percent)||0))
+    );
+    egpShowSyncProgressValueV1=next;
+
+    let overlay=document.getElementById('egpShowSyncOverlayV1');
+    if(!overlay){
+      overlay=document.createElement('div');
+      overlay.id='egpShowSyncOverlayV1';
+      overlay.setAttribute('role','status');
+      overlay.setAttribute('aria-live','polite');
+      overlay.innerHTML=`
+        <div class="egp-show-sync-box">
+          <div class="egp-show-sync-title">Sincronizando show</div>
+          <div class="egp-show-sync-stage"></div>
+          <div class="egp-show-sync-track" aria-hidden="true">
+            <div class="egp-show-sync-fill"></div>
+          </div>
+          <div class="egp-show-sync-percent">0%</div>
+        </div>`;
+      document.body.appendChild(overlay);
+
+      if(!egpShowSyncProgressObserverV1){
+        egpShowSyncProgressObserverV1=new MutationObserver(()=>{
+          if(
+            !document.documentElement.classList.contains(
+              'egp-show-resolving-v2'
+            )
+          ){
+            egpShowSyncProgressV1(100,'Listo');
+            setTimeout(()=>{
+              document.getElementById('egpShowSyncOverlayV1')?.remove();
+              egpShowSyncProgressObserverV1?.disconnect();
+              egpShowSyncProgressObserverV1=null;
+              egpShowSyncProgressValueV1=0;
+            },180);
+          }
+        });
+        egpShowSyncProgressObserverV1.observe(
+          document.documentElement,
+          {attributes:true,attributeFilter:['class']}
+        );
+      }
+    }
+
+    overlay.style.setProperty(
+      '--egp-sync-progress',
+      `${next}%`
+    );
+
+    const stage=overlay.querySelector('.egp-show-sync-stage');
+    const pct=overlay.querySelector('.egp-show-sync-percent');
+    if(stage&&label)stage.textContent=String(label);
+    if(pct)pct.textContent=`${Math.round(next)}%`;
+  }
+
+  async function egpReadFirebaseAuthorityV2({
+    startupProgress=false
+  }={}){
     try{
+      if(startupProgress){
+        egpShowSyncProgressV1(
+          30,
+          'Conectando con Firebase'
+        );
+      }
+
       if(!remoteStateRef)await initRemoteSync(true);
       if(!remoteStateRef)return {reachable:false,data:null};
 
@@ -3522,7 +3596,22 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
 
       if(!getter)return {reachable:false,data:null};
 
+      if(startupProgress){
+        egpShowSyncProgressV1(
+          58,
+          'Leyendo estado del show'
+        );
+      }
+
       const snap=await getter(remoteStateRef);
+
+      if(startupProgress){
+        egpShowSyncProgressV1(
+          82,
+          'Estado recibido'
+        );
+      }
+
       if(!snap.exists())return {reachable:true,data:{}};
 
       return {
@@ -3583,7 +3672,17 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
           });
         });
       }else{
-        remoteResult=await egpReadFirebaseAuthorityV2();
+        egpShowSyncProgressV1(
+          15,
+          'Buscando conexión por Internet'
+        );
+        remoteResult=await egpReadFirebaseAuthorityV2({
+          startupProgress:true
+        });
+        egpShowSyncProgressV1(
+          92,
+          'Aplicando estado del show'
+        );
       }
     }else{
       [coreResult,remoteResult]=await Promise.all([

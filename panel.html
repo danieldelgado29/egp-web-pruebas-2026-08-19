@@ -14,11 +14,17 @@
       visibility:hidden!important;
       pointer-events:none!important;
     }
-    /* EGP_SHOW_SYNC_PROGRESS_V1
-       Core local normalmente resuelve antes de 350 ms, por eso el mensaje
-       permanece invisible durante ese margen. Solo aparece en fallback Internet. */
-    html.egp-show-resolving-v2 body::after{
-      content:"Sincronizando show";
+    /* EGP_SHOW_SYNC_PROGRESS_V1 */
+    /* EGP_SHOW_SYNC_REAL_PROGRESS_STYLE_V1
+       El overlay existe SOLO cuando Core falló y empezó fallback Internet.
+       El ancho avanza únicamente cuando termina una etapa real. */
+    html.egp-show-resolving-v2 body::after,
+    html.egp-show-resolving-v2 body::before{
+      content:none!important;
+      display:none!important;
+    }
+
+    #egpShowSyncOverlayV1{
       position:fixed;
       inset:0;
       z-index:2147483000;
@@ -26,37 +32,53 @@
       align-items:center;
       justify-content:center;
       box-sizing:border-box;
-      padding-bottom:46px;
+      padding:24px;
       background:#050505;
       color:#fff;
-      font:700 17px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      letter-spacing:.02em;
-      opacity:0;
-      animation:egpShowSyncReveal .12s ease .35s forwards;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     }
-    html.egp-show-resolving-v2 body::before{
-      content:"";
-      position:fixed;
-      left:50%;
-      top:calc(50% + 24px);
-      width:min(240px,70vw);
-      height:4px;
-      z-index:2147483001;
+
+    #egpShowSyncOverlayV1 .egp-show-sync-box{
+      width:min(300px,82vw);
+      text-align:center;
+    }
+
+    #egpShowSyncOverlayV1 .egp-show-sync-title{
+      font-size:18px;
+      font-weight:800;
+      letter-spacing:.01em;
+    }
+
+    #egpShowSyncOverlayV1 .egp-show-sync-stage{
+      min-height:18px;
+      margin-top:9px;
+      color:#aeb3bc;
+      font-size:13px;
+      font-weight:600;
+    }
+
+    #egpShowSyncOverlayV1 .egp-show-sync-track{
+      width:100%;
+      height:6px;
+      margin-top:18px;
+      overflow:hidden;
       border-radius:999px;
-      transform:translateX(-50%);
-      opacity:0;
-      background:
-        linear-gradient(90deg,transparent 0 25%,#fff 45% 55%,transparent 75% 100%),
-        rgba(255,255,255,.18);
-      background-size:200% 100%,100% 100%;
-      animation:
-        egpShowSyncBar 1.05s linear .35s infinite,
-        egpShowSyncReveal .12s ease .35s forwards;
+      background:rgba(255,255,255,.16);
     }
-    @keyframes egpShowSyncReveal{to{opacity:1}}
-    @keyframes egpShowSyncBar{
-      from{background-position:200% 0,0 0}
-      to{background-position:-200% 0,0 0}
+
+    #egpShowSyncOverlayV1 .egp-show-sync-fill{
+      width:var(--egp-sync-progress,0%);
+      height:100%;
+      border-radius:inherit;
+      background:#fff;
+      transition:width .2s ease-out;
+    }
+
+    #egpShowSyncOverlayV1 .egp-show-sync-percent{
+      margin-top:8px;
+      color:#d7d9de;
+      font-size:12px;
+      font-variant-numeric:tabular-nums;
     }
     html.egp-show-resolving-v2 #panelLogin:not([hidden]){
       z-index:2147483647!important;
@@ -2556,7 +2578,7 @@ html.egp-android-panel body:not(.live-mode)
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="panel.js?v=core-first-20260909-v1"></script>
+  <script type="module" src="panel.js?v=sync-progress-20260909-v1"></script>
   <script type="module" src="./panel-profile-switch-20260901.js?v=blanco-v2-20260901"></script>
 <script id="EGP_MAC_SWITCH_POSITION_V1">
 (function(){

@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "authority": "internet_github",
-  "release_id": "EGP-SYSTEM-2026.09.09-R7",
-  "release_generation": 2026090906,
-  "created_at": "2026-09-09T22:00:06.202960+00:00",
-  "base_commit": "0d6c810f516114b20cd84a346835144ec6f322ba",
+  "release_id": "EGP-SYSTEM-2026.09.09-R8",
+  "release_generation": 2026090907,
+  "created_at": "2026-09-09T22:10:46.796922+00:00",
+  "base_commit": "899b6b2aca9977fa913b5dd8876f725bb48e879f",
   "update_mode": "stage_verify_apply_rollback",
   "offline_policy": "keep_last_complete_release",
   "bridge_policy": {
@@ -2139,7 +2139,7 @@
     },
     {
       "source": "panel.html",
-      "sha256": "1ba4dc3309afb026148324e8d2bc1049c6c6af5bdf4689e9dc761abf47f94dfd",
+      "sha256": "8976873622fe02a1fb3d82ab959ceb4e5f4249d24ccb7164cc7fcac00b10967b",
       "targets": [
         {
           "surface": "caddy_web",
@@ -2259,9 +2259,9 @@
       "reload": "caddy"
     }
   ],
-  "manifest_revision": 8,
+  "manifest_revision": 9,
   "source_repository": "danieldelgado29/egp-web-pruebas-2026-08-19",
-  "payload_ref": "0d6c810f516114b20cd84a346835144ec6f322ba",
+  "payload_ref": "899b6b2aca9977fa913b5dd8876f725bb48e879f",
   "payload_policy": "immutable_commit",
   "manifest_url_policy": "main_only_for_discovery",
   "payload_integrity": "sha256_required"

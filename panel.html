@@ -1604,6 +1604,23 @@ html.egp-android-panel body:not(.live-mode)
 </style>
 <!-- EGP_ANDROID_CONFIG_SCROLL_AISLADO_V1_FIN -->
 
+
+  <!-- EGP_INSTALLED_PWA_AUTH_BOOT_V1
+       Evita que la contraseña aparezca un instante al abrir la PWA instalada.
+       En navegador normal NO añade la clase y el formulario sigue visible. -->
+  <style>html.egp-installed-pwa #panelLogin{display:none!important}</style>
+  <script>
+    (function(){
+      try{
+        var installed=
+          (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+          navigator.standalone===true ||
+          String(document.referrer||'').indexOf('android-app://')===0;
+        if(installed)document.documentElement.classList.add('egp-installed-pwa');
+      }catch(_){ }
+    })();
+  </script>
+
 </head>
 <body data-build="6.36.100">
 
@@ -2508,7 +2525,7 @@ html.egp-android-panel body:not(.live-mode)
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="panel.js?v=relay-internet-20260909-v1"></script>
+  <script type="module" src="panel.js?v=pwa-auth-20260909-v1"></script>
   <script type="module" src="./panel-profile-switch-20260901.js?v=blanco-v2-20260901"></script>
 <script id="EGP_MAC_SWITCH_POSITION_V1">
 (function(){

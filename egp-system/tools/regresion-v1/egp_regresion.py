@@ -723,6 +723,8 @@ def main():
         ("PNL004", REPO/"panel.js", ["EGP_FAILOVER_VISUAL_STABILITY_V2"], "Failover no repinta estado viejo"),
         ("PNL005", REPO/"panel.js", ["EGP_CORE_SHOW_AUTHORITY_V1"], "Core conserva autoridad de show en LAN"),
         ("PNL006", REPO/"panel.js", ["EGP_DEVICE_CORE_FIREBASE_RELAY_V1", "EGP_DEVICE_RELAY_HEARTBEAT_V1", "core_sync_heartbeat", "core_sync_host", "pedidos_panel_lista"], "Panel puede relevar Core completo a Firebase sin cambiar autoridad"),
+        ("PNL009", REPO/"panel.js", ["EGP_INSTALLED_PWA_AUTH_BYPASS_V1", "egpInstalledPwaContextV1", "display-mode: standalone", "navigator.standalone", "android-app://"], "PWA instalada puede saltar login por contexto standalone"),
+        ("PWA003", REPO/"panel.html", ["EGP_INSTALLED_PWA_AUTH_BOOT_V1", "egp-installed-pwa", "display-mode: standalone", "navigator.standalone"], "PWA oculta login desde bootstrap sin flash"),
         ("PWA001", REPO/"pwa.js", ["registrationRef.update()", "controllerchange", "SKIP_WAITING", "updateViaCache"], "Panel auto-update PWA"),
         ("PWA002", REPO/"service-worker-6.36.103.js", ["skipWaiting", "clients.claim", "networkFirst", "ignoreSearch"], "Panel SW actualización/offline"),
         ("MUS001", REPO/"musicos/app.js", ['const LOCAL_CORE = "https://core.elenagirjoaba.com"', "firebaseOnline", "latestFirebaseState"], "Músicos Core primero + Firebase fallback"),
@@ -784,6 +786,37 @@ def main():
         fail("PNL007", "Relay Panel no reactiva puente bidireccional antiguo", e)
         fail("PNL008", "Relay Panel conserva contrato completo Core -> Firebase", e)
         fail("MUS007", "Relay Músicos conserva contrato completo Core -> Firebase", e)
+
+    # EGP_REG_INSTALLED_PWA_AUTH_V1
+    # Regla fundamental:
+    # - standalone instalado puede pasar sin contraseña;
+    # - navegador normal NO recibe token persistente de bypass;
+    # - la contraseña de navegador conserva el flujo existente por sessionStorage.
+    try:
+        panel_auth_text=(REPO/"panel.js").read_text(encoding="utf-8")
+        panel_auth_html=(REPO/"panel.html").read_text(encoding="utf-8")
+        installed_condition=(
+            "egpInstalledPwaAuthBypassV1 || panelAuthSessionValid()" in panel_auth_text and
+            "function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?.hidden===true;}" in panel_auth_text and
+            "EGP_INSTALLED_PWA_AUTH_RESUME_V1" in panel_auth_text
+        )
+        if installed_condition:
+            pass_("PNL010", "PWA instalada salta puerta; navegador conserva login")
+        else:
+            fail("PNL010", "PWA instalada salta puerta; navegador conserva login")
+
+        browser_safe=(
+            "sessionStorage.setItem(PANEL_AUTH_SESSION_KEY,'1')" in panel_auth_text and
+            "localStorage.setItem(PANEL_AUTH_SESSION_KEY" not in panel_auth_text and
+            "if(installed)document.documentElement.classList.add('egp-installed-pwa')" in panel_auth_html
+        )
+        if browser_safe:
+            pass_("PWA004", "Bypass PWA no se persiste ni autentica el navegador")
+        else:
+            fail("PWA004", "Bypass PWA no se persiste ni autentica el navegador")
+    except Exception as e:
+        fail("PNL010", "PWA instalada salta puerta; navegador conserva login", e)
+        fail("PWA004", "Bypass PWA no se persiste ni autentica el navegador", e)
 
     # Python syntax without .pyc.
     check_code_syntax_python(REPO/"egp-system/runtime/core/egp_local_core.py", "SYN002", "Sintaxis Core Python")
@@ -864,15 +897,27 @@ def main():
             if not lp.is_file() or sha_file(lp) != src_sha:
                 lan_bad.append((rel, "AUSENTE/DIFERENTE"))
 
-        if not caddy_bad:
-            pass_("SURF001", "Caddy Web alineado con fuentes actuales", "%d archivos" % len(assets))
+        if allow_candidate_dirty:
+            skip(
+                "SURF001",
+                "Caddy Web alineado con fuentes actuales",
+                "candidato pre-deploy: producción conserva release certificada anterior"
+            )
+            skip(
+                "SURF002",
+                "LAN Web alineado con fuentes actuales",
+                "candidato pre-deploy: producción conserva release certificada anterior"
+            )
         else:
-            fail("SURF001", "Caddy Web alineado con fuentes actuales", str(caddy_bad[:12]))
+            if not caddy_bad:
+                pass_("SURF001", "Caddy Web alineado con fuentes actuales", "%d archivos" % len(assets))
+            else:
+                fail("SURF001", "Caddy Web alineado con fuentes actuales", str(caddy_bad[:12]))
 
-        if not lan_bad:
-            pass_("SURF002", "LAN Web alineado con fuentes actuales", "%d archivos" % len(assets))
-        else:
-            fail("SURF002", "LAN Web alineado con fuentes actuales", str(lan_bad[:12]))
+            if not lan_bad:
+                pass_("SURF002", "LAN Web alineado con fuentes actuales", "%d archivos" % len(assets))
+            else:
+                fail("SURF002", "LAN Web alineado con fuentes actuales", str(lan_bad[:12]))
 
     except Exception as e:
         fail("SURF001", "Caddy Web alineado con fuentes actuales", e)

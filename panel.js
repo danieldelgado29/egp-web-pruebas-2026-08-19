@@ -3078,7 +3078,22 @@ document.documentElement.dataset.egmVersion="6.36.92";
     const chip=$('#statusChip');chip.textContent=active?'Show activo':'Sin show activo';chip.classList.toggle('active',active);
   }
 
-  function panelAuthValid(){return $('#panelLogin')?.hidden===true;}
+  /* EGP_INSTALLED_PWA_AUTH_BYPASS_V1
+   La PWA instalada se considera un dispositivo EGP confiable por contexto
+   de lanzamiento. Este bypass NO crea sesión ni escribe almacenamiento.
+   El navegador normal sigue dependiendo exclusivamente del login actual. */
+function egpInstalledPwaContextV1(){
+  try{
+    return (
+      window.matchMedia?.('(display-mode: standalone)')?.matches===true ||
+      navigator.standalone===true ||
+      String(document.referrer||'').startsWith('android-app://')
+    );
+  }catch(_){
+    return false;
+  }
+}
+function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?.hidden===true;}
 
   function closeDialogsForRemoteShowEnd(){
     document.querySelectorAll('dialog[open]').forEach(dialog=>{
@@ -10373,7 +10388,9 @@ document.documentElement.dataset.egmVersion="6.36.92";
   // Contraseña una vez por sesión real de la app.
   // Una recarga, actualización del Service Worker o cambio temporal a otra app
   // no debe volver a pedirla.
-  if(panelAuthSessionValid()){
+  const egpInstalledPwaAuthBypassV1=egpInstalledPwaContextV1();
+
+  if(egpInstalledPwaAuthBypassV1 || panelAuthSessionValid()){
     login.hidden=true;
     login.setAttribute('aria-hidden','true');
   }else{
@@ -10381,6 +10398,14 @@ document.documentElement.dataset.egmVersion="6.36.92";
     login.setAttribute('aria-hidden','false');
     login.hidden=false;
   }
+
+  /* EGP_INSTALLED_PWA_AUTH_RESUME_V1 */
+  window.addEventListener('pageshow',()=>{
+    if(!egpInstalledPwaContextV1())return;
+    login.hidden=true;
+    login.setAttribute('aria-hidden','true');
+    if(loginError)loginError.hidden=true;
+  });
 
   loginForm.addEventListener('submit',e=>{
     e.preventDefault();

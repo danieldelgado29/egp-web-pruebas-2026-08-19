@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-repertorios-full-sync-20260909-r11";
+const VERSION = "egm-v6.36.103-queue-delete-revision-20260909-r12";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [

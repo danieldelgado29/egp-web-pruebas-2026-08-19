@@ -517,10 +517,17 @@ def egp_core_revision(core):
     pc = pc if isinstance(pc, dict) else {}
     show = show if isinstance(show, dict) else {}
     rows = rows if isinstance(rows, list) else []
+    # EGP_QUEUE_REVISION_CLOUD_V1
+    # queueRevision sobrevive aunque una fila haya sido borrada.
     return max(
         int(pc.get("show_revision") or 0),
         int(pc.get("updated_at") or 0),
-        max([int(x.get("updated_at") or 0) for x in rows if isinstance(x, dict)] or [0]),
+        int(core.get("queueRevision") or core.get("queue_revision") or 0),
+        max([
+            int(x.get("updated_at") or 0)
+            for x in rows
+            if isinstance(x, dict)
+        ] or [0]),
     )
 
 def egp_remote_revision(data):

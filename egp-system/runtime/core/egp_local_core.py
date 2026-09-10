@@ -309,9 +309,78 @@ def import_catalog():
         )
 
         con.execute("COMMIT")
+# EGP_QUEUE_DELETE_REVISION_V1
+# Una revisión de cola no puede depender solo de filas que sobreviven.
+QUEUE_REVISION_META_KEY='queue_revision_v1'
+
+def _queue_revision_read(con):
+    values=[0]
+
+    row=con.execute(
+        "SELECT value FROM meta WHERE key=?",
+        (QUEUE_REVISION_META_KEY,)
+    ).fetchone()
+    if row:
+        try:
+            values.append(int(row['value'] or 0))
+        except Exception:
+            pass
+
+    row=con.execute(
+        "SELECT COALESCE(MAX(ts),0) v FROM changes WHERE entity='queue'"
+    ).fetchone()
+    if row:
+        try:
+            values.append(int(row['v'] or 0))
+        except Exception:
+            pass
+
+    row=con.execute(
+        "SELECT COALESCE(MAX(updated_at),0) v FROM queue"
+    ).fetchone()
+    if row:
+        try:
+            values.append(int(row['v'] or 0))
+        except Exception:
+            pass
+
+    row=con.execute(
+        "SELECT value FROM meta WHERE key=?",
+        ('public_config_json',)
+    ).fetchone()
+    if row:
+        try:
+            cfg=json.loads(row['value'] or '{}')
+            if isinstance(cfg,dict):
+                values.append(int(cfg.get('show_revision') or 0))
+                values.append(int(cfg.get('updated_at') or 0))
+        except Exception:
+            pass
+
+    return max(values)
+
 def append_change(con, entity, entity_id, op, payload):
-    con.execute("INSERT INTO changes(ts,entity,entity_id,op,payload,sync_state) VALUES(?,?,?,?,?,'pending')",
-                (now_ms(), entity, entity_id or '', op, json.dumps(payload, ensure_ascii=False, separators=(',',':'))))
+    stamp=now_ms()
+
+    if entity=='queue':
+        previous=_queue_revision_read(con)
+        stamp=max(stamp,previous+1)
+        con.execute(
+            "INSERT OR REPLACE INTO meta(key,value) VALUES(?,?)",
+            (QUEUE_REVISION_META_KEY,str(stamp))
+        )
+
+    con.execute(
+        "INSERT INTO changes(ts,entity,entity_id,op,payload,sync_state) "
+        "VALUES(?,?,?,?,?,'pending')",
+        (
+            stamp,
+            entity,
+            entity_id or '',
+            op,
+            json.dumps(payload,ensure_ascii=False,separators=(',',':'))
+        )
+    )
 
 def health_snapshot():
     try:
@@ -512,6 +581,7 @@ def state_snapshot():
         pending = con.execute(
             "SELECT COUNT(*) c FROM changes WHERE sync_state='pending'"
         ).fetchone()['c']
+        queue_revision=_queue_revision_read(con)
 
     cfg=public_config_snapshot()
 
@@ -557,6 +627,8 @@ def state_snapshot():
         ],
         "currentId":current_bridge_id(),
         "pendingSync":pending,
+        "queueRevision":int(queue_revision or 0),
+        "queue_revision":int(queue_revision or 0),
         "mode":"LOCAL_ONLY",
         "publicConfig":cfg,
         "catalog":{

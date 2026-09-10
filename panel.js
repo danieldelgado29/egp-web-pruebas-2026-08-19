@@ -1768,8 +1768,17 @@ document.documentElement.dataset.egmVersion="6.36.92";
       0
     );
 
+    /* EGP_QUEUE_REVISION_PANEL_V1
+     * Borrar/vaciar también avanzan aunque la fila ya no exista.
+     */
+    const persistentQueueRevision=
+      Number(snapshot?.queueRevision) ||
+      Number(snapshot?.queue_revision) ||
+      0;
+
     return Math.max(
       publicRevision,
+      persistentQueueRevision,
       queueRevision
     );
   }
@@ -2266,10 +2275,19 @@ document.documentElement.dataset.egmVersion="6.36.92";
       0
     );
 
+    /* EGP_QUEUE_REVISION_PANEL_V1
+     * Borrar/vaciar también avanzan aunque la fila ya no exista.
+     */
+    const persistentQueueRevision=
+      Number(snapshot?.queueRevision) ||
+      Number(snapshot?.queue_revision) ||
+      0;
+
     const revision=Math.max(
       Number(pub.show_revision)||0,
       Number(pub.updated_at)||0,
       Number(snapshot.show?.updatedAt)||0,
+      persistentQueueRevision,
       queueRevision
     );
 

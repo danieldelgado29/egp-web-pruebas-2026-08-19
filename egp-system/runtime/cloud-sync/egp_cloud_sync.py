@@ -807,10 +807,57 @@ def egp_mirror_core(project, api_key, core, remote=None, force_heartbeat=False):
         patch_firebase(project, api_key, body)
     return plain
 
+
+# EGP_LIBRARY_BIDIRECTIONAL_SYNC_V1
+CORE_LIBRARY_URL='http://127.0.0.1:8788/api/library'
+
+def egp_library_hash(value):
+    raw=json.dumps(value if isinstance(value,dict) else {},ensure_ascii=False,sort_keys=True,separators=(',',':')).encode('utf-8')
+    return hashlib.sha256(raw).hexdigest()
+
+def egp_patch_firebase_library(project,api_key,biblioteca,revision):
+    qs=[('key',api_key),('updateMask.fieldPaths','biblioteca'),('updateMask.fieldPaths','biblioteca_updated_at')]
+    url=(f"https://firestore.googleapis.com/v1/projects/{urllib.parse.quote(project,safe='')}/databases/(default)/documents/config/estado?"+urllib.parse.urlencode(qs))
+    body={'fields':{'biblioteca':firestore_encode(biblioteca if isinstance(biblioteca,dict) else {}),'biblioteca_updated_at':firestore_encode(int(revision or 0))}}
+    return http_json(url,method='PATCH',body=body,timeout=12)
+
+def egp_sync_library_bidirectional(project,api_key,remote):
+    core_lib=fetch_json(CORE_LIBRARY_URL,timeout=4)
+    core_bib=core_lib.get('biblioteca') if isinstance(core_lib.get('biblioteca'),dict) else {}
+    try: core_rev=int(core_lib.get('biblioteca_updated_at') or 0)
+    except Exception: core_rev=0
+    remote=remote if isinstance(remote,dict) else {}
+    remote_bib=remote.get('biblioteca') if isinstance(remote.get('biblioteca'),dict) else {}
+    try: remote_rev=int(remote.get('biblioteca_updated_at') or 0)
+    except Exception: remote_rev=0
+    ch=egp_library_hash(core_bib); rh=egp_library_hash(remote_bib)
+    if remote_rev>core_rev:
+        egp_post_core('/api/library',{'biblioteca':remote_bib,'biblioteca_updated_at':remote_rev,'source':'firebase'})
+        return 'firebase->core'
+    if core_rev>remote_rev:
+        egp_patch_firebase_library(project,api_key,core_bib,core_rev)
+        return 'core->firebase'
+    if ch==rh: return 'igual'
+    empty=egp_library_hash({'songEdits':{},'customSongs':[],'customRepertoires':[]})
+    revision=max(int(time.time()*1000),core_rev+1,remote_rev+1)
+    if core_rev==0 and ch==empty and rh!=empty:
+        egp_post_core('/api/library',{'biblioteca':remote_bib,'biblioteca_updated_at':revision,'source':'cloud-sync'})
+        egp_patch_firebase_library(project,api_key,remote_bib,revision)
+        return 'firebase->core:migracion'
+    egp_post_core('/api/library',{'biblioteca':core_bib,'biblioteca_updated_at':revision,'source':'cloud-sync'})
+    egp_patch_firebase_library(project,api_key,core_bib,revision)
+    return 'core->firebase:conflicto'
+
 def egp_reconcile_once(verbose=False):
     core = fetch_json(CORE_URL, timeout=4)
     project, api_key = firebase_cfg()
     remote = egp_firebase_state(project, api_key)
+    library_action='sin-cambio'
+    try:
+        library_action=egp_sync_library_bidirectional(project,api_key,remote)
+        if library_action.startswith('firebase->core'): core=fetch_json(CORE_URL,timeout=4)
+    except Exception as e:
+        log('BIBLIOTECA SYNC AVISO | %s' % e)
 
     ca = egp_core_active(core)
     ra = egp_remote_active(remote)

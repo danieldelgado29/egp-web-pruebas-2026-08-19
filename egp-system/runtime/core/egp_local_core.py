@@ -399,6 +399,65 @@ def write_custom_songs(data):
     return custom_songs_snapshot()
 
 
+
+# EGP_LIBRARY_CORE_V1
+# Biblioteca editable separada del catálogo Logic.
+LIBRARY_META_KEY='library_state_json'
+LIBRARY_UPDATED_META_KEY='library_updated_at'
+
+def _library_clean(payload):
+    payload=payload if isinstance(payload,dict) else {}
+    edits=payload.get('songEdits') if isinstance(payload.get('songEdits'),dict) else {}
+    songs=payload.get('customSongs') if isinstance(payload.get('customSongs'),list) else []
+    raw_reps=payload.get('customRepertoires') if isinstance(payload.get('customRepertoires'),list) else []
+    reps=[]; seen=set()
+    for item in raw_reps:
+        if not isinstance(item,dict): continue
+        rid=clean_text(item.get('id'),120); name=clean_text(item.get('name'),200)
+        if not rid or not name or rid in seen: continue
+        seen.add(rid); reps.append({'id':rid,'name':name})
+    return {'songEdits':edits,'customSongs':[x for x in songs if isinstance(x,dict)],'customRepertoires':reps}
+
+def library_snapshot():
+    raw=''; updated=0
+    with DB_LOCK,db_connect() as con:
+        row=con.execute('SELECT value FROM meta WHERE key=?',(LIBRARY_META_KEY,)).fetchone()
+        rev=con.execute('SELECT value FROM meta WHERE key=?',(LIBRARY_UPDATED_META_KEY,)).fetchone()
+    if row: raw=str(row['value'] or '')
+    if rev:
+        try: updated=int(rev['value'] or 0)
+        except Exception: updated=0
+    if raw:
+        try: data=json.loads(raw)
+        except Exception: data={}
+    else:
+        data={'songEdits':{},'customSongs':custom_songs_snapshot().get('customSongs',[]),'customRepertoires':[]}
+    clean=_library_clean(data)
+    return {'ok':True,'biblioteca':clean,'songEdits':clean['songEdits'],'customSongs':clean['customSongs'],'customRepertoires':clean['customRepertoires'],'biblioteca_updated_at':updated}
+
+def write_library_state(data):
+    if not isinstance(data,dict): raise ValueError('payload inválido')
+    payload=data.get('biblioteca',data)
+    if not isinstance(payload,dict): raise ValueError('biblioteca debe ser un objeto')
+    clean=_library_clean(payload)
+    write_custom_songs({'customSongs':clean['customSongs']})
+    current=library_snapshot()
+    try: current_rev=int(current.get('biblioteca_updated_at') or 0)
+    except Exception: current_rev=0
+    try: incoming=int(data.get('biblioteca_updated_at') or data.get('updated_at') or 0)
+    except Exception: incoming=0
+    source=clean_text(data.get('source'),80) or 'panel'
+    revision=incoming if source in {'firebase','cloud-sync'} and incoming>0 else max(now_ms(),current_rev+1,incoming)
+    raw=json.dumps(clean,ensure_ascii=False,separators=(',',':'))
+    with DB_LOCK,db_connect() as con:
+        con.execute('BEGIN IMMEDIATE')
+        con.execute('INSERT OR REPLACE INTO meta(key,value) VALUES(?,?)',(LIBRARY_META_KEY,raw))
+        con.execute('INSERT OR REPLACE INTO meta(key,value) VALUES(?,?)',(LIBRARY_UPDATED_META_KEY,str(revision)))
+        append_change(con,'library','biblioteca','set',{'updatedAt':revision,'source':source,'customRepertoires':len(clean['customRepertoires']),'customSongs':len(clean['customSongs']),'songEdits':len(clean['songEdits'])})
+        con.execute('COMMIT')
+    return library_snapshot()
+
+
 def catalog_status():
     with DB_LOCK, db_connect() as con:
         sc = con.execute("SELECT COUNT(*) c FROM songs").fetchone()['c']
@@ -1036,7 +1095,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200); self.send_header('Content-Type',content_type); self.send_header('Content-Length',str(len(raw))); self._cors(); self.end_headers(); self.wfile.write(raw)
     def _body(self):
         n=int(self.headers.get('Content-Length','0') or '0')
-        if n>1_000_000: raise ValueError('payload demasiado grande')
+        limit=8_000_000 if self.path=='/api/library' else 1_000_000
+        if n>limit: raise ValueError('payload demasiado grande')
         raw=self.rfile.read(n) if n else b'{}'; return json.loads(raw.decode('utf-8') or '{}')
     def do_OPTIONS(self): self.send_response(204); self._cors(); self.end_headers()
     def do_GET(self):
@@ -1092,6 +1152,7 @@ class Handler(BaseHTTPRequestHandler):
             if path=='/api/bridge/state': return self._json(bridge_state_snapshot())
             if path=='/api/catalog/status': return self._json(catalog_status())
             if path=='/api/custom-songs': return self._json(custom_songs_snapshot())
+            if path=='/api/library': return self._json(library_snapshot())
             if path=='/api/catalog': return self._json(catalog_snapshot(qs.get('q',[''])[0],qs.get('limit',[500])[0]))
             if path=='/api/resolve-next': return self._json(resolve_next())
             if path=='/api/changes': return self._json(changes_snapshot(qs.get('limit',[200])[0]))
@@ -1104,6 +1165,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             data=self._body()
             if self.path=='/api/custom-songs': return self._json(write_custom_songs(data))
+            if self.path=='/api/library': return self._json(write_library_state(data))
             if self.path=='/api/show': return self._json(write_show(data))
             if self.path=='/api/public-config': return self._json(write_public_config(data))
             if self.path=='/api/photos': return self._json(write_photos(data))

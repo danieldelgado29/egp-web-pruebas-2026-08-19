@@ -725,6 +725,9 @@ document.documentElement.dataset.egmVersion="6.36.92";
           pendingRemoteLibrary=b;
           if(b.songEdits&&typeof b.songEdits==='object') state.songEdits={...state.songEdits,...b.songEdits};
           if(Array.isArray(b.customSongs)) mergeRemoteCustomSongs(b.customSongs);
+          if(Array.isArray(b.customRepertoires)){
+            state.customRepertoires=b.customRepertoires.filter(r=>r&&r.id&&r.name).map(r=>({id:String(r.id),name:String(r.name)}));
+          }
           if(state.songs.length){
             /*
              * EGP_EXPLICIT_REPERTOIRE_LISTS_V1
@@ -990,11 +993,15 @@ document.documentElement.dataset.egmVersion="6.36.92";
    * deben guardarse también en la SQLite del Local Core.
    * Firebase sigue siendo la copia remota cuando Internet está disponible.
    */
+  /* EGP_REPERTOIRES_FULL_SYNC_V1 */
   async function syncLocalCustomSongs(){
-    return localQueueRequest('/api/custom-songs',{
-      customSongs:Array.isArray(state.customSongs)
-        ? state.customSongs
-        : []
+    return localQueueRequest('/api/library',{
+      biblioteca:{
+        songEdits:state.songEdits,
+        customSongs:Array.isArray(state.customSongs)?state.customSongs:[],
+        customRepertoires:Array.isArray(state.customRepertoires)?state.customRepertoires:[]
+      },
+      source:'panel'
     });
   }
 
@@ -1066,12 +1073,17 @@ document.documentElement.dataset.egmVersion="6.36.92";
      * Se cargan antes de construir repertorios.
      */
     try{
-      const localLibrary=await localQueueRequest('/api/custom-songs');
+      const localLibrary=await localQueueRequest('/api/library');
 
-      if(Array.isArray(localLibrary?.customSongs)){
-        mergeRemoteCustomSongs(localLibrary.customSongs);
-        saveStateLocalOnly();
+      if(localLibrary?.songEdits&&typeof localLibrary.songEdits==='object') state.songEdits={...state.songEdits,...localLibrary.songEdits};
+      if(Array.isArray(localLibrary?.customSongs)) mergeRemoteCustomSongs(localLibrary.customSongs);
+      if(Array.isArray(localLibrary?.customRepertoires)) state.customRepertoires=localLibrary.customRepertoires.filter(r=>r&&r.id&&r.name).map(r=>({id:String(r.id),name:String(r.name)}));
+      const localLibraryRevision=Number(localLibrary?.biblioteca_updated_at||0);
+      if(localLibraryRevision>0&&(lastAppliedRemoteLibraryRevision===null||localLibraryRevision>lastAppliedRemoteLibraryRevision)) lastAppliedRemoteLibraryRevision=localLibraryRevision;
+      if(state.songs.length){
+        state.songs=state.songs.map(song=>state.songEdits[song.id]?mergeSongEditSafelyV1(song,state.songEdits[song.id]):song);
       }
+      saveStateLocalOnly();
     }catch(err){
       console.warn(
         'Custom songs Local Core no disponibles; Firebase/localStorage continúan:',
@@ -3046,6 +3058,35 @@ document.documentElement.dataset.egmVersion="6.36.92";
   }
 
   setTimeout(startLocalQueueSync,50);
+
+  /* EGP_REPERTOIRES_CORE_LIVE_SYNC_V1 */
+  let repertoireCorePollTimerV11=0;
+  async function syncRepertoireLibraryFromCoreV11(){
+    try{
+      const data=await localQueueRequest('/api/library');
+      const revision=Number(data?.biblioteca_updated_at||0);
+      if(!revision||(lastAppliedRemoteLibraryRevision!==null&&revision<=lastAppliedRemoteLibraryRevision)) return false;
+      const b=data?.biblioteca||data;
+      if(b?.songEdits&&typeof b.songEdits==='object') state.songEdits={...state.songEdits,...b.songEdits};
+      if(Array.isArray(b?.customSongs)) mergeRemoteCustomSongs(b.customSongs);
+      if(Array.isArray(b?.customRepertoires)) state.customRepertoires=b.customRepertoires.filter(r=>r&&r.id&&r.name).map(r=>({id:String(r.id),name:String(r.name)}));
+      lastAppliedRemoteLibraryRevision=revision;
+      if(state.songs.length){
+        state.songs=state.songs.map(song=>state.songEdits[song.id]?mergeSongEditSafelyV1(song,state.songEdits[song.id]):song);
+        sortMasterSongs(); buildRepertoires();
+        if($('#repertoiresDialog')?.open) renderRepertoireManager();
+      }
+      saveStateLocalOnly();
+      return true;
+    }catch(_){ return false; }
+  }
+  function startRepertoireCorePollV11(){
+    clearTimeout(repertoireCorePollTimerV11);
+    const tick=async()=>{ await syncRepertoireLibraryFromCoreV11(); repertoireCorePollTimerV11=setTimeout(tick,2500); };
+    repertoireCorePollTimerV11=setTimeout(tick,350);
+  }
+  setTimeout(startRepertoireCorePollV11,80);
+
   function saveState(immediate=false){ saveStateLocalOnly(); return syncRemoteState(immediate); }
 
   function buildRepertoires(){
@@ -7772,7 +7813,7 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
 
   function openRepertoires(){
     const reps=allRepertoires();
-    activeRepertoireId = reps.find(r=>r.id!=='todas')?.id || 'todas';
+    activeRepertoireId = reps.find(r=>r.id===(state.config?.repertoire||''))?.id || reps.find(r=>r.id!=='todas')?.id || 'todas';
     resetRepertoireDraft();
     $('#newRepertoireName').value='';
     $('#repertoireSongSearch').value='';

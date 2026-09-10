@@ -116,6 +116,9 @@ const estado = {
   modo: "principal-diario",
   modoForzado: false,
   repertoriosRemotos: new Set(),
+  repertoriosRemotosNombres: new Map(),
+  egpLibraryRevision: 0,
+  egpLibraryCoreTimer: 0,
   idsRepertorioRemoto: null,
   vistaClientes: false,
   categoria: null,
@@ -240,6 +243,8 @@ function aplicarBibliotecaRemota(biblioteca) {
     estado.todasLocalesBase = estado.todas.map((cancion) => ({ ...cancion }));
   }
 
+  const repertoriosAntes = JSON.stringify([...estado.repertoriosRemotosNombres.entries()]);
+
   const ediciones = biblioteca.songEdits && typeof biblioteca.songEdits === "object"
     ? biblioteca.songEdits
     : {};
@@ -247,11 +252,11 @@ function aplicarBibliotecaRemota(biblioteca) {
     ? biblioteca.customSongs
     : [];
 
-  estado.repertoriosRemotos = new Set(
-    Array.isArray(biblioteca.customRepertoires)
-      ? biblioteca.customRepertoires.map((r) => r && r.id).filter(Boolean)
-      : []
-  );
+  const repertoriosCustom = Array.isArray(biblioteca.customRepertoires)
+    ? biblioteca.customRepertoires.filter((r) => r && r.id && r.name)
+    : [];
+  estado.repertoriosRemotos = new Set(repertoriosCustom.map((r) => String(r.id)));
+  estado.repertoriosRemotosNombres = new Map(repertoriosCustom.map((r) => [String(r.id), String(r.name)]));
 
   const anteriores = JSON.stringify(estado.todas.map((c) => [c.id, c.titulo, c.artista, c.listas]));
   const combinadas = estado.todasLocalesBase.map((cancion) =>
@@ -273,11 +278,12 @@ function aplicarBibliotecaRemota(biblioteca) {
   estado.todas = depurarCanciones(combinadas);
   estado.todas.sort((a, b) => a.titulo.localeCompare(b.titulo, "es", { sensitivity: "base" }));
   const actuales = JSON.stringify(estado.todas.map((c) => [c.id, c.titulo, c.artista, c.listas]));
-  return anteriores !== actuales;
+  const repertoriosDespues = JSON.stringify([...estado.repertoriosRemotosNombres.entries()]);
+  return anteriores !== actuales || repertoriosAntes !== repertoriosDespues;
 }
 
 function nombreModo(id) {
-  return MODOS.find((modo) => modo.id === id)?.nombre || id;
+  return MODOS.find((modo) => modo.id === id)?.nombre || estado.repertoriosRemotosNombres.get(String(id)) || id;
 }
 
 function obtenerCancion(id) {
@@ -951,7 +957,12 @@ async function iniciarFirebase(firebaseConfig) {
         return;
       }
 
-      const bibliotecaCambio = aplicarBibliotecaRemota(datos.biblioteca);
+      let bibliotecaCambio = false;
+      const firebaseLibraryRevision = Number(datos.biblioteca_updated_at || 0);
+      if(!firebaseLibraryRevision || firebaseLibraryRevision >= Number(estado.egpLibraryRevision || 0)){
+        bibliotecaCambio = aplicarBibliotecaRemota(datos.biblioteca);
+        if(firebaseLibraryRevision) estado.egpLibraryRevision = firebaseLibraryRevision;
+      }
       const listaRemota = datos.lista_activa || datos.listaActiva || estado.modo;
       const idsRemotos = Array.isArray(datos.repertorio_activo_ids)
         ? datos.repertorio_activo_ids
@@ -1611,6 +1622,29 @@ async function egpSincronizarLanV85(forzar = false) {
   );
 
   if ((botonAntes !== botonDespues || firmaAntes !== firmaDespues) && DOM.lista) renderizar(false);
+}
+
+/* EGP_PUBLIC_LIBRARY_CORE_SYNC_V1 */
+async function egpSincronizarBibliotecaCoreV11(){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),1200);
+  try{
+    const response=await fetch('/__egp_core/api/library',{cache:'no-store',signal:controller.signal});
+    if(!response.ok) return false;
+    const data=await response.json();
+    if(!data?.ok) return false;
+    const revision=Number(data.biblioteca_updated_at||0);
+    if(!revision || revision<=Number(estado.egpLibraryRevision||0)) return false;
+    const changed=aplicarBibliotecaRemota(data.biblioteca||data);
+    estado.egpLibraryRevision=revision;
+    if(changed) aplicarModo(estado.modo,false);
+    return changed;
+  }catch(_){ return false; }
+  finally{ clearTimeout(timer); }
+}
+function egpProgramarBibliotecaCoreV11(delay=350){
+  clearTimeout(estado.egpLibraryCoreTimer);
+  estado.egpLibraryCoreTimer=window.setTimeout(async()=>{ await egpSincronizarBibliotecaCoreV11(); egpProgramarBibliotecaCoreV11(2500); },delay);
 }
 
 function egpProgramarLanV85(delay = 2500) {
@@ -3939,6 +3973,7 @@ async function iniciar() {
   // V5: iniciar la sincronización LAN solo después de que el DOM exista.
   // Antes podía leer pedidos_panel=true demasiado pronto y no volver a renderizar los botones.
   egpProgramarLanV85(150);
+  egpProgramarBibliotecaCoreV11(250);
   const panelMode=new URLSearchParams(location.search).get("panel")==="1";
   if(panelMode){
     sessionStorage.setItem("egm-panel-auth","1");

@@ -126,6 +126,7 @@ ALLOWED_MUTATION_PATHS = {
     "/api/queue/reorder",
     "/api/queue/clear",
     "/api/custom-songs",
+    "/api/library",
 }
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -733,6 +734,11 @@ def main():
         # EGP_REG_PUBLICIDAD_CONFIG_DOM_V2
         ("PNL013", REPO/"panel.js", ["EGP_PUBLICIDAD_CONFIG_DOM_V2", "publicidadConfigGroup", "appendChild(adCard)", "appendChild(profileField)"], "Publicidad mueve físicamente controles en orden"),
         ("PNL014", REPO/"panel.js", ["EGP_REPERTORIO_PRINCIPAL_DIARIO_DEFAULT_V2", "EGP_REPERTORIO_PRINCIPAL_DIARIO_BUILD_V3", "principalDiarioOption", "savedExists", "principal diario"], "Principal Diario se decide dentro de buildRepertoires sin depender de timing"),
+        # EGP_REG_REPERTOIRES_FULL_SYNC_V1
+        ("PNL018", REPO/"panel.js", ["EGP_REPERTOIRES_FULL_SYNC_V1", "/api/library", "customRepertoires", "EGP_REPERTOIRES_CORE_LIVE_SYNC_V1"], "Repertorios guardan biblioteca completa y reflejan Core"),
+        ("CORE021", REPO/"egp-system/runtime/core/egp_local_core.py", ["EGP_LIBRARY_CORE_V1", "def library_snapshot()", "def write_library_state(data)", "/api/library"], "Core persiste biblioteca completa"),
+        ("CLD021", REPO/"egp-system/runtime/cloud-sync/egp_cloud_sync.py", ["EGP_LIBRARY_BIDIRECTIONAL_SYNC_V1", "egp_sync_library_bidirectional", "biblioteca_updated_at"], "Cloud Sync reconcilia biblioteca"),
+        ("PUB021", REPO/"script.js", ["EGP_PUBLIC_LIBRARY_CORE_SYNC_V1", "/__egp_core/api/library", "repertoriosRemotosNombres"], "Carta 2 refleja repertorios desde Core"),
         ("PNL015", REPO/"panel.html", ["EGP_PUBLICIDAD_CONFIG_DOM_V2_STYLE", "publicidadConfigHeader", "publicidadConfigBody"], "Desplegable Publicidad estilizado"),
         # EGP_REG_STATIC_CONFIG_BOOT_V3
         ("PNL016", REPO/"panel.html", ["EGP_PUBLICIDAD_CONFIG_STATIC_V3", "publicidadConfigGroup", "advertisingToggle", "profileSelect"], "Publicidad existe físicamente en HTML"),

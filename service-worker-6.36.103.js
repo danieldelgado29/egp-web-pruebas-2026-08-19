@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-ios-momentum-20260910-r16";
+const VERSION = "egm-v6.36.103-drag-edge-start-fast-20260910-r17";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [

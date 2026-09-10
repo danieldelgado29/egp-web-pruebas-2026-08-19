@@ -4111,6 +4111,106 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
     return true;
   }
 
+  /* EGP_SHOW_START_VISUAL_IMMEDIATE_V1
+   * Tras confirmar Comenzar, entrar visualmente al Control en vivo
+   * de inmediato. La autoridad sigue verificándose antes de desbloquear.
+   */
+  function egpShowStartPreviewConfigV1(){
+    const select=$('#repertoireSelect');
+
+    return {
+      venue:$('#venueInput').value.trim(),
+      repertoire:select?.value||'',
+      repertoireName:
+        select?.selectedOptions?.[0]?.dataset?.name ||
+        select?.selectedOptions?.[0]?.textContent ||
+        'Repertorio',
+      profile:$('#profileSelect').value,
+      whatsapp:$('#whatsappToggle').checked===true,
+      requests:$('#requestsToggle')?.checked===true,
+      requestsMode:
+        $('#requestsModeSelect')?.value==='uno_por_turno'
+          ? 'uno_por_turno'
+          : 'libre',
+      publicQueue:$('#publicQueueToggle').checked,
+      advertising:$('#advertisingToggle').checked,
+      startedAt:new Date().toISOString(),
+      __egpStartPreviewV1:true
+    };
+  }
+
+  function egpBeginShowStartPreviewV1(preview){
+    state.config=preview;
+    showLive();
+
+    const live=$('#liveView');
+    if(live){
+      live.dataset.egpStartPending='1';
+      live.style.pointerEvents='none';
+    }
+
+    let overlay=document.getElementById(
+      'egpShowStartPreviewOverlayV1'
+    );
+
+    if(!overlay){
+      overlay=document.createElement('div');
+      overlay.id='egpShowStartPreviewOverlayV1';
+
+      Object.assign(
+        overlay.style,
+        {
+          position:'fixed',
+          inset:'0',
+          zIndex:'99990',
+          display:'grid',
+          placeItems:'center',
+          pointerEvents:'all',
+          background:'rgba(8,9,11,.36)',
+          backdropFilter:'blur(2px)',
+          WebkitBackdropFilter:'blur(2px)'
+        }
+      );
+
+      overlay.innerHTML=`
+        <div style="
+          padding:13px 18px;
+          border-radius:14px;
+          background:rgba(18,20,25,.94);
+          border:1px solid rgba(255,255,255,.14);
+          box-shadow:0 14px 42px rgba(0,0,0,.38);
+          font:750 14px/1.2 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+          color:#fff;
+        ">Iniciando show…</div>
+      `;
+
+      document.body.appendChild(overlay);
+    }
+  }
+
+  function egpEndShowStartPreviewV1(
+    preview,
+    previousConfig
+  ){
+    document
+      .getElementById('egpShowStartPreviewOverlayV1')
+      ?.remove();
+
+    const live=$('#liveView');
+    if(live){
+      delete live.dataset.egpStartPending;
+      live.style.pointerEvents='';
+    }
+
+    if(
+      state.config===preview &&
+      showActiveConfirmed!==true
+    ){
+      state.config=previousConfig||null;
+      showConfig(false);
+    }
+  }
+
   let egpStartingShowV2=false;
 
   $('#showForm').addEventListener('submit',async e=>{
@@ -4134,6 +4234,14 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
 
         const startBtn=$('#showForm .start-btn');
         if(startBtn)startBtn.disabled=true;
+
+        const egpPreviousConfigV1=state.config;
+        const egpPreviewConfigV1=
+          egpShowStartPreviewConfigV1();
+
+        egpBeginShowStartPreviewV1(
+          egpPreviewConfigV1
+        );
 
         try{
           const finalCheck=
@@ -4357,6 +4465,11 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
             );
           }
         }finally{
+          egpEndShowStartPreviewV1(
+            egpPreviewConfigV1,
+            egpPreviousConfigV1
+          );
+
           egpStartingShowV2=false;
           if(startBtn)startBtn.disabled=false;
         }
@@ -11459,6 +11572,97 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
       );
     };
 
+    /* EGP_QUEUE_DRAG_EDGE_SCROLL_V1
+     * Durante reordenamiento NO existe scroll libre.
+     * Solo se desplaza en los bordes superior/inferior.
+     */
+    let dragEdgeY=null;
+    let dragEdgeFrame=0;
+
+    const stopDragEdgeScroll=()=>{
+      if(dragEdgeFrame){
+        cancelAnimationFrame(dragEdgeFrame);
+        dragEdgeFrame=0;
+      }
+      dragEdgeY=null;
+    };
+
+    const dragEdgeStep=()=>{
+      if(
+        !list.classList.contains('is-reordering') ||
+        dragEdgeY===null
+      ){
+        stopDragEdgeScroll();
+        return;
+      }
+
+      const rect=list.getBoundingClientRect();
+      const edge=Math.max(
+        34,
+        Math.min(58,rect.height*0.22)
+      );
+
+      let delta=0;
+
+      if(dragEdgeY<rect.top+edge){
+        const strength=Math.max(
+          0,
+          Math.min(
+            1,
+            (rect.top+edge-dragEdgeY)/edge
+          )
+        );
+        delta=-(2+strength*8);
+
+      }else if(dragEdgeY>rect.bottom-edge){
+        const strength=Math.max(
+          0,
+          Math.min(
+            1,
+            (dragEdgeY-(rect.bottom-edge))/edge
+          )
+        );
+        delta=2+strength*8;
+      }
+
+      if(delta!==0){
+        list.scrollTop=clampScroll(
+          list.scrollTop+delta
+        );
+      }
+
+      dragEdgeFrame=requestAnimationFrame(
+        dragEdgeStep
+      );
+    };
+
+    document.addEventListener(
+      'pointermove',
+      event=>{
+        if(
+          !list.classList.contains('is-reordering')
+        )return;
+
+        stopMomentum();
+        dragEdgeY=event.clientY;
+
+        if(!dragEdgeFrame){
+          dragEdgeFrame=requestAnimationFrame(
+            dragEdgeStep
+          );
+        }
+      },
+      {capture:true,passive:true}
+    );
+
+    ['pointerup','pointercancel'].forEach(type=>{
+      document.addEventListener(
+        type,
+        stopDragEdgeScroll,
+        {capture:true,passive:true}
+      );
+    });
+
     const beginMomentum=velocity=>{
       stopMomentum();
 
@@ -11543,7 +11747,16 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
       list.addEventListener(
         'touchmove',
         event=>{
-          if(!touch||event.touches.length!==1)return;
+          if(event.touches.length!==1)return;
+
+          if(list.classList.contains('is-reordering')){
+            touch=null;
+            stopMomentum();
+            event.preventDefault();
+            return;
+          }
+
+          if(!touch)return;
 
           const t=event.touches[0];
           const now=performance.now();
@@ -11696,6 +11909,7 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
       'orientationchange',
       ()=>{
         stopMomentum();
+        stopDragEdgeScroll();
         setTimeout(update,80);
         setTimeout(update,280);
       },

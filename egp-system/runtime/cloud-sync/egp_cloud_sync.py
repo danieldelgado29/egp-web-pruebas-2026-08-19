@@ -581,6 +581,28 @@ def egp_core_active(core):
 def egp_remote_active(data):
     return isinstance(data, dict) and data.get("show_activo") is True
 
+# EGP_CORE_FINALIZATION_WINS_V1
+# Un Core inactivo NO significa "vacío/desconocido": write_public_config()
+# conserva show_session_id y crea un show_revision nuevo al finalizar.
+# Si Firebase todavía conserva ESA MISMA sesión activa pero con revisión
+# anterior, es una copia atrasada y no puede resucitar el show.
+def egp_core_finalization_wins(core, remote):
+    if egp_core_active(core):
+        return False
+    if not egp_remote_active(remote):
+        return False
+
+    cs = egp_core_session(core)
+    rs = egp_remote_session(remote)
+
+    if not cs or not rs or cs != rs:
+        return False
+
+    cr = egp_core_revision(core)
+    rr = egp_remote_revision(remote)
+
+    return cr > rr
+
 def egp_core_queue(core):
     rows = core.get("queue") if isinstance(core, dict) else []
     rows = [x for x in (rows if isinstance(rows, list) else []) if isinstance(x, dict)]
@@ -904,8 +926,15 @@ def egp_reconcile_once(verbose=False):
             action = "core_activo->firebase"
 
     elif (not ca) and ra:
-        core = egp_apply_remote_to_core(remote, core)
-        action = "firebase_activo->core"
+        if egp_core_finalization_wins(core, remote):
+            # Misma sesión: el Core acaba de cerrarla con una revisión
+            # posterior. No importar el Firebase activo atrasado.
+            # egp_mirror_core() de abajo publicará la tumba a Firebase
+            # usando la precondición updateTime de R15.
+            action = "core_finaliza->firebase"
+        else:
+            core = egp_apply_remote_to_core(remote, core)
+            action = "firebase_activo->core"
 
     else:
         action = "ambos_inactivos:core->firebase"

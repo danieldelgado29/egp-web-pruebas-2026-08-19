@@ -11721,6 +11721,27 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
       momentumFrame=requestAnimationFrame(step);
     };
 
+    /* EGP_ANDROID_QUEUE_DRAG_LOCK_V1
+     * Android Chrome puede reclamar pan-y aunque el long-press ya activó
+     * el reordenamiento. Mientras #queueList está is-reordering, bloquear
+     * únicamente ese pan nativo. Fuera del drag no intercepta nada.
+     */
+    document.addEventListener(
+      'touchmove',
+      event=>{
+        if(
+          !list.classList.contains('is-reordering')
+        )return;
+
+        stopMomentum();
+
+        if(event.cancelable){
+          event.preventDefault();
+        }
+      },
+      {capture:true,passive:false}
+    );
+
     if(isiOS){
       list.addEventListener(
         'touchstart',

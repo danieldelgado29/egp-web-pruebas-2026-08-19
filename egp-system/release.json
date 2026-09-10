@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "authority": "internet_github",
-  "release_id": "EGP-SYSTEM-2026.09.09-R10",
-  "release_generation": 2026090909,
-  "created_at": "2026-09-09T23:34:39.467124+00:00",
-  "base_commit": "89a3170ad4bc36d4b147ca99b7e610633dedebf3",
+  "release_id": "EGP-SYSTEM-2026.09.09-R11",
+  "release_generation": 2026090910,
+  "created_at": "2026-09-10T00:37:55.659619+00:00",
+  "base_commit": "b4e9e4bf245a2eb1aae914dff1e03e1f23bff186",
   "update_mode": "stage_verify_apply_rollback",
   "offline_policy": "keep_last_complete_release",
   "bridge_policy": {
@@ -2139,7 +2139,7 @@
     },
     {
       "source": "panel.html",
-      "sha256": "ec1b0284c4190406fd0b37f69a8adaaacab145538f5ed6883ea71f0c42b49e7a",
+      "sha256": "fe9e8b9ec986e2085281058ae7fc46b0e5f982c8c2a650d9c0df63c70d9c50d1",
       "targets": [
         {
           "surface": "caddy_web",
@@ -2154,7 +2154,7 @@
     },
     {
       "source": "panel.js",
-      "sha256": "a393e9216c9501c105a5e84c967945a6dcc2856ef037a7f54573b00b50dfb8c0",
+      "sha256": "dac7ba26a170b7817e66fc8be60b6894ebb617975f4f41036ccb56425255fa20",
       "targets": [
         {
           "surface": "caddy_web",
@@ -2184,8 +2184,12 @@
     },
     {
       "source": "script.js",
-      "sha256": "f1b9191fecbb85ad829a6985872d6b72edcd1a11566a23de72e105fed988a66e",
+      "sha256": "341c7abca788545e134a37696986b3ca7a5bdb1dc75016f8a012ec72c98d50bf",
       "targets": [
+        {
+          "surface": "caddy_web",
+          "path": "script.js"
+        },
         {
           "surface": "lan_web",
           "path": "script.js"
@@ -2236,7 +2240,7 @@
     },
     {
       "source": "musica/index.html",
-      "sha256": "bdb9bb4471eb9a31a4749bf06210ee937c43fb0e7c01aab5ae34483aeaccd7b8",
+      "sha256": "533c55dafce3953eb44b9109ef742bb6120d1403e21377f5e6a982fc88469edf",
       "targets": [
         {
           "surface": "caddy_web",
@@ -2254,7 +2258,7 @@
     {
       "component": "core",
       "source": "egp-system/runtime/core/egp_local_core.py",
-      "sha256": "ed95bcb0b5acb32febb8bd0207f769a38dedf155ca8a6408d64e50bd6d37f618",
+      "sha256": "54f77d92eb8f504b3464702ff5edb77505bdb30d59d31abf5dc7bbe06b751d3e",
       "target": "core_runtime",
       "restart": "com.egp.localcore.once",
       "contract": "EGP_CORE_BRIDGE_CONTRACT_V1"
@@ -2262,7 +2266,7 @@
     {
       "component": "cloud_sync",
       "source": "egp-system/runtime/cloud-sync/egp_cloud_sync.py",
-      "sha256": "ff0ffdfd59c2b1efca69f399dc5c5cde8e2522d525124afd893b4497d0dfc101",
+      "sha256": "6528b932decda203450e9971b0cfe7d59688f157353e212acfb83aa7f1fc9a87",
       "target": "cloud_sync_runtime",
       "restart": "com.egp.cloud-sync"
     },
@@ -2274,9 +2278,9 @@
       "reload": "caddy"
     }
   ],
-  "manifest_revision": 11,
+  "manifest_revision": 12,
   "source_repository": "danieldelgado29/egp-web-pruebas-2026-08-19",
-  "payload_ref": "89a3170ad4bc36d4b147ca99b7e610633dedebf3",
+  "payload_ref": "b4e9e4bf245a2eb1aae914dff1e03e1f23bff186",
   "payload_policy": "immutable_commit",
   "manifest_url_policy": "main_only_for_discovery",
   "payload_integrity": "sha256_required"

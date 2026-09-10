@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-queue-delete-revision-20260909-r12";
+const VERSION = "egm-v6.36.103-mobile-queue-scroll-20260909-r13";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [

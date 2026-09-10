@@ -11232,3 +11232,92 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
     }
   });
 })();
+
+
+/* EGP_MOBILE_QUEUE_SCROLL_MEASURE_V1
+ * Vertical: limita #queueList al alto REAL de las primeras 4 canciones.
+ * Horizontal: elimina ese límite; CSS usa todo el alto disponible.
+ * No altera la cola ni su orden: solo mide presentación.
+ */
+(function egpMobileQueueScrollMeasureV1(){
+  const start=()=>{
+    const list=document.getElementById('queueList');
+    if(!list)return;
+
+    const mobile=window.matchMedia(
+      '(max-width:1100px) and (hover:none) and (pointer:coarse)'
+    );
+    const portrait=window.matchMedia('(orientation:portrait)');
+
+    let raf=0;
+    let last='';
+
+    const update=()=>{
+      cancelAnimationFrame(raf);
+
+      raf=requestAnimationFrame(()=>{
+        if(!mobile.matches || !portrait.matches){
+          if(last!==''){
+            list.style.removeProperty('--egp-queue-four-height');
+            last='';
+          }
+          return;
+        }
+
+        const items=[
+          ...list.children
+        ].filter(el=>el.classList?.contains('queue-item'));
+
+        if(items.length<4){
+          if(last!==''){
+            list.style.removeProperty('--egp-queue-four-height');
+            last='';
+          }
+          return;
+        }
+
+        const firstFour=items.slice(0,4);
+        const style=getComputedStyle(list);
+        const gap=parseFloat(style.rowGap||style.gap||'0')||0;
+
+        const rowsHeight=firstFour.reduce(
+          (sum,item)=>sum+item.getBoundingClientRect().height,
+          0
+        );
+
+        const px=Math.ceil(rowsHeight+(gap*3));
+        const value=px+'px';
+
+        if(value!==last){
+          list.style.setProperty('--egp-queue-four-height',value);
+          last=value;
+        }
+      });
+    };
+
+    const mutation=new MutationObserver(update);
+    mutation.observe(list,{
+      childList:true,
+      subtree:false
+    });
+
+    const resize=new ResizeObserver(update);
+    resize.observe(list);
+
+    window.addEventListener('resize',update,{passive:true});
+    window.addEventListener('orientationchange',update,{passive:true});
+
+    if(typeof mobile.addEventListener==='function'){
+      mobile.addEventListener('change',update);
+      portrait.addEventListener('change',update);
+    }
+
+    update();
+  };
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',start,{once:true});
+  }else{
+    start();
+  }
+})();

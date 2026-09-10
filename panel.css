@@ -3216,3 +3216,121 @@ body.egp-ios.live-mode .song-action{
   z-index:2147483647!important;
   position:fixed!important;
 }
+
+
+/* =========================================================
+   EGP_MOBILE_QUEUE_SCROLL_V1
+   iPhone + Android:
+   - el encabezado de Cola NO hace scroll;
+   - solo #queueList desplaza;
+   - vertical muestra exactamente hasta 4 filas;
+   - horizontal usa todo el alto disponible.
+   ========================================================= */
+@media (max-width:1100px) and (hover:none) and (pointer:coarse){
+
+  html body.live-mode #liveView.view.is-active #queuePanel{
+    display:flex!important;
+    flex-direction:column!important;
+    min-width:0!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+
+  html body.live-mode #liveView.view.is-active
+  #queuePanel > .queue-heading{
+    position:relative!important;
+    inset:auto!important;
+    top:auto!important;
+    flex:0 0 auto!important;
+    min-width:0!important;
+    width:100%!important;
+    z-index:3!important;
+    overflow:hidden!important;
+  }
+
+  html body.live-mode #liveView.view.is-active
+  #queuePanel > #queueList{
+    display:grid!important;
+    flex:1 1 auto!important;
+    min-width:0!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior-y:contain!important;
+    -webkit-overflow-scrolling:touch!important;
+    touch-action:pan-y!important;
+    scrollbar-gutter:stable!important;
+  }
+
+  /* En las DOS orientaciones el encabezado dice el repertorio,
+     no "Cola activa". */
+  html body.live-mode #liveView.view.is-active
+  #queuePanel .queue-active-label{
+    display:none!important;
+  }
+
+  html body.live-mode #liveView.view.is-active
+  #queuePanel .queue-repertoire-name{
+    display:block!important;
+    min-width:0!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+
+  /* El nombre vive en el encabezado de la cola en móvil. */
+  html body.live-mode #liveView.view.is-active #liveRepertoireName{
+    display:none!important;
+  }
+
+  /* En móvil el encabezado pedido es:
+     foco + repertorio + usuario + reloj. */
+  html body.live-mode #liveView.view.is-active #queueCount{
+    display:none!important;
+  }
+}
+
+/* VERTICAL: el JS calcula el alto REAL de las primeras cuatro filas. */
+@media (orientation:portrait) and (max-width:1100px)
+       and (hover:none) and (pointer:coarse){
+
+  html body.live-mode #liveView.view.is-active #queuePanel{
+    height:auto!important;
+    max-height:none!important;
+    align-self:auto!important;
+  }
+
+  html body.live-mode #liveView.view.is-active
+  #queuePanel > #queueList{
+    flex:0 1 auto!important;
+    height:auto!important;
+    max-height:var(--egp-queue-four-height,none)!important;
+  }
+}
+
+/* HORIZONTAL: quitar el límite de 4 y usar el alto del grid.
+   La lista es la única zona desplazable. */
+@media (orientation:landscape) and (max-width:1100px)
+       and (hover:none) and (pointer:coarse){
+
+  html body.egp-two-column.live-mode
+  #liveView.view.is-active #queuePanel,
+  html body.live-mode
+  #liveView.view.is-active #queuePanel{
+    align-self:stretch!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow:hidden!important;
+  }
+
+  html body.live-mode #liveView.view.is-active
+  #queuePanel > #queueList{
+    flex:1 1 0!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    touch-action:pan-y!important;
+  }
+}

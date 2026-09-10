@@ -11415,7 +11415,11 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
 
 
 /* EGP_IOS_QUEUE_TOUCH_SCROLL_V1 */
-(function egpQueueTouchScrollAndIndicatorV1(){
+/* EGP_IOS_QUEUE_MOMENTUM_V1
+ * Mantiene el scroll manual fiable de R15 y añade física inercial:
+ * la velocidad final del dedo determina cuánto continúa desplazándose.
+ */
+(function egpQueueTouchScrollAndIndicatorV2(){
   const start=()=>{
     const panel=document.getElementById('queuePanel');
     const list=document.getElementById('queueList');
@@ -11423,78 +11427,306 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
 
     const isiOS=(
       /iPad|iPhone|iPod/.test(navigator.userAgent||'') ||
-      (navigator.platform==='MacIntel' && Number(navigator.maxTouchPoints||0)>1)
+      (
+        navigator.platform==='MacIntel' &&
+        Number(navigator.maxTouchPoints||0)>1
+      )
     );
 
     let touch=null;
+    let momentumFrame=0;
+    let momentumVelocity=0;
+    let momentumLastTime=0;
+
+    const stopMomentum=()=>{
+      if(momentumFrame){
+        cancelAnimationFrame(momentumFrame);
+        momentumFrame=0;
+      }
+      momentumVelocity=0;
+      momentumLastTime=0;
+    };
+
+    const clampScroll=value=>{
+      const max=Math.max(
+        0,
+        list.scrollHeight-list.clientHeight
+      );
+
+      return Math.max(
+        0,
+        Math.min(max,Number(value)||0)
+      );
+    };
+
+    const beginMomentum=velocity=>{
+      stopMomentum();
+
+      if(Math.abs(velocity)<0.025)return;
+
+      momentumVelocity=Math.max(
+        -3.6,
+        Math.min(3.6,velocity)
+      );
+
+      momentumLastTime=performance.now();
+
+      const step=now=>{
+        const dt=Math.min(
+          34,
+          Math.max(1,now-momentumLastTime)
+        );
+
+        momentumLastTime=now;
+
+        const before=list.scrollTop;
+        const next=clampScroll(
+          before + momentumVelocity*dt
+        );
+
+        list.scrollTop=next;
+
+        momentumVelocity *= Math.pow(
+          0.9982,
+          dt
+        );
+
+        const max=Math.max(
+          0,
+          list.scrollHeight-list.clientHeight
+        );
+
+        const hitEdge=
+          Math.abs(next-before)<0.08 &&
+          (
+            next<=0 ||
+            next>=max
+          );
+
+        if(
+          hitEdge ||
+          Math.abs(momentumVelocity)<0.018
+        ){
+          stopMomentum();
+          return;
+        }
+
+        momentumFrame=requestAnimationFrame(step);
+      };
+
+      momentumFrame=requestAnimationFrame(step);
+    };
 
     if(isiOS){
-      list.addEventListener('touchstart',event=>{
-        if(event.touches.length!==1)return;
-        if(event.target.closest('button'))return;
-        const t=event.touches[0];
-        touch={y:t.clientY,scrollTop:list.scrollTop,moved:false};
-      },{passive:true});
+      list.addEventListener(
+        'touchstart',
+        event=>{
+          stopMomentum();
 
-      list.addEventListener('touchmove',event=>{
-        if(!touch||event.touches.length!==1)return;
-        const y=event.touches[0].clientY;
-        const dy=touch.y-y;
-        if(Math.abs(dy)>3)touch.moved=true;
-        if(!touch.moved)return;
-        const max=Math.max(0,list.scrollHeight-list.clientHeight);
-        if(max<=0)return;
-        list.scrollTop=Math.max(0,Math.min(max,touch.scrollTop+dy));
-        event.preventDefault();
-      },{passive:false});
+          if(event.touches.length!==1)return;
+          if(event.target.closest('button'))return;
 
-      const finish=()=>{touch=null;};
-      list.addEventListener('touchend',finish,{passive:true});
-      list.addEventListener('touchcancel',finish,{passive:true});
+          const t=event.touches[0];
+          const now=performance.now();
+
+          touch={
+            y:t.clientY,
+            lastY:t.clientY,
+            lastTime:now,
+            velocity:0,
+            moved:false
+          };
+        },
+        {passive:true}
+      );
+
+      list.addEventListener(
+        'touchmove',
+        event=>{
+          if(!touch||event.touches.length!==1)return;
+
+          const t=event.touches[0];
+          const now=performance.now();
+
+          const dy=touch.lastY-t.clientY;
+          const dt=Math.max(
+            1,
+            now-touch.lastTime
+          );
+
+          if(Math.abs(touch.y-t.clientY)>3){
+            touch.moved=true;
+          }
+
+          touch.lastY=t.clientY;
+          touch.lastTime=now;
+
+          if(!touch.moved)return;
+
+          const max=Math.max(
+            0,
+            list.scrollHeight-list.clientHeight
+          );
+
+          if(max<=0)return;
+
+          list.scrollTop=clampScroll(
+            list.scrollTop+dy
+          );
+
+          const instant=dy/dt;
+
+          touch.velocity=
+            touch.velocity*0.58 +
+            instant*0.42;
+
+          event.preventDefault();
+        },
+        {passive:false}
+      );
+
+      list.addEventListener(
+        'touchend',
+        ()=>{
+          if(touch&&touch.moved){
+            beginMomentum(
+              touch.velocity
+            );
+          }
+          touch=null;
+        },
+        {passive:true}
+      );
+
+      list.addEventListener(
+        'touchcancel',
+        ()=>{
+          touch=null;
+          stopMomentum();
+        },
+        {passive:true}
+      );
     }
 
     const bar=document.createElement('div');
     bar.className='egp-queue-scroll-indicator-v1';
     bar.hidden=true;
+
     const thumb=document.createElement('div');
     thumb.className='egp-queue-scroll-thumb-v1';
+
     bar.appendChild(thumb);
     panel.appendChild(bar);
 
     let raf=0;
+
     const update=()=>{
       cancelAnimationFrame(raf);
+
       raf=requestAnimationFrame(()=>{
-        const client=Math.max(1,list.clientHeight);
-        const total=Math.max(client,list.scrollHeight);
-        const max=Math.max(0,total-client);
-        const hasHidden=max>2;
-        bar.hidden=!hasHidden;
-        if(!hasHidden)return;
+        const client=Math.max(
+          1,
+          list.clientHeight
+        );
+
+        const total=Math.max(
+          client,
+          list.scrollHeight
+        );
+
+        const max=Math.max(
+          0,
+          total-client
+        );
+
+        const itemCount=
+          list.querySelectorAll(
+            ':scope > .queue-item'
+          ).length;
+
+        const hasIndicator=
+          itemCount>4 ||
+          max>2;
+
+        bar.hidden=!hasIndicator;
+
+        if(!hasIndicator)return;
+
         bar.style.top=list.offsetTop+'px';
         bar.style.height=client+'px';
-        const thumbH=Math.max(24,Math.min(client,client*(client/total)));
-        const travel=Math.max(0,client-thumbH);
-        const y=max>0?travel*(list.scrollTop/max):0;
+
+        const thumbH=max>2
+          ? Math.max(
+              24,
+              Math.min(
+                client,
+                client*(client/total)
+              )
+            )
+          : client;
+
+        const travel=Math.max(
+          0,
+          client-thumbH
+        );
+
+        const y=max>0
+          ? travel*(list.scrollTop/max)
+          : 0;
+
         thumb.style.height=thumbH+'px';
-        thumb.style.transform=`translateY(${y}px)`;
+        thumb.style.transform=
+          `translateY(${y}px)`;
       });
     };
 
-    list.addEventListener('scroll',update,{passive:true});
-    window.addEventListener('resize',update,{passive:true});
-    window.addEventListener('orientationchange',()=>{
-      setTimeout(update,80);
-      setTimeout(update,280);
-    },{passive:true});
+    list.addEventListener(
+      'scroll',
+      update,
+      {passive:true}
+    );
+
+    window.addEventListener(
+      'resize',
+      update,
+      {passive:true}
+    );
+
+    window.addEventListener(
+      'orientationchange',
+      ()=>{
+        stopMomentum();
+        setTimeout(update,80);
+        setTimeout(update,280);
+      },
+      {passive:true}
+    );
+
     if(window.visualViewport){
-      window.visualViewport.addEventListener('resize',update,{passive:true});
+      window.visualViewport.addEventListener(
+        'resize',
+        update,
+        {passive:true}
+      );
     }
-    new MutationObserver(update).observe(list,{childList:true});
+
+    new MutationObserver(update).observe(
+      list,
+      {childList:true}
+    );
+
     new ResizeObserver(update).observe(list);
+
     update();
   };
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
-  else start();
+  if(document.readyState==='loading'){
+    document.addEventListener(
+      'DOMContentLoaded',
+      start,
+      {once:true}
+    );
+  }else{
+    start();
+  }
 })();

@@ -499,16 +499,19 @@ def egp_authority_state_write(session="", active=False):
     os.replace(tmp, AUTHORITY_STATE_PATH)
 
 def egp_firebase_state(project, api_key):
+    # EGP_FIREBASE_CAS_NO_STALE_QUEUE_V1
     url = (
         f"https://firestore.googleapis.com/v1/projects/{urllib.parse.quote(project, safe='')}"
         f"/databases/(default)/documents/config/estado"
         f"?key={urllib.parse.quote(api_key, safe='')}"
     )
     raw = http_json(url, timeout=10)
-    return {
+    result = {
         k: firestore_plain(v)
         for k, v in (raw.get("fields") or {}).items()
     }
+    result["__updateTime"] = str(raw.get("updateTime") or "")
+    return result
 
 def egp_core_revision(core):
     pc = core.get("publicConfig") if isinstance(core, dict) else {}
@@ -811,7 +814,12 @@ def egp_mirror_core(project, api_key, core, remote=None, force_heartbeat=False):
     )
     plain, body = build_payload(core, heartbeat=heartbeat)
     if force_heartbeat or remote is None or not egp_states_equal(remote, plain):
-        patch_firebase(project, api_key, body)
+        patch_firebase(
+            project,
+            api_key,
+            body,
+            expected_update_time=str(remote.get("__updateTime") or ""),
+        )
     return plain
 
 
@@ -1016,8 +1024,11 @@ def fingerprint(plain):
     raw = json.dumps(stable, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
-def patch_firebase(project, api_key, body):
+def patch_firebase(project, api_key, body, expected_update_time=""):
     qs = [("key", api_key)]
+    # EGP_FIREBASE_CAS_NO_STALE_QUEUE_V1
+    if expected_update_time:
+        qs.append(("currentDocument.updateTime", str(expected_update_time)))
     mask_fields = list(FIELDS)
     if "pedidos_panel_lista" in (body.get("fields") or {}):
         mask_fields.append("pedidos_panel_lista")

@@ -3413,3 +3413,35 @@ html.egp-mobile-queue-scroll-v2
 body.live-mode #queueCount{
   display:none!important;
 }
+
+
+/* EGP_QUEUE_SCROLL_INDICATOR_PERSISTENT_V1 */
+html.egp-mobile-queue-scroll-v2 body.live-mode #queuePanel{
+  position:relative!important;
+}
+.egp-queue-scroll-indicator-v1{
+  position:absolute;
+  right:3px;
+  width:5px;
+  border-radius:999px;
+  background:rgba(255,255,255,.18);
+  pointer-events:none;
+  z-index:20;
+  opacity:1!important;
+}
+.egp-queue-scroll-indicator-v1[hidden]{display:none!important;}
+.egp-queue-scroll-thumb-v1{
+  width:100%;
+  min-height:24px;
+  border-radius:999px;
+  background:rgba(255,255,255,.82);
+  transform:translateY(0);
+  will-change:transform;
+}
+html.egp-mobile-queue-scroll-v2 body.live-mode #queueList{
+  scrollbar-width:none!important;
+}
+html.egp-mobile-queue-scroll-v2 body.live-mode #queueList::-webkit-scrollbar{
+  width:0!important;
+  height:0!important;
+}

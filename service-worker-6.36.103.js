@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-queue-mobile-real-20260910-r14";
+const VERSION = "egm-v6.36.103-queue-fast-ios-cas-20260910-r15";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [

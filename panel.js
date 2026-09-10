@@ -139,6 +139,11 @@ document.documentElement.dataset.egmVersion="6.36.92";
     suppressClickUntil:0
   };
   let remoteRunTransaction=null;
+
+  /* EGP_QUEUE_OPTIMISTIC_STABLE_V1 */
+  let egpQueueUiMutationSeq=0;
+  let egpQueueUiLatestSeq=0;
+  let egpInternetQueuePendingCount=0;
   const dialogBaselines = new WeakMap();
   const trackedDialogIds = new Set(['newSongDialog','repertoiresDialog','editSongDialog','songbookEditorDialog','photoManagerDialog','securityDialog','imageEditorDialog']);
   const labels = {alto:'Alto potencial', medio:'Potencial medio', bajo:'Bajo potencial'};
@@ -610,6 +615,11 @@ document.documentElement.dataset.egmVersion="6.36.92";
         const egpFirebaseServerRevision=
           egpFirebaseStateRevision(data);
 
+        const egpHoldInternetQueueSnapshot=
+          LOCAL_QUEUE_MODE!==true &&
+          egpInternetQueuePendingCount>0 &&
+          data.show_activo===true;
+
         if(!egpRemoteDesdeCache){
           latestRemoteServerState=data;
           latestRemoteState=data;
@@ -682,8 +692,19 @@ document.documentElement.dataset.egmVersion="6.36.92";
           egpBridgeFirebaseStateToCore(data);
         }
 
-        const incomingQueue=LOCAL_QUEUE_MODE?[...state.queue]:(Array.isArray(data.cola)?data.cola.map(String):[]);
-        const incomingPlayedOrder=LOCAL_QUEUE_MODE?[...state.played]:(Array.isArray(data.tocadas)?[...new Set(data.tocadas.map(String))]:[]);
+        const incomingQueue=
+          LOCAL_QUEUE_MODE
+            ? [...state.queue]
+            : egpHoldInternetQueueSnapshot
+              ? [...state.queue]
+              : (Array.isArray(data.cola)?data.cola.map(String):[]);
+
+        const incomingPlayedOrder=
+          LOCAL_QUEUE_MODE
+            ? [...state.played]
+            : egpHoldInternetQueueSnapshot
+              ? [...state.played]
+              : (Array.isArray(data.tocadas)?[...new Set(data.tocadas.map(String))]:[]);
         const oldPlayedOrder=[...state.played].map(String);
         const playedChanged=incomingPlayedOrder.join('|')!==oldPlayedOrder.join('|');
 
@@ -705,7 +726,12 @@ document.documentElement.dataset.egmVersion="6.36.92";
 
         applyRemotePanelState(data,{skipQueue:true,skipPlayed:true,preserveLocalRequests:egpRemoteDesdeCache});
 
-        if(!LOCAL_QUEUE_MODE&&!queueDragState.active&&!queueDragState.saving){
+        if(
+          !LOCAL_QUEUE_MODE &&
+          !egpHoldInternetQueueSnapshot &&
+          !queueDragState.active &&
+          !queueDragState.saving
+        ){
           normalizeRemoteQueueIfNeeded(incomingQueue,incomingPlayedOrder);
         }
 
@@ -4095,23 +4121,13 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
     const venue=$('#venueInput').value.trim();
     if(!venue)return toast('Escribe el lugar del show');
 
-    const preflight=await egpResolvePanelAuthorityV2();
-
-    if(preflight.active){
-      toast('Ya existe un show activo. Entrando al show actual.');
-      return;
-    }
-
-    if(!preflight.reachable){
-      toast(
-        'No se pudo comprobar ni Core ni Firebase. No se creará otro show.'
-      );
-      return;
-    }
-
+    /* EGP_START_SHOW_CONFIRM_IMMEDIATE_V1
+     * El primer click abre la confirmación inmediatamente.
+     * La verificación fuerte se conserva al pulsar Comenzar.
+     */
     askConfirm(
       'Comenzar nuevo show',
-      'Se verificará nuevamente que no exista otro show activo.',
+      'Se verificará que no exista otro show activo.',
       async()=>{
         if(egpStartingShowV2)return;
         egpStartingShowV2=true;
@@ -5076,44 +5092,11 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
     return [...pending,target,...done];
   }
 
-  function persistQueueStateMutation(songId,kind){
-    const id=String(songId||'');
-    if(!id)return Promise.resolve();
-
-    localQueueMutationPending++;
-
-    const run=()=>persistQueueStateMutationNow(id,kind);
-    const task=localQueueMutationChain.then(run,run);
-
-    localQueueMutationChain=task.catch(()=>{});
-
-    return task.finally(()=>{
-      localQueueMutationPending=Math.max(0,localQueueMutationPending-1);
-      if(localQueueMutationPending===0)setTimeout(refreshLocalQueue,0);
-    });
-  }
-
-  async function persistQueueStateMutationNow(songId,kind){
-    const id=String(songId||'');
-    if(!id)return;
-    const originalQueue=[...state.queue],originalPlayed=new Set(state.played);
-
-    // Optimistic local state using the exact same invariant as Firestore.
+  function egpApplyQueueOptimisticMutationV1(id,kind){
     if(kind==='add'){
       state.played.delete(id);
       state.queue=insertAtEndOfPending(state.queue,id,state.played);
-
-      /*
-       * EGP_CLEAR_SEARCH_AFTER_QUEUE_ADD_V1
-       *
-       * Al encontrar una canción y ponerla en cola, dejar el buscador
-       * listo para la siguiente búsqueda y restaurar inmediatamente
-       * la lista completa del repertorio.
-       *
-       * No altera la cola; solo limpia el filtro visual.
-       */
       const searchInput=$('#songSearch');
-
       if(searchInput && searchInput.value){
         searchInput.value='';
         filterSongs();
@@ -5129,7 +5112,56 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
       state.queue=state.queue.filter(x=>String(x)!==id);
     }
     state.queue=canonicalQueueOrder(state.queue,state.played);
-    saveStateLocalOnly();renderQueue();renderSongs();
+    saveStateLocalOnly();
+    renderQueue();
+    renderSongs();
+  }
+
+  function persistQueueStateMutation(songId,kind){
+    const id=String(songId||'');
+    if(!id)return Promise.resolve();
+
+    const originalQueue=[...state.queue];
+    const originalPlayed=new Set(state.played);
+    const mutationSeq=++egpQueueUiMutationSeq;
+    egpQueueUiLatestSeq=mutationSeq;
+
+    const internetGuarded=LOCAL_QUEUE_MODE!==true;
+    if(internetGuarded)egpInternetQueuePendingCount++;
+
+    // Pintar inmediatamente, sin esperar el turno de red.
+    egpApplyQueueOptimisticMutationV1(id,kind);
+
+    localQueueMutationPending++;
+
+    const context={originalQueue,originalPlayed,mutationSeq,internetGuarded};
+    const run=()=>persistQueueStateMutationNow(id,kind,context);
+    const task=localQueueMutationChain.then(run,run);
+    localQueueMutationChain=task.catch(()=>{});
+
+    return task.finally(()=>{
+      if(internetGuarded){
+        egpInternetQueuePendingCount=Math.max(0,egpInternetQueuePendingCount-1);
+      }
+      localQueueMutationPending=Math.max(0,localQueueMutationPending-1);
+      if(localQueueMutationPending===0)setTimeout(refreshLocalQueue,0);
+    });
+  }
+
+  async function persistQueueStateMutationNow(songId,kind,context={}){
+    const id=String(songId||'');
+    if(!id)return;
+
+    const originalQueue=Array.isArray(context.originalQueue)
+      ? [...context.originalQueue]
+      : [...state.queue];
+    const originalPlayed=context.originalPlayed instanceof Set
+      ? new Set(context.originalPlayed)
+      : new Set(state.played);
+    const mutationSeq=Number(context.mutationSeq)||0;
+    let internetGuardedHere=false;
+
+    // El optimismo ya ocurrió al tocar. Aquí solo persiste red/Core.
 
     try{
       if(LOCAL_QUEUE_MODE){
@@ -5157,14 +5189,15 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
         try{
           const result=await localQueueRequest(path,body);
 
-          applyLocalQueueSnapshot(result,{force:true});
-
-          processQueueHeadChange(
-            originalQueue,
-            state.queue,
-            originalPlayed,
-            state.played
-          );
+          if(!mutationSeq || mutationSeq===egpQueueUiLatestSeq){
+            applyLocalQueueSnapshot(result,{force:true});
+            processQueueHeadChange(
+              originalQueue,
+              state.queue,
+              originalPlayed,
+              state.played
+            );
+          }
 
           /*
            * Bridge/Musicos ya recibieron por LAN.
@@ -5187,18 +5220,13 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
         }
       }
 
-      /*
-       * EGP_INTERNET_QUEUE_CONFIRMED_ONLY_V1
-       *
-       * Fuera de Core NO dejamos en pantalla el estado optimista.
-       * Primero Firebase debe confirmar que el show sigue realmente activo
-       * y aceptar la mutación.
+      /* EGP_QUEUE_OPTIMISTIC_STABLE_V1
+       * Mantener la vista inmediata mientras Firebase confirma.
        */
-      state.queue=[...originalQueue];
-      state.played=new Set(originalPlayed);
-      saveStateLocalOnly();
-      renderQueue();
-      renderSongs();
+      if(!context.internetGuarded){
+        egpInternetQueuePendingCount++;
+        internetGuardedHere=true;
+      }
 
       /*
        * FAILOVER INTERNET.
@@ -5242,22 +5270,34 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
         toast('El show terminó; no se cambió la cola.');
         return;
       }
-      state.queue=[...(result?.queue||state.queue)];
-      state.played=new Set(result?.played||[...state.played]);
-      saveStateLocalOnly();renderQueue();renderSongs();
-
-      processQueueHeadChange(
-        originalQueue,
-        state.queue,
-        originalPlayed,
-        state.played
-      );
+      if(!mutationSeq || mutationSeq===egpQueueUiLatestSeq){
+        state.queue=[...(result?.queue||state.queue)];
+        state.played=new Set(result?.played||[...state.played]);
+        saveStateLocalOnly();
+        renderQueue();
+        renderSongs();
+        processQueueHeadChange(
+          originalQueue,
+          state.queue,
+          originalPlayed,
+          state.played
+        );
+      }
     }catch(err){
       console.warn('No se pudo guardar el cambio de cola',err);
-      state.queue=originalQueue;state.played=originalPlayed;
-      saveStateLocalOnly();renderQueue();renderSongs();
+      if(!mutationSeq || mutationSeq===egpQueueUiLatestSeq){
+        state.queue=originalQueue;
+        state.played=originalPlayed;
+        saveStateLocalOnly();
+        renderQueue();
+        renderSongs();
+      }
       toast(err?.message==='OFFLINE'?'Sin conexión: no se cambió la cola remota.':String(err?.message||'Error desconocido'));
       throw err;
+    }finally{
+      if(internetGuardedHere){
+        egpInternetQueuePendingCount=Math.max(0,egpInternetQueuePendingCount-1);
+      }
     }
   }
 
@@ -11371,4 +11411,90 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
   }else{
     start();
   }
+})();
+
+
+/* EGP_IOS_QUEUE_TOUCH_SCROLL_V1 */
+(function egpQueueTouchScrollAndIndicatorV1(){
+  const start=()=>{
+    const panel=document.getElementById('queuePanel');
+    const list=document.getElementById('queueList');
+    if(!panel||!list)return;
+
+    const isiOS=(
+      /iPad|iPhone|iPod/.test(navigator.userAgent||'') ||
+      (navigator.platform==='MacIntel' && Number(navigator.maxTouchPoints||0)>1)
+    );
+
+    let touch=null;
+
+    if(isiOS){
+      list.addEventListener('touchstart',event=>{
+        if(event.touches.length!==1)return;
+        if(event.target.closest('button'))return;
+        const t=event.touches[0];
+        touch={y:t.clientY,scrollTop:list.scrollTop,moved:false};
+      },{passive:true});
+
+      list.addEventListener('touchmove',event=>{
+        if(!touch||event.touches.length!==1)return;
+        const y=event.touches[0].clientY;
+        const dy=touch.y-y;
+        if(Math.abs(dy)>3)touch.moved=true;
+        if(!touch.moved)return;
+        const max=Math.max(0,list.scrollHeight-list.clientHeight);
+        if(max<=0)return;
+        list.scrollTop=Math.max(0,Math.min(max,touch.scrollTop+dy));
+        event.preventDefault();
+      },{passive:false});
+
+      const finish=()=>{touch=null;};
+      list.addEventListener('touchend',finish,{passive:true});
+      list.addEventListener('touchcancel',finish,{passive:true});
+    }
+
+    const bar=document.createElement('div');
+    bar.className='egp-queue-scroll-indicator-v1';
+    bar.hidden=true;
+    const thumb=document.createElement('div');
+    thumb.className='egp-queue-scroll-thumb-v1';
+    bar.appendChild(thumb);
+    panel.appendChild(bar);
+
+    let raf=0;
+    const update=()=>{
+      cancelAnimationFrame(raf);
+      raf=requestAnimationFrame(()=>{
+        const client=Math.max(1,list.clientHeight);
+        const total=Math.max(client,list.scrollHeight);
+        const max=Math.max(0,total-client);
+        const hasHidden=max>2;
+        bar.hidden=!hasHidden;
+        if(!hasHidden)return;
+        bar.style.top=list.offsetTop+'px';
+        bar.style.height=client+'px';
+        const thumbH=Math.max(24,Math.min(client,client*(client/total)));
+        const travel=Math.max(0,client-thumbH);
+        const y=max>0?travel*(list.scrollTop/max):0;
+        thumb.style.height=thumbH+'px';
+        thumb.style.transform=`translateY(${y}px)`;
+      });
+    };
+
+    list.addEventListener('scroll',update,{passive:true});
+    window.addEventListener('resize',update,{passive:true});
+    window.addEventListener('orientationchange',()=>{
+      setTimeout(update,80);
+      setTimeout(update,280);
+    },{passive:true});
+    if(window.visualViewport){
+      window.visualViewport.addEventListener('resize',update,{passive:true});
+    }
+    new MutationObserver(update).observe(list,{childList:true});
+    new ResizeObserver(update).observe(list);
+    update();
+  };
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
+  else start();
 })();

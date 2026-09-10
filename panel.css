@@ -3334,3 +3334,82 @@ body.egp-ios.live-mode .song-action{
     touch-action:pan-y!important;
   }
 }
+
+
+/* =========================================================
+   EGP_MOBILE_QUEUE_SCROLL_V2
+   Solo se activa cuando JS detecta dispositivo táctil.
+   ========================================================= */
+html.egp-mobile-queue-scroll-v2
+body.live-mode #liveView.view.is-active #queuePanel{
+  display:flex!important;
+  flex-direction:column!important;
+  min-width:0!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+
+html.egp-mobile-queue-scroll-v2
+body.live-mode #liveView.view.is-active
+#queuePanel > .queue-heading{
+  position:relative!important;
+  inset:auto!important;
+  top:auto!important;
+  flex:0 0 auto!important;
+  width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  z-index:5!important;
+}
+
+html.egp-mobile-queue-scroll-v2
+body.live-mode #liveView.view.is-active
+#queuePanel > #queueList{
+  display:block!important;
+  flex:0 0 auto!important;
+  min-width:0!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior-y:contain!important;
+  -webkit-overflow-scrolling:touch!important;
+  touch-action:pan-y!important;
+}
+
+html.egp-mobile-queue-scroll-v2
+body.live-mode #queueList > .queue-item{
+  width:100%!important;
+  touch-action:pan-y!important;
+}
+
+html.egp-mobile-queue-scroll-v2
+body.live-mode #queueList > .queue-item + .queue-item{
+  margin-top:4px!important;
+}
+
+html.egp-mobile-queue-scroll-v2
+body.live-mode #queueList .queue-name{
+  touch-action:pan-y!important;
+}
+
+html.egp-mobile-queue-scroll-v2
+body.live-mode #queuePanel .queue-active-label{
+  display:none!important;
+}
+
+html.egp-mobile-queue-scroll-v2
+body.live-mode #queuePanel .queue-repertoire-name{
+  display:block!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+
+html.egp-mobile-queue-scroll-v2
+body.live-mode #liveRepertoireName,
+html.egp-mobile-queue-scroll-v2
+body.live-mode #queueCount{
+  display:none!important;
+}

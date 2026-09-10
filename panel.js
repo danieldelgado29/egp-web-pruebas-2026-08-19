@@ -3600,7 +3600,7 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
             setTimeout(()=>clearInterval(egpAutoEntradaTimerV1),120000);
           }
         }
-      }else if(data.show_activo===false){
+      }else if(data.show_activo!==true){
         /*
          * EGP_REMOTE_SHOW_REARM_NEXT_V2
          *
@@ -5188,6 +5188,19 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
       }
 
       /*
+       * EGP_INTERNET_QUEUE_CONFIRMED_ONLY_V1
+       *
+       * Fuera de Core NO dejamos en pantalla el estado optimista.
+       * Primero Firebase debe confirmar que el show sigue realmente activo
+       * y aceptar la mutación.
+       */
+      state.queue=[...originalQueue];
+      state.played=new Set(originalPlayed);
+      saveStateLocalOnly();
+      renderQueue();
+      renderSongs();
+
+      /*
        * FAILOVER INTERNET.
        * Intentar Firebase realmente aunque navigator.onLine sea enganoso.
        */
@@ -5197,7 +5210,7 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
       const result=await remoteRunTransaction(remoteDb,async transaction=>{
         const snap=await transaction.get(remoteStateRef);
         const data=snap.exists()?(snap.data()||{}):{};
-        if(data.show_activo===false)return {status:'show-ended',queue:[],played:[]};
+        if(data.show_activo!==true)return {status:'show-ended',queue:[],played:[]};
 
         let q=Array.isArray(data.cola)?[...new Set(data.cola.map(String))]:[];
         let p=new Set(Array.isArray(data.tocadas)?data.tocadas.map(String):[]);
@@ -5274,7 +5287,7 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
         await remoteRunTransaction(remoteDb,async transaction=>{
           const snap=await transaction.get(remoteStateRef);
           const data=snap.exists()?(snap.data()||{}):{};
-          if(data.show_activo===false)return;
+          if(data.show_activo!==true)return;
 
           const q=Array.isArray(data.cola)?[...new Set(data.cola.map(String))]:[];
           const qSet=new Set(q);
@@ -5363,7 +5376,7 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
       const result=await remoteRunTransaction(remoteDb,async transaction=>{
         const snap=await transaction.get(remoteStateRef);
         const data=snap.exists()?(snap.data()||{}):{};
-        if(data.show_activo===false)return {status:'show-ended',queue:[]};
+        if(data.show_activo!==true)return {status:'show-ended',queue:[]};
 
         const p=new Set(Array.isArray(data.tocadas)?data.tocadas.map(String):[]);
         let q=canonicalQueueOrder(Array.isArray(data.cola)?data.cola.map(String):[],p);
@@ -11233,83 +11246,121 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
   });
 })();
 
-
-/* EGP_MOBILE_QUEUE_SCROLL_MEASURE_V1
- * Vertical: limita #queueList al alto REAL de las primeras 4 canciones.
- * Horizontal: elimina ese límite; CSS usa todo el alto disponible.
- * No altera la cola ni su orden: solo mide presentación.
+/* EGP_MOBILE_QUEUE_SCROLL_MEASURE_V2
+ * Scroll móvil determinista.
+ * Vertical: alto exacto de hasta 4 filas.
+ * Horizontal: alto real hasta el borde inferior del visualViewport.
  */
-(function egpMobileQueueScrollMeasureV1(){
+(function egpMobileQueueScrollMeasureV2(){
   const start=()=>{
+    const panel=document.getElementById('queuePanel');
     const list=document.getElementById('queueList');
-    if(!list)return;
+    if(!panel||!list)return;
 
-    const mobile=window.matchMedia(
-      '(max-width:1100px) and (hover:none) and (pointer:coarse)'
+    const isTouchDevice=()=>(
+      Number(navigator.maxTouchPoints||0)>0 ||
+      'ontouchstart' in window
     );
-    const portrait=window.matchMedia('(orientation:portrait)');
+
+    const isMobileWidth=()=>(
+      Number(window.innerWidth||0)<=1100
+    );
 
     let raf=0;
-    let last='';
+    let lastKey='';
+
+    const reset=()=>{
+      document.documentElement.classList.remove('egp-mobile-queue-scroll-v2');
+      list.style.removeProperty('height');
+      list.style.removeProperty('max-height');
+      list.style.removeProperty('overflow-y');
+      list.style.removeProperty('overflow-x');
+      list.style.removeProperty('touch-action');
+      panel.style.removeProperty('overflow');
+      lastKey='';
+    };
 
     const update=()=>{
       cancelAnimationFrame(raf);
-
       raf=requestAnimationFrame(()=>{
-        if(!mobile.matches || !portrait.matches){
-          if(last!==''){
-            list.style.removeProperty('--egp-queue-four-height');
-            last='';
-          }
+        if(!isTouchDevice()||!isMobileWidth()){
+          reset();
           return;
         }
 
-        const items=[
-          ...list.children
-        ].filter(el=>el.classList?.contains('queue-item'));
+        document.documentElement.classList.add('egp-mobile-queue-scroll-v2');
 
-        if(items.length<4){
-          if(last!==''){
-            list.style.removeProperty('--egp-queue-four-height');
-            last='';
-          }
-          return;
-        }
+        const items=[...list.querySelectorAll(':scope > .queue-item')];
 
-        const firstFour=items.slice(0,4);
-        const style=getComputedStyle(list);
-        const gap=parseFloat(style.rowGap||style.gap||'0')||0;
-
-        const rowsHeight=firstFour.reduce(
-          (sum,item)=>sum+item.getBoundingClientRect().height,
-          0
+        const portrait=(
+          window.matchMedia('(orientation:portrait)').matches ||
+          window.innerHeight>=window.innerWidth
         );
 
-        const px=Math.ceil(rowsHeight+(gap*3));
-        const value=px+'px';
+        let height=0;
 
-        if(value!==last){
-          list.style.setProperty('--egp-queue-four-height',value);
-          last=value;
+        if(portrait){
+          const visible=items.slice(0,Math.min(4,items.length));
+
+          if(visible.length){
+            const style=getComputedStyle(list);
+            const gap=parseFloat(style.rowGap||style.gap||'0')||0;
+            const rows=visible.reduce(
+              (sum,item)=>sum+item.getBoundingClientRect().height,
+              0
+            );
+            height=Math.ceil(rows+gap*Math.max(0,visible.length-1));
+          }else{
+            height=Math.ceil(list.scrollHeight||0);
+          }
+        }else{
+          const vv=window.visualViewport;
+          const viewportBottom=vv
+            ? Number(vv.offsetTop||0)+Number(vv.height||0)
+            : Number(window.innerHeight||0);
+
+          const rect=list.getBoundingClientRect();
+          height=Math.max(72,Math.floor(viewportBottom-rect.top-12));
         }
+
+        const key=[
+          portrait?'P':'L',
+          height,
+          items.length,
+          Math.round(window.innerWidth||0),
+          Math.round(window.innerHeight||0)
+        ].join('|');
+
+        if(key===lastKey)return;
+        lastKey=key;
+
+        panel.style.setProperty('overflow','hidden','important');
+        list.style.setProperty('height',height+'px','important');
+        list.style.setProperty('max-height',height+'px','important');
+        list.style.setProperty('overflow-y','auto','important');
+        list.style.setProperty('overflow-x','hidden','important');
+        list.style.setProperty('touch-action','pan-y','important');
+
+        const maxScroll=Math.max(0,list.scrollHeight-list.clientHeight);
+        if(list.scrollTop>maxScroll)list.scrollTop=maxScroll;
       });
     };
 
     const mutation=new MutationObserver(update);
-    mutation.observe(list,{
-      childList:true,
-      subtree:false
-    });
+    mutation.observe(list,{childList:true,subtree:false});
 
     const resize=new ResizeObserver(update);
-    resize.observe(list);
+    resize.observe(panel);
 
     window.addEventListener('resize',update,{passive:true});
-    window.addEventListener('orientationchange',update,{passive:true});
+    window.addEventListener('orientationchange',()=>{
+      lastKey='';
+      setTimeout(update,60);
+      setTimeout(update,250);
+    },{passive:true});
 
-    if(typeof mobile.addEventListener==='function'){
-      mobile.addEventListener('change',update);
-      portrait.addEventListener('change',update);
+    if(window.visualViewport){
+      window.visualViewport.addEventListener('resize',update,{passive:true});
     }
 
     update();

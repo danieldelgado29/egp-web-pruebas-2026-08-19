@@ -1,14 +1,14 @@
 {
-  "release_id": "EGP-SYSTEM-2026.09.09-R12",
-  "release_json_sha256": "a3ce9d5713cc4cbef6887a54d9d55bb92716c3119c5cc646570485275c028006",
+  "release_id": "EGP-SYSTEM-2026.09.09-R13",
+  "release_json_sha256": "b99191e9b63cbb8e3be5e0ad99ca4081f9c3751777620118c992d1c202934183",
   "panel": {
-    "panel.html": "14d6246260106ac7801d63f501c013538516424caaab9b58ea2c4303a2835c08",
-    "panel.js": "59478d8d2d169de5328e452e03f464176eb05371176dfe84b2efc548866a2db0",
-    "panel.css": "139153ba003665daffef5cf977faddb161447c5551d77b1a0df4797dd67a8333",
+    "panel.html": "4523b855806af64daf942aee256562bcf47cc912966ea363a49b025636ee9570",
+    "panel.js": "6bc3867f664fbe90f7895cac571687594296c4625e43941a8a7c8e2e1157dc68",
+    "panel.css": "440791370d3bcb6e76b4b702d8f601777ee024bbf1a257eed336baa899f465af",
     "pwa.js": "18bf514d842d52dcd4ffce920249ae01d0e3d3f496b1740b4629e126d0430902",
     "manifest.json": "aad33c98bcdc4bade9a0584db06afd93c37447ef62331361316f926bc31fafdd",
     "version.json": "8b852d977190c1a8271756914b607bd6ee23bb1cfadec4ec3e9df69fa85e34ff",
-    "service-worker-6.36.103.js": "23c4122851817f39b0ddc40cd98763425de862dae687750d76d16f4e1c835a14"
+    "service-worker-6.36.103.js": "4959f2d195ff1792c3c1b2ec64a76ce3c3930680a9e574364b1ad5c584891496"
   },
   "public_web": {
     "script.js": "341c7abca788545e134a37696986b3ca7a5bdb1dc75016f8a012ec72c98d50bf",
@@ -31,6 +31,6 @@
     "mode": "verify_only",
     "launcher_sha256": "1451dc3d8b23d1af4bb14752345449131a536fc78fd0df8a3c62acdebe7a80bf"
   },
-  "payload_ref": "8f118be91d94da01d614fa8dd37be23c586d23f7",
-  "manifest_revision": 13
+  "payload_ref": "db145e3396a12fee3f139ad1f3b13a51b602a2e3",
+  "manifest_revision": 14
 }

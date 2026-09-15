@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "authority": "internet_github",
-  "release_id": "EGP-SYSTEM-2026.09.15-R30",
-  "release_generation": 2026090929,
-  "created_at": "2026-09-15T23:00:57.519222+00:00",
-  "base_commit": "dfbb00c1c36fb91c4df95af37e6069e89292dada",
+  "release_id": "EGP-SYSTEM-2026.09.15-R31",
+  "release_generation": 2026090930,
+  "created_at": "2026-09-15T23:19:39.694634+00:00",
+  "base_commit": "df510234ffa769976cfcd9ebc81635b4fd1f9857",
   "update_mode": "stage_verify_apply_rollback",
   "offline_policy": "keep_last_complete_release",
   "bridge_policy": {
@@ -2019,7 +2019,7 @@
     },
     {
       "source": "musicos/index.html",
-      "sha256": "365a17bef7a992a4c202b56d1aaade8ce75945f888f82f7fd5840d94d515e853",
+      "sha256": "62ee2e06b3169d39180164446bdeef1acc107e4794c893aaccdf805195141230",
       "targets": [
         {
           "surface": "caddy_web",
@@ -2139,7 +2139,7 @@
     },
     {
       "source": "panel.html",
-      "sha256": "12cf666f638495e7a8cded704055f125b734ca2b6d7070d72751cbeed663fdda",
+      "sha256": "abbf61326ceaf893287d4a4e9565bb52eaa082f2b31b8d6fd3a8372deaedb32e",
       "targets": [
         {
           "surface": "caddy_web",
@@ -2210,7 +2210,7 @@
     },
     {
       "source": "version.json",
-      "sha256": "8b852d977190c1a8271756914b607bd6ee23bb1cfadec4ec3e9df69fa85e34ff",
+      "sha256": "e56892e2413ae4beea011f70fd8e7997da72f18cfecedfbfeecaf0c9af97009e",
       "targets": [
         {
           "surface": "caddy_web",
@@ -2274,9 +2274,9 @@
       "reload": "caddy"
     }
   ],
-  "manifest_revision": 31,
+  "manifest_revision": 32,
   "source_repository": "danieldelgado29/egp-web-pruebas-2026-08-19",
-  "payload_ref": "dfbb00c1c36fb91c4df95af37e6069e89292dada",
+  "payload_ref": "df510234ffa769976cfcd9ebc81635b4fd1f9857",
   "payload_policy": "immutable_commit",
   "manifest_url_policy": "main_only_for_discovery",
   "payload_integrity": "sha256_required"

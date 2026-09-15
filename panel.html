@@ -2772,7 +2772,7 @@ html.egp-android-panel body:not(.live-mode)
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="panel.js?v=finish-tombstone-android-drag-20260910-r18"></script>
+  <script type="module" src="panel.js?v=search-persist-ios-20260915-r19"></script>
   <script type="module" src="./panel-profile-switch-20260901.js?v=blanco-v2-20260901"></script>
 <script id="EGP_MAC_SWITCH_POSITION_V1">
 (function(){
@@ -3104,6 +3104,13 @@ html.egp-android-panel body:not(.live-mode)
 
   body.egp-search-keyboard-open .song-table-region{
     padding-bottom:300px !important;
+  }
+
+  /* EGP_IPHONE_SEARCH_RESULTS_FULL_HEIGHT_V1
+     iPhone usa su propio scroll del repertorio; no reducir la región
+     visible con el espacio artificial reservado para Android. */
+  body.egp-ios .song-table-region{
+    padding-bottom:0 !important;
   }
 }
 

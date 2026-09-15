@@ -4480,6 +4480,9 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
 
   function showLive(){
     if(!state.config) return toast('Primero configura el show');
+    const wasAlreadyLive=
+      document.body.classList.contains('live-mode') &&
+      $('#liveView')?.classList.contains('is-active');
     document.documentElement.classList.add('live-mode');document.body.classList.add('live-mode');
     $('#configView').classList.remove('is-active');$('#liveView').classList.add('is-active');
     const toolbar=document.querySelector('.live-toolbar');
@@ -4487,7 +4490,9 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
     if(toolbar){toolbar.hidden=false;toolbar.removeAttribute('aria-hidden');}
     if(toolbarRight){toolbarRight.hidden=false;toolbarRight.removeAttribute('aria-hidden');}
     $('#liveRepertoireName').textContent=state.config.repertoireName || 'Repertorio';
-    $('#songSearch').value='';filterSongs();renderQueue();
+    if(!wasAlreadyLive)$('#songSearch').value='';
+    filterSongs();
+    renderQueue();
   }
   let configOpenedFromLive=false;
   function showConfig(fromLive=false){
@@ -4916,7 +4921,17 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
     }
   );
 
-  $('#songSearch').addEventListener('input',scheduleFilterSongs);
+  $('#songSearch').addEventListener('input',()=>{
+    scheduleFilterSongs();
+
+    const resetSearchResultsScroll=()=>{
+      const region=document.querySelector('.song-scroll-region');
+      if(region)region.scrollTop=0;
+    };
+
+    requestAnimationFrame(resetSearchResultsScroll);
+    setTimeout(resetSearchResultsScroll,40);
+  });
   let repertoireCache={key:'',songs:[],numbers:new Map()};
   function invalidateRepertoireCache(){repertoireCache={key:'',songs:[],numbers:new Map()};}
   function repertoireSongs(){

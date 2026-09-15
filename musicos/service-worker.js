@@ -1,7 +1,7 @@
 "use strict";
-const CACHE = "egp-musicos-v1.5.8.22-ios-old-phone-r27";
+const CACHE = "egp-musicos-v1.5.8.23-phone-stereo-mono-r28";
 const CORE = [
-  "./", "./index.html", "./style.css?v=1.5.8.17", "./app.js?v=ios-old-phone-20260915-r27",
+  "./", "./index.html", "./style.css?v=1.5.8.17", "./app.js?v=ios-old-phone-20260915-r28",
   "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png",
   "../canciones.json", "../configuracion.json"
 ];

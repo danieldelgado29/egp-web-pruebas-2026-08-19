@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "authority": "internet_github",
-  "release_id": "EGP-SYSTEM-2026.09.14-R19",
-  "release_generation": 2026090918,
-  "created_at": "2026-09-15T00:09:13.040848+00:00",
+  "release_id": "EGP-SYSTEM-2026.09.14-R20",
+  "release_generation": 2026090919,
+  "created_at": "2026-09-15T00:11:32.182350+00:00",
   "base_commit": "7261a2d1087349cc099d9ea77a0c6cadef738fdf",
   "update_mode": "stage_verify_apply_rollback",
   "offline_policy": "keep_last_complete_release",
@@ -2187,10 +2187,6 @@
       "sha256": "341c7abca788545e134a37696986b3ca7a5bdb1dc75016f8a012ec72c98d50bf",
       "targets": [
         {
-          "surface": "caddy_web",
-          "path": "script.js"
-        },
-        {
           "surface": "lan_web",
           "path": "script.js"
         }
@@ -2278,7 +2274,7 @@
       "reload": "caddy"
     }
   ],
-  "manifest_revision": 20,
+  "manifest_revision": 21,
   "source_repository": "danieldelgado29/egp-web-pruebas-2026-08-19",
   "payload_ref": "7261a2d1087349cc099d9ea77a0c6cadef738fdf",
   "payload_policy": "immutable_commit",

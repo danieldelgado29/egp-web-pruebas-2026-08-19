@@ -1,6 +1,6 @@
 {
-  "release_id": "EGP-SYSTEM-2026.09.14-R21",
-  "release_json_sha256": "561b967a0930d9c650463c43815518c5397ab980b6c77f900b74e37073d27eba",
+  "release_id": "EGP-SYSTEM-2026.09.14-R22",
+  "release_json_sha256": "58a71f328adb2564c2c1080ccf3f37ec1548cb14dc6815176229279ebc9df360",
   "panel": {
     "panel.html": "64a5c699deb9b9adbd18a978cb54470de5639aea4c57b88f0b624703621ff182",
     "panel.js": "21383857f73889c3045c12cbfb1e2255c5e9488d108078627b91cb953347993f",
@@ -15,11 +15,11 @@
     "musica/index.html": "533c55dafce3953eb44b9109ef742bb6120d1403e21377f5e6a982fc88469edf"
   },
   "musicos": {
-    "index.html": "c1d56041b2bd28aa943b50bbb94630bd2b4f18841c61c9f592c0f6dec9f57612",
+    "index.html": "19ffe5e7ba5e247a1bed62d0d10a00c832d88cc8d9b64e5e1aff1160711dd802",
     "app.js": "67e834f841c5708f30f9fdc51510ee10516f8c93cb59766996519a7cc12c1a05",
-    "style.css": "6bbefb0e66c60bb0b84b52e0f2020c9763c6e94a57201aa28a4ccac95e33002c",
+    "style.css": "411444c9f647b47f7cd0ce1d253debc923c60f9043a5b3fa27d28a7c5be740fb",
     "manifest.webmanifest": "b5110f50ab60d7692f561d7cb04936f41a2ad1d3168823f2349334bb7621039e",
-    "service-worker.js": "f78bd46c2bf871c5dfb1a28b8fab18f6fc6346190ba4eb04cdd37ada7a4e8a5b"
+    "service-worker.js": "ca4fb74fd64e60c38bacb3d09c3d1af55dfb905e142241367de8ee37f18deb7d"
   },
   "runtime": {
     "core": "c0234ea0713b5a31914f17b0ebb19e1d87259f75675df52700df539c3f8a244e",
@@ -34,6 +34,6 @@
     "mode": "verify_only",
     "launcher_sha256": "1451dc3d8b23d1af4bb14752345449131a536fc78fd0df8a3c62acdebe7a80bf"
   },
-  "payload_ref": "cf08f3c2733a89bd64e386aaeb388c9089ee39f2",
-  "manifest_revision": 22
+  "payload_ref": "916040ade7b63d3bd5c08368a9f3044d83e02cdd",
+  "manifest_revision": 23
 }

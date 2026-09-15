@@ -1,25 +1,25 @@
 {
-  "release_id": "EGP-SYSTEM-2026.09.15-R25",
-  "release_json_sha256": "6aff8aa67919a03b306ceb29861d8e0c6514101dc884df15b18f394fa4bfb153",
+  "release_id": "EGP-SYSTEM-2026.09.15-R26",
+  "release_json_sha256": "628dd25e895415fc64c902d60d2509394dfcf5fe8d2bddaabd335a371149c630",
   "panel": {
-    "panel.html": "ada975cf03c31c5877a38073745dcf66e14096b21f46b936f8c7f16a3628a75e",
+    "panel.html": "32074230919c4257359e8fe94db6c123ffbdda92ecfee6362c2e555f9c0a2887",
     "panel.js": "6efa388cd794c50edf10937e20b4d18d6931e789335f958d4620384561ff628e",
     "panel.css": "e90d423cf840388ab5480c0f96b9beeb54090d6a2365e52a41e68fcf9fcf3fad",
     "pwa.js": "18bf514d842d52dcd4ffce920249ae01d0e3d3f496b1740b4629e126d0430902",
     "manifest.json": "aad33c98bcdc4bade9a0584db06afd93c37447ef62331361316f926bc31fafdd",
     "version.json": "8b852d977190c1a8271756914b607bd6ee23bb1cfadec4ec3e9df69fa85e34ff",
-    "service-worker-6.36.103.js": "d81ddcaa0d10f7645c77070f9559790169cf58ed99383022d0f93e86c15fb4fe"
+    "service-worker-6.36.103.js": "dbd34cd37992d4e56aa0d820c65a9ae259f523d22ef606d5fa5b76f0da3b0ca5"
   },
   "public_web": {
     "script.js": "190e022b53d25a44fa759bda61e8877bd29f821036fedb0053d77623410dbe20",
     "musica/index.html": "533c55dafce3953eb44b9109ef742bb6120d1403e21377f5e6a982fc88469edf"
   },
   "musicos": {
-    "index.html": "18cdb27adddcd788fa8aa50685f8dc20e946c77ae993a2a9bdf8d6b44c9d9749",
+    "index.html": "c1d56041b2bd28aa943b50bbb94630bd2b4f18841c61c9f592c0f6dec9f57612",
     "app.js": "67e834f841c5708f30f9fdc51510ee10516f8c93cb59766996519a7cc12c1a05",
     "style.css": "411444c9f647b47f7cd0ce1d253debc923c60f9043a5b3fa27d28a7c5be740fb",
     "manifest.webmanifest": "b5110f50ab60d7692f561d7cb04936f41a2ad1d3168823f2349334bb7621039e",
-    "service-worker.js": "f6baad346515b542746f76f3cff9ba031e298b18f7dc9da76c24ebef1bc61705"
+    "service-worker.js": "b4ec52904243f8d9ad1bcd736679e881d7af2cfb682578bc4ed552a4eec2557e"
   },
   "runtime": {
     "core": "c0234ea0713b5a31914f17b0ebb19e1d87259f75675df52700df539c3f8a244e",
@@ -34,6 +34,6 @@
     "mode": "verify_only",
     "launcher_sha256": "1451dc3d8b23d1af4bb14752345449131a536fc78fd0df8a3c62acdebe7a80bf"
   },
-  "payload_ref": "f809d2561ccb9f9c477e739105cbd04ab08f9c2b",
-  "manifest_revision": 26
+  "payload_ref": "4e6476fcda3187b200666b338e483b02de20c319",
+  "manifest_revision": 27
 }

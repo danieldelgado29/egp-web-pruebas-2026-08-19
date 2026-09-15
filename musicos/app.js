@@ -857,6 +857,63 @@ if (previewMode || testMode || (standalone && (!isAndroid || ownPwaLaunch))) {
 }
 
 
+
+/* EGP_MUSICOS_IOS_OLD_PHONE_R27 */
+function egpIosMajorVersion() {
+  var ua = String(navigator.userAgent || "");
+  var match = ua.match(/OS\s+(\d+)[_.]/i);
+  if (!match) return 0;
+
+  var major = parseInt(match[1], 10);
+  return isFinite(major) ? major : 0;
+}
+
+function egpDebeUsarPhoneUi24r() {
+  var ua = String(navigator.userAgent || "");
+  var iosDevice = /iPhone|iPad|iPod/i.test(ua);
+
+  if (!iosDevice) return false;
+
+  var major = egpIosMajorVersion();
+
+  /*
+   * iPhone 7: iOS 15.x
+   * iPhone X: máximo iOS 16.x
+   * En esos WebKit mixer.html falló y phone.html abrió bien.
+   */
+  return major > 0 && major <= 16;
+}
+
+function egpInicializarUi24rSegunDispositivo() {
+  var frame = document.getElementById("egpUi24rFrame");
+  if (!frame) return;
+
+  var actual = String(frame.getAttribute("src") || "");
+  if (actual && actual !== "about:blank") return;
+
+  var compatible = egpDebeUsarPhoneUi24r();
+
+  var url = compatible
+    ? String(
+        frame.getAttribute("data-src-old-ios") ||
+        "https://ui.elenagirjoaba.com/phone.html?v=egp-r27"
+      )
+    : String(
+        frame.getAttribute("data-src-modern") ||
+        "https://ui.elenagirjoaba.com/musicos.html?v=1.5.8.14"
+      );
+
+  frame.setAttribute("data-egp-ui24r-mode",compatible ? "phone" : "mixer");
+  frame.setAttribute("src",url);
+
+  console.info(
+    "EGP Ui24R:",
+    compatible ? "PHONE compatible para iOS antiguo" : "MIXER normal"
+  );
+}
+
+egpInicializarUi24rSegunDispositivo();
+
 /* EGP MUSICOS 1.5.8 · UI24R PERSISTENTE REAL */
 
 const EGP_UI24R_ORIGIN =

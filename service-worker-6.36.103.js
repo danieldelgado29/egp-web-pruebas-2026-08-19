@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-queue-viewer-lifecycle-20260915-r20";
+const VERSION = "egm-v6.36.103-ui24r-native-frame-20260915-r25";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [

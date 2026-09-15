@@ -1,7 +1,7 @@
 "use strict";
-const CACHE = "egp-musicos-v1.5.8.19-relay-internet";
+const CACHE = "egp-musicos-v1.5.8.20-ui24r-native-frame-r25";
 const CORE = [
-  "./", "./index.html", "./style.css?v=1.5.8.17", "./app.js?v=relay-internet-20260909-v1",
+  "./", "./index.html", "./style.css?v=ui24r-native-frame-20260915-r25", "./app.js?v=ui24r-native-frame-20260915-r25",
   "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png",
   "../canciones.json", "../configuracion.json"
 ];

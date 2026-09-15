@@ -2,9 +2,9 @@
   "name": "Panel off",
   "short_name": "Panel off",
   "description": "Panel de control y repertorio de Elena Girjoaba Music, disponible sin conexión.",
-  "id": "./panel.html",
-  "start_url": "./panel.html",
-  "scope": "./",
+  "id": "/panel.html",
+  "start_url": "/panel.html?panel_pwa=1",
+  "scope": "/panel.html",
   "display": "standalone",
   "display_override": [
     "standalone",

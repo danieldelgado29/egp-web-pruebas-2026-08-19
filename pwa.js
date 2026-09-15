@@ -83,7 +83,40 @@
   });
   window.addEventListener("load",async()=>{
     try{
-      const registration=await navigator.serviceWorker.register("./service-worker-6.36.103.js",{scope:"./",updateViaCache:"none"});
+      /* EGP_ANDROID_DUAL_PWA_R29
+       * Panel ya NO puede controlar /musicos/.
+       * Retira el registro histórico de raíz y crea uno exclusivo
+       * para /panel.html.
+       */
+      const registrations=await navigator.serviceWorker.getRegistrations();
+
+      await Promise.all(
+        registrations.map(async reg=>{
+          try{
+            const script=
+              reg.active?.scriptURL ||
+              reg.waiting?.scriptURL ||
+              reg.installing?.scriptURL ||
+              "";
+
+            const isOurRootRegistration=
+              reg.scope===new URL("./",location.origin+"/").href &&
+              script.endsWith("/service-worker-6.36.103.js");
+
+            if(isOurRootRegistration){
+              await reg.unregister();
+            }
+          }catch(_){}
+        })
+      );
+
+      const registration=await navigator.serviceWorker.register(
+        "./service-worker-6.36.103.js",
+        {
+          scope:"./panel.html",
+          updateViaCache:"none"
+        }
+      );
       registrationRef=registration;
       if(registration.waiting) activate(registration.waiting);
       registration.addEventListener("updatefound",()=>{

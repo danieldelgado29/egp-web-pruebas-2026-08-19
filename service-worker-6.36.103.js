@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-r29-android-dual-pwa";
+const VERSION = "egm-v6.36.103-r26-rollback-ui24r-r25";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [
@@ -127,6 +127,15 @@ const STATIC_ASSETS = [
   "./hero.jpg",
   "./index.html",
   "./manifest.json",
+  "./musicos/app.js",
+  "./musicos/apple-touch-icon.png",
+  "./musicos/icon-192.png",
+  "./musicos/icon-512.png",
+  "./musicos/index.html",
+  "./musicos/manifest.webmanifest",
+  "./musicos/qr-musicos.png",
+  "./musicos/service-worker.js",
+  "./musicos/style.css",
   "./panel.css",
   "./panel.html",
   "./panel.js",

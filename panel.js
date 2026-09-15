@@ -152,6 +152,11 @@ document.documentElement.dataset.egmVersion="6.36.92";
   const defaultDanielAutoOpen=isDesktopMac?'image':'none';
   let panelDevicePrefs={profile:'elena',autoOpen:'none'};
   let suppressQueueAutoOpenUntil=Date.now()+2500;
+
+  /* EGP_QUEUE_HEAD_VIEWER_LIFECYCLE_V1 */
+  let queueAutoOpenGeneration=0;
+  let queueAutoViewerSongId='';
+  let queueAutoViewerType='';
   function loadPanelDevicePrefs(){
     try{
       const saved=JSON.parse(localStorage.getItem(PANEL_PREFS_KEY)||'{}');
@@ -310,17 +315,66 @@ document.documentElement.dataset.egmVersion="6.36.92";
     }finally{visualContentLoading.delete(key);}
   }
 
-  async function maybeAutoOpenQueuedSong(song){
-    if(!song||Date.now()<suppressQueueAutoOpenUntil||!document.body.classList.contains('live-mode'))return;
+  function closeQueueAutoViewerForHeadChange(){
+    const tracked=String(queueAutoViewerSongId||'');
+    queueAutoViewerSongId='';
+    queueAutoViewerType='';
+
+    const viewer=$('#viewerDialog');
+    if(!tracked||!viewer?.open||String(activeViewerSongId||'')!==tracked)return;
+
+    viewerRenderGeneration++;
+    pendingViewerRefresh=null;
+    returnToImageViewer=false;
+    closeDialogDirect(viewer);
+  }
+
+  function openQueueAutoViewer(song,type,generation){
+    if(
+      !song ||
+      generation!==queueAutoOpenGeneration ||
+      firstPendingQueueId(state.queue,state.played)!==String(song.id)
+    )return false;
+
+    const viewer=$('#viewerDialog');
+    if(viewer?.open)return false;
+
+    openViewer(song,type);
+
+    if($('#viewerDialog')?.open&&String(activeViewerSongId||'')===String(song.id)){
+      queueAutoViewerSongId=String(song.id);
+      queueAutoViewerType=String(type||'');
+      return true;
+    }
+    return false;
+  }
+
+  async function maybeAutoOpenQueuedSong(song,generation=queueAutoOpenGeneration){
+    if(
+      !song ||
+      Date.now()<suppressQueueAutoOpenUntil ||
+      !document.body.classList.contains('live-mode') ||
+      generation!==queueAutoOpenGeneration ||
+      firstPendingQueueId(state.queue,state.played)!==String(song.id)
+    )return;
+
     const pref=panelDevicePrefs.autoOpen;
     if(pref==='none')return;
+
     if(panelDevicePrefs.profile==='elena'){
-      if(pref==='image')openViewer(song,'notes');
-      else if(pref==='lyrics')openViewer(song,'lyrics');
+      if(pref==='image')openQueueAutoViewer(song,'notes',generation);
+      else if(pref==='lyrics')openQueueAutoViewer(song,'lyrics',generation);
     }else{
       if(pref==='image'){
-        if(await hasDanielImageContent(song))openViewer(song,'daniel-image');
-      }else if(pref==='songbook')openViewer(song,'daniel');
+        const hasImage=await hasDanielImageContent(song);
+        if(
+          hasImage &&
+          generation===queueAutoOpenGeneration &&
+          firstPendingQueueId(state.queue,state.played)===String(song.id)
+        )openQueueAutoViewer(song,'daniel-image',generation);
+      }else if(pref==='songbook'){
+        openQueueAutoViewer(song,'daniel',generation);
+      }
     }
   }
   /*
@@ -351,28 +405,32 @@ document.documentElement.dataset.egmVersion="6.36.92";
   ){
     if(Date.now()<suppressQueueAutoOpenUntil)return;
 
-    const beforeHead=firstPendingQueueId(
-      previousQueue,
-      previousPlayed
-    );
+    const beforeHead=firstPendingQueueId(previousQueue,previousPlayed);
+    const nextHead=firstPendingQueueId(nextQueue,nextPlayed);
 
-    const nextHead=firstPendingQueueId(
-      nextQueue,
-      nextPlayed
-    );
+    if(nextHead===beforeHead)return;
 
-    if(!nextHead || nextHead===beforeHead)return;
+    const generation=++queueAutoOpenGeneration;
 
-    const song=state.songs.find(
-      x=>String(x.id)===nextHead
-    );
+    /*
+     * La ventana automática anterior termina cuando cambia la primera
+     * pendiente. Si no hay siguiente contenido, simplemente queda cerrada.
+     */
+    closeQueueAutoViewerForHeadChange();
 
-    if(song){
-      setTimeout(
-        ()=>maybeAutoOpenQueuedSong(song),
-        120
-      );
-    }
+    if(!nextHead)return;
+
+    const song=state.songs.find(x=>String(x.id)===nextHead);
+    if(!song)return;
+
+    setTimeout(()=>{
+      if(
+        generation!==queueAutoOpenGeneration ||
+        firstPendingQueueId(state.queue,state.played)!==nextHead
+      )return;
+
+      maybeAutoOpenQueuedSong(song,generation);
+    },120);
   }
   const fallbackRepertoires = [{id:'todas',name:'Todas las canciones'}];
   loadPanelDevicePrefs();

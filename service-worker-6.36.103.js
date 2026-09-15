@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "egm-v6.36.103-search-persist-ios-20260915-r19";
+const VERSION = "egm-v6.36.103-queue-viewer-lifecycle-20260915-r20";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const STATIC_ASSETS = [

@@ -12,7 +12,7 @@
   <link rel="manifest" href="./manifest.webmanifest?v=com-pwa-20260905-v1">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./style.css?v=ui24r-native-frame-20260915-r25">
+  <link rel="stylesheet" href="./style.css?v=espacio-animacion-20260819-190549">
 </head>
 <body>
   <main id="installView" class="install-view">
@@ -170,7 +170,7 @@
 
   </div>
 
-<script type="module" src="./app.js?v=ui24r-native-frame-20260915-r25"></script>
+<script type="module" src="./app.js?v=relay-internet-20260909-v1"></script>
 
 <script id="egpHorizontalHeaderFinal">
 (function(){
@@ -283,73 +283,6 @@
 
 })();
 </script>
-
-
-<!-- EGP_MUSICOS_UI24R_NATIVE_IFRAME_STABILITY_R25_INICIO -->
-<style id="EGP_MUSICOS_UI24R_NATIVE_IFRAME_STABILITY_R25">
-html body #egpUi24rOverlay{
-  box-sizing:border-box !important;
-  left:0 !important; top:0 !important; right:auto !important; bottom:auto !important;
-  width:100vw !important; height:100vh !important; height:100dvh !important;
-  transform:none !important; -webkit-transform:none !important;
-  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px) !important;
-  overflow:hidden !important;
-}
-html body #egpUi24rOverlay #egpUi24rFrame{
-  display:block !important;
-  width:100% !important; height:100% !important;
-  inline-size:100% !important; block-size:100% !important;
-  min-width:0 !important; min-height:0 !important;
-  max-width:none !important; max-height:none !important;
-  transform:none !important; -webkit-transform:none !important;
-  transform-origin:center center !important; -webkit-transform-origin:center center !important;
-  will-change:auto !important; contain:none !important;
-  backface-visibility:visible !important; -webkit-backface-visibility:visible !important;
-}
-</style>
-<script id="EGP_MUSICOS_UI24R_NATIVE_IFRAME_STABILITY_R25_JS">
-(function(){
-  'use strict';
-  const overlay=document.getElementById('egpUi24rOverlay');
-  const frame=document.getElementById('egpUi24rFrame');
-  if(!overlay||!frame)return;
-  function viewport(){
-    const vv=window.visualViewport;
-    return {
-      left:Math.round(Number((vv&&vv.offsetLeft)||0)),
-      top:Math.round(Number((vv&&vv.offsetTop)||0)),
-      width:Math.max(1,Math.round(Number((vv&&vv.width)||document.documentElement.clientWidth||window.innerWidth||1))),
-      height:Math.max(1,Math.round(Number((vv&&vv.height)||document.documentElement.clientHeight||window.innerHeight||1)))
-    };
-  }
-  function apply(){
-    const vp=viewport();
-    overlay.style.setProperty('position','fixed','important');
-    overlay.style.setProperty('inset','auto','important');
-    overlay.style.setProperty('left',vp.left+'px','important');
-    overlay.style.setProperty('top',vp.top+'px','important');
-    overlay.style.setProperty('right','auto','important');
-    overlay.style.setProperty('bottom','auto','important');
-    overlay.style.setProperty('width',vp.width+'px','important');
-    overlay.style.setProperty('height',vp.height+'px','important');
-    frame.style.setProperty('width','100%','important');
-    frame.style.setProperty('height','100%','important');
-    frame.style.setProperty('inline-size','100%','important');
-    frame.style.setProperty('block-size','100%','important');
-    frame.style.setProperty('transform','none','important');
-    frame.style.setProperty('-webkit-transform','none','important');
-    frame.style.setProperty('will-change','auto','important');
-  }
-  function soon(){ apply(); requestAnimationFrame(apply); setTimeout(apply,60); setTimeout(apply,180); setTimeout(apply,420); }
-  window.addEventListener('resize',soon,{passive:true});
-  window.addEventListener('orientationchange',soon,{passive:true});
-  if(window.visualViewport){ window.visualViewport.addEventListener('resize',soon,{passive:true}); window.visualViewport.addEventListener('scroll',soon,{passive:true}); }
-  document.addEventListener('visibilitychange',function(){ if(!document.hidden)soon(); });
-  window.addEventListener('pageshow',soon,{passive:true});
-  soon();
-})();
-</script>
-<!-- EGP_MUSICOS_UI24R_NATIVE_IFRAME_STABILITY_R25_FIN -->
 
 </body>
 </html>

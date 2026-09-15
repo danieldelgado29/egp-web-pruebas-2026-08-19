@@ -113,7 +113,7 @@
     })();
   </script>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="panel.css?v=ui24r-native-frame-20260915-r25">
+  <link rel="stylesheet" href="panel.css?v=queue-fast-ios-cas-20260910-r15">
   <style>
     /* 6.34.1: acceso crítico visible incluso si Safari conserva CSS antiguo */
     #panelLogin{position:fixed!important;inset:0!important;z-index:2147483647!important;display:flex!important;align-items:center!important;justify-content:center!important;background:#050505!important;padding:24px!important;color:#fff!important;opacity:1!important;visibility:visible!important}
@@ -5466,72 +5466,6 @@ body.egp-config-keyboard-open #configView.view.is-active{
 })();
 </script>
 <!-- EGP_UI24R_PERSISTENTE_POSTLOAD_V1_FIN -->
-
-
-<!-- EGP_UI24R_NATIVE_IFRAME_STABILITY_R25_INICIO -->
-<style id="EGP_UI24R_NATIVE_IFRAME_STABILITY_R25">
-html body #ui24rOverlay{
-  box-sizing:border-box !important;
-  transform:none !important;
-  -webkit-transform:none !important;
-  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px) !important;
-  overflow:hidden !important;
-}
-html body #ui24rOverlay #ui24rFrame{
-  display:block !important;
-  width:100% !important; height:100% !important;
-  inline-size:100% !important; block-size:100% !important;
-  min-width:0 !important; min-height:0 !important;
-  max-width:none !important; max-height:none !important;
-  transform:none !important; -webkit-transform:none !important;
-  transform-origin:center center !important; -webkit-transform-origin:center center !important;
-  will-change:auto !important; contain:none !important;
-  backface-visibility:visible !important; -webkit-backface-visibility:visible !important;
-}
-</style>
-<script id="EGP_UI24R_NATIVE_IFRAME_STABILITY_R25_JS">
-(function(){
-  'use strict';
-  const overlay=document.getElementById('ui24rOverlay');
-  const frame=document.getElementById('ui24rFrame');
-  if(!overlay||!frame)return;
-  function viewport(){
-    const vv=window.visualViewport;
-    return {
-      left:Math.round(Number((vv&&vv.offsetLeft)||0)),
-      top:Math.round(Number((vv&&vv.offsetTop)||0)),
-      width:Math.max(1,Math.round(Number((vv&&vv.width)||document.documentElement.clientWidth||window.innerWidth||1))),
-      height:Math.max(1,Math.round(Number((vv&&vv.height)||document.documentElement.clientHeight||window.innerHeight||1)))
-    };
-  }
-  function apply(){
-    const vp=viewport();
-    overlay.style.setProperty('position','fixed','important');
-    overlay.style.setProperty('inset','auto','important');
-    overlay.style.setProperty('left',vp.left+'px','important');
-    overlay.style.setProperty('top',vp.top+'px','important');
-    overlay.style.setProperty('right','auto','important');
-    overlay.style.setProperty('bottom','auto','important');
-    overlay.style.setProperty('width',vp.width+'px','important');
-    overlay.style.setProperty('height',vp.height+'px','important');
-    frame.style.setProperty('width','100%','important');
-    frame.style.setProperty('height','100%','important');
-    frame.style.setProperty('inline-size','100%','important');
-    frame.style.setProperty('block-size','100%','important');
-    frame.style.setProperty('transform','none','important');
-    frame.style.setProperty('-webkit-transform','none','important');
-    frame.style.setProperty('will-change','auto','important');
-  }
-  function soon(){ apply(); requestAnimationFrame(apply); setTimeout(apply,60); setTimeout(apply,180); setTimeout(apply,420); }
-  window.addEventListener('resize',soon,{passive:true});
-  window.addEventListener('orientationchange',soon,{passive:true});
-  if(window.visualViewport){ window.visualViewport.addEventListener('resize',soon,{passive:true}); window.visualViewport.addEventListener('scroll',soon,{passive:true}); }
-  document.addEventListener('visibilitychange',function(){ if(!document.hidden)soon(); });
-  window.addEventListener('pageshow',soon,{passive:true});
-  soon();
-})();
-</script>
-<!-- EGP_UI24R_NATIVE_IFRAME_STABILITY_R25_FIN -->
 
 </body>
 </html>

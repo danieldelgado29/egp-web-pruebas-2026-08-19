@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "authority": "internet_github",
-  "release_id": "EGP-SYSTEM-2026.09.15-R24",
-  "release_generation": 2026090923,
-  "created_at": "2026-09-15T17:07:44.460203+00:00",
-  "base_commit": "5a58f5286d23474cb458948c6f1bd7c9c1bbb487",
+  "release_id": "EGP-SYSTEM-2026.09.15-R25",
+  "release_generation": 2026090924,
+  "created_at": "2026-09-15T17:45:31.981186+00:00",
+  "base_commit": "f809d2561ccb9f9c477e739105cbd04ab08f9c2b",
   "update_mode": "stage_verify_apply_rollback",
   "offline_policy": "keep_last_complete_release",
   "bridge_policy": {
@@ -2019,7 +2019,7 @@
     },
     {
       "source": "musicos/index.html",
-      "sha256": "c1d56041b2bd28aa943b50bbb94630bd2b4f18841c61c9f592c0f6dec9f57612",
+      "sha256": "18cdb27adddcd788fa8aa50685f8dc20e946c77ae993a2a9bdf8d6b44c9d9749",
       "targets": [
         {
           "surface": "caddy_web",
@@ -2079,7 +2079,7 @@
     },
     {
       "source": "musicos/service-worker.js",
-      "sha256": "f78bd46c2bf871c5dfb1a28b8fab18f6fc6346190ba4eb04cdd37ada7a4e8a5b",
+      "sha256": "f6baad346515b542746f76f3cff9ba031e298b18f7dc9da76c24ebef1bc61705",
       "targets": [
         {
           "surface": "caddy_web",
@@ -2139,7 +2139,7 @@
     },
     {
       "source": "panel.html",
-      "sha256": "32074230919c4257359e8fe94db6c123ffbdda92ecfee6362c2e555f9c0a2887",
+      "sha256": "ada975cf03c31c5877a38073745dcf66e14096b21f46b936f8c7f16a3628a75e",
       "targets": [
         {
           "surface": "caddy_web",
@@ -2274,9 +2274,9 @@
       "reload": "caddy"
     }
   ],
-  "manifest_revision": 25,
+  "manifest_revision": 26,
   "source_repository": "danieldelgado29/egp-web-pruebas-2026-08-19",
-  "payload_ref": "5a58f5286d23474cb458948c6f1bd7c9c1bbb487",
+  "payload_ref": "f809d2561ccb9f9c477e739105cbd04ab08f9c2b",
   "payload_policy": "immutable_commit",
   "manifest_url_policy": "main_only_for_discovery",
   "payload_integrity": "sha256_required"

@@ -5,6 +5,119 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#08090c">
+  <!-- EGP_AUTO_UPDATE_CONTRACT_R31 -->
+  <script id="EGP_AUTO_UPDATE_CONTRACT_R31">
+  (function(){
+    "use strict";
+    var APP_KEY="egp-auto-update-musicos-v1";
+    var VERSION_URL="/version.json";
+    var REFRESH_PARAM="__egp_release";
+    var checking=false;
+
+    function tokenFrom(data){
+      if(!data || typeof data!=="object") return "";
+      return String(data.release_generation || data.release_id || data.version || "");
+    }
+
+    async function updateRegistration(){
+      if(!("serviceWorker" in navigator)) return;
+      try{
+        var reg=await navigator.serviceWorker.getRegistration(location.href);
+        if(!reg) return;
+        await reg.update();
+        if(reg.waiting){
+          try{ reg.waiting.postMessage({type:"SKIP_WAITING"}); }catch(_e){}
+        }
+      }catch(_e){}
+    }
+
+    async function checkForRelease(){
+      if(checking) return;
+      checking=true;
+      try{
+        var response=await fetch(VERSION_URL+"?egp="+Date.now(),{cache:"no-store"});
+        if(!response.ok) return;
+
+        var data=await response.json();
+        var token=tokenFrom(data);
+        if(!token) return;
+
+        var url=new URL(location.href);
+        var loaded=url.searchParams.get(REFRESH_PARAM) || "";
+        var seen="";
+        try{ seen=localStorage.getItem(APP_KEY) || ""; }catch(_e){}
+
+        if(loaded===token){
+          try{ localStorage.setItem(APP_KEY,token); }catch(_e){}
+          url.searchParams.delete(REFRESH_PARAM);
+          try{
+            history.replaceState(history.state,document.title,url.pathname+url.search+url.hash);
+          }catch(_e){}
+          return;
+        }
+
+        if(seen!==token){
+          await updateRegistration();
+          url.searchParams.set(REFRESH_PARAM,token);
+          location.replace(url.toString());
+        }
+      }catch(_e){
+        /* offline: conservar última versión funcional */
+      }finally{
+        checking=false;
+      }
+    }
+
+    window.addEventListener("pageshow",checkForRelease);
+    window.addEventListener("focus",checkForRelease);
+    window.addEventListener("online",checkForRelease);
+    document.addEventListener("visibilitychange",function(){
+      if(document.visibilityState==="visible") checkForRelease();
+    });
+    checkForRelease();
+  }());
+  </script>
+  <!-- EGP_MUSICOS_ORIENTATION_RUNTIME_R31 -->
+  <script id="EGP_MUSICOS_ORIENTATION_RUNTIME_R31">
+  (function(){
+    "use strict";
+    function liberarOrientacion(){
+      try{
+        var orientation=screen && screen.orientation;
+        if(orientation && typeof orientation.lock==="function"){
+          try{
+            var result=orientation.lock("any");
+            if(result && typeof result.catch==="function"){
+              result.catch(function(){
+                try{
+                  if(typeof orientation.unlock==="function") orientation.unlock();
+                }catch(_e){}
+              });
+            }
+          }catch(_e){
+            try{
+              if(typeof orientation.unlock==="function") orientation.unlock();
+            }catch(_e2){}
+          }
+        }else if(orientation && typeof orientation.unlock==="function"){
+          orientation.unlock();
+        }else if(screen && typeof screen.unlockOrientation==="function"){
+          screen.unlockOrientation();
+        }
+      }catch(_e){}
+    }
+
+    window.__EGP_LIBERAR_ORIENTACION__=liberarOrientacion;
+    liberarOrientacion();
+    window.addEventListener("DOMContentLoaded",liberarOrientacion);
+    window.addEventListener("pageshow",liberarOrientacion);
+    window.addEventListener("focus",liberarOrientacion);
+    window.addEventListener("orientationchange",liberarOrientacion);
+    document.addEventListener("visibilitychange",function(){
+      if(document.visibilityState==="visible") liberarOrientacion();
+    });
+  }());
+  </script>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="EGP Músicos">
@@ -172,7 +285,7 @@
 
   </div>
 
-<script type="module" src="./app.js?v=ios-old-phone-20260915-r28"></script>
+<script type="module" src="./app.js?v=plug-and-play-r31"></script>
 
 <script id="egpHorizontalHeaderFinal">
 (function(){

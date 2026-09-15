@@ -331,6 +331,11 @@ function tieneLetra(idCancion) {
   return Boolean(documentoLetraCliente(obtenerCancion(idCancion)));
 }
 
+function tieneLetraPublica(idCancion) {
+  const documento = documentoLetraCliente(obtenerCancion(idCancion));
+  return Boolean(String(documento?.publicaHtml || "").trim());
+}
+
 function ocultarMenusLetra() {
   [DOM.letraColorMenu, DOM.letraTamanoMenu, DOM.letraIconosMenu].forEach((menu) => {
     if (!menu) return;
@@ -1925,7 +1930,8 @@ function egpFirmaVisualEstadoPublico() {
       return [
         id,
         numeroCancionEnLista(id),
-        String(cancion?.titulo || "")
+        String(cancion?.titulo || ""),
+        tieneLetraPublica(id)
       ];
     });
 
@@ -1985,11 +1991,23 @@ function renderizarEstadoPublico() {
         <li>
           <span class="cola-publica-compacta__numero">${numero || "—"}</span>
           <span class="cola-publica-compacta__cancion">${escapar(cancion.titulo)}</span>
-          <span class="cola-publica-compacta__estado">A la cola</span>
+          ${tieneLetraPublica(cancion.id)
+            ? '<button class="cola-publica-compacta__estado cancion__letra" type="button" data-cola-publica-letra="' + escapar(cancion.id) + '" aria-label="Ver letra pública de ' + escapar(cancion.titulo) + '">Letra</button>'
+            : '<button class="cola-publica-compacta__estado cancion__letra" type="button" disabled aria-label="Letra pública no disponible" title="Letra pública no disponible">Letra</button>'}
         </li>
       `;
     })
     .join("");
+
+  DOM.colaPublica
+    .querySelectorAll("[data-cola-publica-letra]")
+    .forEach((boton) => {
+      boton.addEventListener("click", (evento) => {
+        evento.stopPropagation();
+        const cancion = obtenerCancion(boton.dataset.colaPublicaLetra);
+        if (cancion) abrirLetra(cancion, false);
+      });
+    });
 
   DOM.colaPublicaVacia.hidden = cancionesCola.length > 0;
 

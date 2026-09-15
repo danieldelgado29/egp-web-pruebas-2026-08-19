@@ -885,6 +885,308 @@ def egp_sync_library_bidirectional(project,api_key,remote):
     egp_patch_firebase_library(project,api_key,core_bib,revision)
     return 'core->firebase:conflicto'
 
+# EGP_QUEUE_THREE_WAY_MERGE_V58
+# La cola ya no se decide con una sola revision global. Para una misma sesion
+# conservamos el ultimo estado sincronizado y hacemos merge 3-vias por cancion.
+QUEUE_MERGE_STATE_PATH = Path.home() / "Library/Application Support/EGP-Cloud-Sync/queue_merge_state_v58.json"
+
+
+def egp_queue_pair_normalize(queue, played):
+    q = []
+    seen = set()
+    for raw in (queue or []):
+        sid = str(raw or "")
+        if sid and sid not in seen:
+            seen.add(sid)
+            q.append(sid)
+
+    played_set = {str(x) for x in (played or []) if str(x)}
+    p = [sid for sid in q if sid in played_set]
+    pending = [sid for sid in q if sid not in played_set]
+    return pending + p, p
+
+
+def egp_queue_merge_state_read(session):
+    session = str(session or "")
+    if not session:
+        return None
+    try:
+        with QUEUE_MERGE_STATE_PATH.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return None
+        if int(data.get("schema") or 0) != 58:
+            return None
+        if str(data.get("session") or "") != session:
+            return None
+        q, p = egp_queue_pair_normalize(data.get("queue"), data.get("played"))
+        return {"queue": q, "played": p}
+    except Exception:
+        return None
+
+
+def egp_queue_merge_state_write(session, queue, played):
+    session = str(session or "")
+    if not session:
+        return
+    q, p = egp_queue_pair_normalize(queue, played)
+    QUEUE_MERGE_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = QUEUE_MERGE_STATE_PATH.with_suffix(".tmp")
+    data = {
+        "schema": 58,
+        "session": session,
+        "queue": q,
+        "played": p,
+        "saved_at": int(time.time() * 1000),
+    }
+    with tmp.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, QUEUE_MERGE_STATE_PATH)
+
+
+def egp_queue_merge_state_clear():
+    try:
+        QUEUE_MERGE_STATE_PATH.unlink()
+    except FileNotFoundError:
+        pass
+    except Exception:
+        pass
+
+
+def egp_queue_state_map(queue, played):
+    q, p = egp_queue_pair_normalize(queue, played)
+    pset = set(p)
+    return {sid: (2 if sid in pset else 1) for sid in q}
+
+
+def egp_queue_common_base(core_q, core_p, remote_q, remote_p):
+    """Base segura para el primer ciclo de una sesion.
+
+    Solo considera base lo que AMBOS lados ya ven igual. Lo que aparece solo
+    en un lado se trata como una posible adicion nueva y por eso no se borra.
+    El instalador V58 exige show inactivo, asi que normalmente este camino
+    empieza con cola vacia/igual.
+    """
+    cm = egp_queue_state_map(core_q, core_p)
+    rm = egp_queue_state_map(remote_q, remote_p)
+    q = []
+    p = []
+    seen = set()
+    for sid in list(core_q or []) + list(remote_q or []):
+        sid = str(sid or "")
+        if not sid or sid in seen:
+            continue
+        seen.add(sid)
+        if cm.get(sid, 0) == rm.get(sid, 0) and cm.get(sid, 0) != 0:
+            q.append(sid)
+            if cm.get(sid) == 2:
+                p.append(sid)
+    return egp_queue_pair_normalize(q, p)
+
+
+def egp_queue_three_way_v58(base_q, base_p, core_q, core_p, remote_q, remote_p):
+    base_q, base_p = egp_queue_pair_normalize(base_q, base_p)
+    core_q, core_p = egp_queue_pair_normalize(core_q, core_p)
+    remote_q, remote_p = egp_queue_pair_normalize(remote_q, remote_p)
+
+    bm = egp_queue_state_map(base_q, base_p)
+    cm = egp_queue_state_map(core_q, core_p)
+    rm = egp_queue_state_map(remote_q, remote_p)
+
+    all_ids = []
+    seen = set()
+    for sid in remote_q + core_q + base_q:
+        if sid not in seen:
+            seen.add(sid)
+            all_ids.append(sid)
+
+    merged_state = {}
+    conflicts = []
+    for sid in all_ids:
+        b = bm.get(sid, 0)  # 0=ausente, 1=pendiente, 2=tocada
+        c = cm.get(sid, 0)
+        r = rm.get(sid, 0)
+
+        if c == r:
+            m = c
+        elif c == b:
+            # Solo Internet/Panel cambio esta cancion.
+            m = r
+        elif r == b:
+            # Solo Core/Bridge cambio esta cancion.
+            m = c
+        else:
+            # Ambos tocaron la MISMA cancion desde la ultima base.
+            # Prioridades intencionales:
+            # 1) PENDIENTE gana: nunca perder una adicion/repeticion manual.
+            # 2) AUSENTE gana sobre TOCADA: una X manual no debe ser revivida.
+            # 3) TOCADA queda como ultimo caso.
+            if 1 in (c, r):
+                m = 1
+            elif 0 in (c, r):
+                m = 0
+            else:
+                m = 2
+            conflicts.append((sid, b, c, r, m))
+
+        merged_state[sid] = m
+
+    core_changed = (core_q, core_p) != (base_q, base_p)
+    remote_changed = (remote_q, remote_p) != (base_q, base_p)
+
+    # El orden visible del Panel/Internet manda cuando ese lado cambio.
+    # Si solo cambio Core/LAN, conservar su orden. En conflicto se preservan
+    # primero las posiciones remotas y se anexan elementos exclusivos del Core.
+    if remote_changed:
+        order_sources = [remote_q, core_q, base_q]
+    else:
+        order_sources = [core_q, remote_q, base_q]
+
+    pending = []
+    played = []
+    used_pending = set()
+    used_played = set()
+
+    for source in order_sources:
+        for sid in source:
+            state = merged_state.get(sid, 0)
+            if state == 1 and sid not in used_pending:
+                used_pending.add(sid)
+                pending.append(sid)
+            elif state == 2 and sid not in used_played:
+                used_played.add(sid)
+                played.append(sid)
+
+    # Defensa: cualquier ID elegido por el merge debe quedar representado.
+    for sid in all_ids:
+        state = merged_state.get(sid, 0)
+        if state == 1 and sid not in used_pending:
+            used_pending.add(sid)
+            pending.append(sid)
+        elif state == 2 and sid not in used_played:
+            used_played.add(sid)
+            played.append(sid)
+
+    merged_q = pending + played
+    return merged_q, played, conflicts, core_changed, remote_changed
+
+
+def egp_reconcile_active_queue_v58(core, remote):
+    session = egp_core_session(core) or egp_remote_session(remote)
+    core_q, core_p = egp_core_queue(core)
+    remote_q, remote_p = egp_remote_queue(remote)
+    core_q, core_p = egp_queue_pair_normalize(core_q, core_p)
+    remote_q, remote_p = egp_queue_pair_normalize(remote_q, remote_p)
+
+    state = egp_queue_merge_state_read(session)
+    if state is None:
+        base_q, base_p = egp_queue_common_base(core_q, core_p, remote_q, remote_p)
+        bootstrap = True
+    else:
+        base_q, base_p = state["queue"], state["played"]
+        bootstrap = False
+
+    merged_q, merged_p, conflicts, core_changed, remote_changed = egp_queue_three_way_v58(
+        base_q,
+        base_p,
+        core_q,
+        core_p,
+        remote_q,
+        remote_p,
+    )
+
+    if (merged_q, merged_p) != (core_q, core_p):
+        egp_apply_remote_queue(
+            {"cola": merged_q, "tocadas": merged_p},
+            core,
+        )
+        core = fetch_json(CORE_URL, timeout=4)
+
+    pieces = []
+    if bootstrap:
+        pieces.append("bootstrap")
+    if core_changed:
+        pieces.append("core")
+    if remote_changed:
+        pieces.append("internet")
+    if conflicts:
+        pieces.append(f"conflictos={len(conflicts)}")
+    if not pieces:
+        pieces.append("igual")
+
+    return core, "+".join(pieces)
+
+
+def egp_queue_merge_commit_from_core(core):
+    if not egp_core_active(core):
+        egp_queue_merge_state_clear()
+        return
+    session = egp_core_session(core)
+    q, p = egp_core_queue(core)
+    egp_queue_merge_state_write(session, q, p)
+
+
+# EGP_SHOW_DIAGNOSTIC_CLOUD_V59
+# Diagnostico pasivo: usa el Core y Firebase que Cloud Sync YA leyo en este
+# mismo ciclo. No hace lecturas extra, no decide autoridad y no modifica cola.
+EGP_SHOW_DIAG_CLOUD_POINTER_V59 = Path("/tmp/egp-show-diagnostic-cloud-events.path")
+_EGP_SHOW_DIAG_LAST_SIGNATURE_V59 = ""
+_EGP_SHOW_DIAG_LAST_POINTER_V59 = ""
+
+
+def egp_show_diag_cloud_v59(core, remote, action):
+    global _EGP_SHOW_DIAG_LAST_SIGNATURE_V59, _EGP_SHOW_DIAG_LAST_POINTER_V59
+    try:
+        if not EGP_SHOW_DIAG_CLOUD_POINTER_V59.exists():
+            _EGP_SHOW_DIAG_LAST_SIGNATURE_V59 = ""
+            _EGP_SHOW_DIAG_LAST_POINTER_V59 = ""
+            return
+        path = Path(EGP_SHOW_DIAG_CLOUD_POINTER_V59.read_text(encoding="utf-8").strip())
+        if not str(path):
+            return
+
+        cq, cp = egp_core_queue(core)
+        rq, rp = egp_remote_queue(remote)
+        payload = {
+            "action": str(action or ""),
+            "core": {
+                "active": egp_core_active(core),
+                "session": egp_core_session(core),
+                "revision": egp_core_revision(core),
+                "queue": cq,
+                "played": cp,
+            },
+            "firebase": {
+                "active": egp_remote_active(remote),
+                "session": egp_remote_session(remote),
+                "revision": egp_remote_revision(remote),
+                "writer": str(remote.get("show_writer") or "") if isinstance(remote, dict) else "",
+                "queue": rq,
+                "played": rp,
+                "updateTime": str(remote.get("__updateTime") or "") if isinstance(remote, dict) else "",
+            },
+        }
+        pointer = str(path)
+        signature = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        if pointer == _EGP_SHOW_DIAG_LAST_POINTER_V59 and signature == _EGP_SHOW_DIAG_LAST_SIGNATURE_V59:
+            return
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        record = {
+            "time_ms": int(time.time() * 1000),
+            "time": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            "kind": "cloud_sync_state",
+            "data": payload,
+        }
+        with path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n")
+        _EGP_SHOW_DIAG_LAST_POINTER_V59 = pointer
+        _EGP_SHOW_DIAG_LAST_SIGNATURE_V59 = signature
+    except Exception:
+        # Diagnostico nunca puede romper Cloud Sync.
+        return
+
+
 def egp_reconcile_once(verbose=False):
     core = fetch_json(CORE_URL, timeout=4)
     project, api_key = firebase_cfg()
@@ -911,11 +1213,26 @@ def egp_reconcile_once(verbose=False):
             # si Core está activo, NUNCA se reemplaza por otra sesión remota.
             action = "conflicto_sesion:core->firebase"
 
-        elif rr > cr:
-            core = egp_apply_remote_to_core(remote, core)
-            action = "firebase->core"
         else:
-            action = "core->firebase"
+            # EGP_QUEUE_THREE_WAY_MERGE_V58
+            # Para la MISMA sesion la cola se reconcilia por cancion contra
+            # la ultima base sincronizada. Asi un TOCADA local no puede borrar
+            # dos canciones que la cantante acaba de agregar por Internet.
+            core, queue_action_v58 = egp_reconcile_active_queue_v58(core, remote)
+
+            # La configuracion del show conserva la regla de revision V2, pero
+            # ya NO se vuelve a aplicar la foto remota completa de la cola.
+            if rr > cr:
+                egp_post_core(
+                    "/api/public-config",
+                    egp_remote_public_config(remote, core),
+                )
+                core = fetch_json(CORE_URL, timeout=4)
+                config_action_v58 = "internet-config->core"
+            else:
+                config_action_v58 = "core-config->internet"
+
+            action = f"cola-v58:{queue_action_v58}|{config_action_v58}"
 
     elif ca and not ra:
         same_session = bool(cs and rs and cs == rs)
@@ -939,6 +1256,8 @@ def egp_reconcile_once(verbose=False):
     else:
         action = "ambos_inactivos:core->firebase"
 
+    egp_show_diag_cloud_v59(core, remote, action)
+
     now_ms = int(time.time() * 1000)
     last_hb = int(remote.get("core_sync_heartbeat") or 0) if isinstance(remote, dict) else 0
     force_heartbeat = (now_ms - last_hb) >= EGP_HEARTBEAT_INTERVAL_MS
@@ -957,6 +1276,11 @@ def egp_reconcile_once(verbose=False):
         egp_core_session(core),
         egp_core_active(core),
     )
+
+    # Solo guardar la nueva base DESPUES de que egp_mirror_core termino sin
+    # excepcion. Si Firebase cambia durante el CAS, el siguiente ciclo vuelve
+    # a hacer el merge contra la base anterior y no pierde la operacion nueva.
+    egp_queue_merge_commit_from_core(core)
 
     if verbose:
         q, played = egp_core_queue(core)

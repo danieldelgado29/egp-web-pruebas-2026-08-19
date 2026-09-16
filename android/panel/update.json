@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 6,
-  "versionName": "1.5",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V1.5-AUTO-TEST.apk",
-  "sha256": "1f70c64f47ee37335e88ccf7ed36d7f4719ea42b96e7e6480228094babe9749f",
-  "size": 26740,
+  "versionCode": 7,
+  "versionName": "1.6",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V1.6.apk",
+  "sha256": "6b71a61f3564c039027397ed7da27f8abcd0ee4806fb4f961a35980f9213b6ae",
+  "size": 277190,
   "mandatory": true,
-  "publishedAt": "2026-09-16T17:12:12Z",
-  "purpose": "V1.5 auto-test: probar que V1.4 se actualiza sin descargar ni instalar APK manualmente"
+  "publishedAt": "2026-09-16T17:42:17Z",
+  "purpose": "V1.6: logo Panel aprobado + actualizador sobre red celular validada"
 }

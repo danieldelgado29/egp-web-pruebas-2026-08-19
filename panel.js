@@ -7701,8 +7701,9 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
 
 
   $$('.menu-options button').forEach(btn=>btn.addEventListener('click',()=>{
-    $('#toolsMenu').close();
-    $('#openMenuBtn').setAttribute('aria-expanded','false');
+    // EGP_PANEL_MENU_RESPONSIVE_V1:
+    // El menú queda abierto detrás del módulo. Al cerrar el módulo,
+    // se vuelve al menú en vez de expulsar al usuario a Configuración.
     if(btn.dataset.module==='new-song') return openNewSong();
     if(btn.dataset.module==='repertoires') return openRepertoires();
     if(btn.dataset.module==='edit-songs') return openEditSongs();
@@ -7722,6 +7723,9 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
   });
   $('#closeMenuBtn').addEventListener('click',()=>{
     $('#toolsMenu').close();
+    $('#openMenuBtn').setAttribute('aria-expanded','false');
+  });
+  $('#toolsMenu').addEventListener('close',()=>{
     $('#openMenuBtn').setAttribute('aria-expanded','false');
   });
 
@@ -9109,6 +9113,22 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
       };
     });
 
+    // EGP_PANEL_MENU_RESPONSIVE_V1: abrir primero; sincronizar después.
+    // Así "Subir fotos" responde al primer toque incluso si Core/Firebase tarda.
+    activePhotoSlot='portada';
+    $$('[data-photo-slot]').forEach(
+      b=>b.classList.toggle('is-active',b.dataset.photoSlot===activePhotoSlot)
+    );
+    syncPhotoControls();
+    $('#photoSourceInput').value='';
+    $('#photoSourceStatus').textContent=
+      currentPhotoDraft().fileName||'Ninguna imagen seleccionada';
+    const photoManagerDialog=$('#photoManagerDialog');
+    if(photoManagerDialog && !photoManagerDialog.open){
+      photoManagerDialog.showModal();
+      rememberDialogState(photoManagerDialog);
+    }
+
     let remotePhotos=null;
 
     try{
@@ -9182,8 +9202,10 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
     $('#photoSourceStatus').textContent=
       currentPhotoDraft().fileName||'Ninguna imagen seleccionada';
 
-    $('#photoManagerDialog').showModal();
-    rememberDialogState($('#photoManagerDialog'));
+    if(photoManagerDialog && !photoManagerDialog.open){
+      photoManagerDialog.showModal();
+    }
+    if(photoManagerDialog) rememberDialogState(photoManagerDialog);
   }
   $$('[data-photo-slot]').forEach(b=>b.addEventListener('click',()=>{activePhotoSlot=b.dataset.photoSlot;$$('[data-photo-slot]').forEach(x=>x.classList.toggle('is-active',x===b));syncPhotoControls();$('#photoSourceInput').value='';$('#photoSourceStatus').textContent=currentPhotoDraft().fileName||'Ninguna imagen seleccionada';}));
   const photoSourceInput=$('#photoSourceInput');
@@ -11247,8 +11269,6 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
   }
 
   document.getElementById('openAuxMonitorsBtn')?.addEventListener('click',()=>{
-    const menu=document.getElementById('toolsMenu');
-    if(menu?.open)menu.close();
     fillAuxMonitorForm();
     document.getElementById('auxMonitorsDialog')?.showModal();
   });

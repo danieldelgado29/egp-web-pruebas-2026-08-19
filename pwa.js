@@ -15,7 +15,7 @@
     return;
   }
 
-  const APP_VERSION = "6.36.103";
+  const APP_VERSION = "6.36.104";
 
   /* EGP REPO PRUEBAS SIN SERVICE WORKER */
   const EGP_TEST_REPO =
@@ -101,7 +101,7 @@
 
             const isOurRootRegistration=
               reg.scope===new URL("./",location.origin+"/").href &&
-              script.endsWith("/service-worker-6.36.103.js");
+              /\/service-worker-6\.36\.(?:103|104)\.js$/.test(script);
 
             if(isOurRootRegistration){
               await reg.unregister();
@@ -111,7 +111,7 @@
       );
 
       const registration=await navigator.serviceWorker.register(
-        "./service-worker-6.36.103.js",
+        "./service-worker-6.36.104.js",
         {
           scope:"./panel.html",
           updateViaCache:"none"

@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 10,
-  "versionName": "1.9",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V1.9-HIBRIDA.apk",
-  "sha256": "9e50ee4864e9c340362957e06b342cc73e89f43117be099ab2b1797185f1a9b7",
-  "size": 28327816,
+  "versionCode": 11,
+  "versionName": "2.0",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.0-HIBRIDA-AUTO-PWA.apk",
+  "sha256": "cc17ad3cebdd3f8695ad911cc4df091a7095945de73ecf85e1bc450482306b79",
+  "size": 28338604,
   "mandatory": true,
-  "publishedAt": "2026-09-16T18:52:34Z",
-  "purpose": "V1.9 HYBRID: PWA exacta de main dentro del APK + motor nativo V1.6; produccion/Bridge/Core intactos",
-  "pwaSourceCommit": "be4a12a1e0d277d3748fb4395f29ea7335d75990"
+  "publishedAt": "2026-09-16T23:53:56Z",
+  "purpose": "V2.0 HYBRID: PWA exacta de main + auto-update PWA desde main + motor nativo V1.6; produccion/Bridge/Core intactos",
+  "pwaSourceCommit": "71339863f3ed1c07717bbda7b4f1c6834b94f3db"
 }

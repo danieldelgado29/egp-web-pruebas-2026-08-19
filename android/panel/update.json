@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 7,
-  "versionName": "1.6",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V1.6.apk",
-  "sha256": "6b71a61f3564c039027397ed7da27f8abcd0ee4806fb4f961a35980f9213b6ae",
-  "size": 277190,
+  "versionCode": 8,
+  "versionName": "1.7",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V1.7.apk",
+  "sha256": "013939a46b905aab2255e495f5563c6930e8777b3ef1de94113a44c68ac15eca",
+  "size": 1288213,
   "mandatory": true,
-  "publishedAt": "2026-09-16T17:42:17Z",
-  "purpose": "V1.6: logo Panel aprobado + actualizador sobre red celular validada"
+  "publishedAt": "2026-09-16T17:50:31Z",
+  "purpose": "V1.7: primer Panel nativo real con Control en vivo y cola Local Core"
 }

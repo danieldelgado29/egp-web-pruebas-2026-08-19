@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "packageName": "com.egp.redprobe",
+  "versionCode": 6,
+  "versionName": "1.5",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V1.5-AUTO-TEST.apk",
+  "sha256": "1f70c64f47ee37335e88ccf7ed36d7f4719ea42b96e7e6480228094babe9749f",
+  "size": 26740,
+  "mandatory": true,
+  "publishedAt": "2026-09-16T17:12:12Z",
+  "purpose": "V1.5 auto-test: probar que V1.4 se actualiza sin descargar ni instalar APK manualmente"
+}

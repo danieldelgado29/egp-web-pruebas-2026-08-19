@@ -3745,16 +3745,14 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
 
         if(
           panelAuthValid() &&
-          $('#panelLogin').hidden
+          $('#panelLogin').hidden &&
+          wasActuallyInShow
         ){
           closeDialogsForRemoteShowEnd();
           showConfig(false);
-
-          if(wasActuallyInShow){
-            toast(
-              'El show fue finalizado desde otro dispositivo.'
-            );
-          }
+          toast(
+            'El show fue finalizado desde otro dispositivo.'
+          );
         }
       }
       renderQueue();
@@ -12057,4 +12055,19 @@ function panelAuthValid(){return egpInstalledPwaContextV1() || $('#panelLogin')?
   }else{
     start();
   }
+})();
+
+/* EGP_IOS_SUBMENU_SAFE_CLASS_V1 */
+(function egpIOSSubmenuSafeClassV1(){
+  try{
+    const ua=String(navigator.userAgent||'');
+    const platform=String(navigator.platform||'');
+    const touch=Number(navigator.maxTouchPoints||0);
+    const isiOS=
+      /iPhone|iPad|iPod/i.test(ua) ||
+      (platform==='MacIntel' && touch>1);
+    if(isiOS){
+      document.documentElement.classList.add('egp-ios-submenu-safe');
+    }
+  }catch(_){}
 })();

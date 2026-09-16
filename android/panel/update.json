@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 8,
-  "versionName": "1.7",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V1.7.apk",
-  "sha256": "013939a46b905aab2255e495f5563c6930e8777b3ef1de94113a44c68ac15eca",
-  "size": 1288213,
+  "versionCode": 9,
+  "versionName": "1.8",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V1.8.apk",
+  "sha256": "f7497745a867a3a76c7bdd3ab5733e7227a6ebc95dbb43835d33c76b53daa60c",
+  "size": 1302324,
   "mandatory": true,
-  "publishedAt": "2026-09-16T17:50:31Z",
-  "purpose": "V1.7: primer Panel nativo real con Control en vivo y cola Local Core"
+  "publishedAt": "2026-09-16T18:26:59Z",
+  "purpose": "V1.8: replica nativa de Configuracion y Control en vivo PWA; config, show, repertorio y cola reales sobre Local Core"
 }

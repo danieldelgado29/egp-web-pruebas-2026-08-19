@@ -1,12 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 9,
-  "versionName": "1.8",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V1.8.apk",
-  "sha256": "f7497745a867a3a76c7bdd3ab5733e7227a6ebc95dbb43835d33c76b53daa60c",
-  "size": 1302324,
+  "versionCode": 10,
+  "versionName": "1.9",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V1.9-HIBRIDA.apk",
+  "sha256": "9e50ee4864e9c340362957e06b342cc73e89f43117be099ab2b1797185f1a9b7",
+  "size": 28327816,
   "mandatory": true,
-  "publishedAt": "2026-09-16T18:26:59Z",
-  "purpose": "V1.8: replica nativa de Configuracion y Control en vivo PWA; config, show, repertorio y cola reales sobre Local Core"
+  "publishedAt": "2026-09-16T18:52:34Z",
+  "purpose": "V1.9 HYBRID: PWA exacta de main dentro del APK + motor nativo V1.6; produccion/Bridge/Core intactos",
+  "pwaSourceCommit": "be4a12a1e0d277d3748fb4395f29ea7335d75990"
 }

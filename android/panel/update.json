@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 26,
-  "versionName": "3.5",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V3.5-HIBRIDA-UI24R-SIN-PARPADEO-AL-VOLVER-AUTO-PWA.apk",
-  "sha256": "01108ff39c915b43d3d2d2cc7506426b0ddd29ff3fb28983b1173491e589686f",
-  "size": 28348829,
+  "versionCode": 27,
+  "versionName": "3.6",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V3.6-HIBRIDA-PANTALLA-COMPLETA-VERSION-VISIBLE-AUTO-PWA.apk",
+  "sha256": "2a9161640dae4baaf6e14f394e2905a2837395eb8f5dddec35bb144d2f084357",
+  "size": 28349942,
   "mandatory": true,
-  "publishedAt": "2026-09-17T22:54:27Z",
-  "purpose": "V3.5 UI24R SIN PARPADEO AL VOLVER: conserva V3.4; evita falso OFFLINE al regresar de Ui24Activity sembrando redes actuales antes del primer tick y revalidando en background; produccion/Cloud Sync/Bridge/Core intactos",
+  "publishedAt": "2026-09-17T23:07:05Z",
+  "purpose": "V3.6 PANTALLA COMPLETA + VERSION VISIBLE: conserva V3.5; oculta status/navigation bars y elimina espacio reservado; muestra App v3.6 bajo Guardar configuracion y comenzar show; produccion/Cloud Sync/Bridge/Core intactos",
   "pwaSourceCommit": "810763901dc4d275fe5f74d2ea37bfef2864a699"
 }

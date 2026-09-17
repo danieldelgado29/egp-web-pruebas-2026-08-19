@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 25,
-  "versionName": "3.4",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V3.4-HIBRIDA-UI24R-BOTON-PANEL-PARIDAD-AUTO-PWA.apk",
-  "sha256": "38058795ce29669ec801e08f44c20762e1ae7b442ac0dde8f9ab9c9a8209af66",
-  "size": 28348231,
+  "versionCode": 26,
+  "versionName": "3.5",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V3.5-HIBRIDA-UI24R-SIN-PARPADEO-AL-VOLVER-AUTO-PWA.apk",
+  "sha256": "01108ff39c915b43d3d2d2cc7506426b0ddd29ff3fb28983b1173491e589686f",
+  "size": 28348829,
   "mandatory": true,
-  "publishedAt": "2026-09-17T22:18:15Z",
-  "purpose": "V3.4 UI24R BOTON PANEL PARIDAD: conserva V3.3; restaura forma/tamano/comportamiento del boton rojo PANEL y lo reencuadra siempre tras rotacion; produccion/Cloud Sync/Bridge/Core intactos",
+  "publishedAt": "2026-09-17T22:54:27Z",
+  "purpose": "V3.5 UI24R SIN PARPADEO AL VOLVER: conserva V3.4; evita falso OFFLINE al regresar de Ui24Activity sembrando redes actuales antes del primer tick y revalidando en background; produccion/Cloud Sync/Bridge/Core intactos",
   "pwaSourceCommit": "810763901dc4d275fe5f74d2ea37bfef2864a699"
 }

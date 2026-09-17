@@ -1,0 +1,9 @@
+EGP PWA AUTOUPDATE TEST V2.2
+
+Archivo marcador sin efecto funcional ni visual.
+Su única finalidad es crear un commit nuevo en main para comprobar que
+la app Android V2.2 detecta el cambio, descarga una copia privada validada
+y la aplica al volver a abrir Panel.
+
+Creado: 2026-09-16 19:30:06 -0500
+Base anterior: 71339863f3ed1c07717bbda7b4f1c6834b94f3db

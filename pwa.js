@@ -1,6 +1,23 @@
 (() => {
   "use strict";
 
+  /* EGP_PANEL_HIDE_EXIT_X_V1
+   * Solo oculta las dos X de salida del Panel.
+   * No elimina elementos, listeners ni lógica existente.
+   */
+  const hidePanelExitXs=()=>{
+    ["exitPanelBtn","closePanelBtn"].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.style.setProperty("display","none","important");
+    });
+  };
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",hidePanelExitXs,{once:true});
+  }else{
+    hidePanelExitXs();
+  }
+
+
   /* EGP DEV LOCAL — PWA DESACTIVADA */
   if (location.hostname === "localhost" ||
       location.hostname === "127.0.0.1") {

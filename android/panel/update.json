@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 20,
-  "versionName": "2.9",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.9-HIBRIDA-UI24R-IP-DIRECTA-AUTO-PWA.apk",
-  "sha256": "8f6dafb22250126aae177311e8c91e92fb2bb8cec5b700b758b2decc8171fa25",
-  "size": 28342597,
+  "versionCode": 21,
+  "versionName": "3.0",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V3.0-HIBRIDA-UI24R-WEBVIEW-DEDICADO-AUTO-PWA.apk",
+  "sha256": "fbab9144aa576726edbbb2631507af51f9bc77a92f64cecf9d4759c19d1a6578",
+  "size": 28345610,
   "mandatory": true,
-  "publishedAt": "2026-09-17T17:35:33Z",
-  "purpose": "V2.9 UI24R IP DIRECTA: copia privada Android reescribe SOLO iframe mixer a http://10.10.10.10/mixer.html tras bind Wi-Fi EGP; sin Caddy/DNS ni proxy Java; producción/Cloud Sync/Bridge/Core intactos",
+  "publishedAt": "2026-09-17T18:17:55Z",
+  "purpose": "V3.0 UI24R WEBVIEW DEDICADO: Ui24R vive en Activity/proceso separado enlazado a Wi-Fi EGP, WebView directo a 10.10.10.10; Panel conserva su proceso/ruta; sin iframe/Caddy/proxy Java; producción/Cloud Sync/Bridge/Core intactos",
   "pwaSourceCommit": "12a03708af6f84ed5962efad15d2e5a32c6c5a08"
 }

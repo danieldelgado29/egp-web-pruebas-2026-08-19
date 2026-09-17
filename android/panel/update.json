@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 12,
-  "versionName": "2.1",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.1-HIBRIDA-SAFEAREA-AUTO-PWA.apk",
-  "sha256": "a54860f0a339edf0a2358b7380665ea7782ab22d844098537bf8c65ed47efc6a",
-  "size": 28339284,
+  "versionCode": 13,
+  "versionName": "2.2",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.2-HIBRIDA-VISUAL-PARITY-AUTO-PWA.apk",
+  "sha256": "68372c2d13208facb1c11675ecec0dbcff3821a24d5a44d17a58b0b842a1ed55",
+  "size": 28339725,
   "mandatory": true,
-  "publishedAt": "2026-09-17T00:07:22Z",
-  "purpose": "V2.1 HYBRID: PWA exacta de main + safe-area Android + auto-update PWA desde main + motor nativo V1.6; produccion/Bridge/Core intactos",
+  "publishedAt": "2026-09-17T00:19:22Z",
+  "purpose": "V2.2 HYBRID: PWA exacta de main + safe-area Android + paridad visual WebView sin tap-highlight + auto-update PWA + motor nativo V1.6; produccion/Bridge/Core intactos",
   "pwaSourceCommit": "71339863f3ed1c07717bbda7b4f1c6834b94f3db"
 }

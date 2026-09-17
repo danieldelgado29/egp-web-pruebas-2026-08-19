@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 18,
-  "versionName": "2.7",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.7-HIBRIDA-UI24R-DIRECTA-WIFI-AUTO-PWA.apk",
-  "sha256": "14cbfaef185c582450164856399be3659a74df8955277b08988b1e8072a47d97",
-  "size": 28342037,
+  "versionCode": 19,
+  "versionName": "2.8",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.8-HIBRIDA-UI24R-DIRECTA-WIFI-AUTO-PWA.apk",
+  "sha256": "5b0ecb10a797b4c0e15f903649d05075001917f88f402cd276c0d6c980bf0e0b",
+  "size": 28342155,
   "mandatory": true,
-  "publishedAt": "2026-09-17T17:05:01Z",
-  "purpose": "V2.7 UI24R DIRECTA WIFI: mixer/WebSocket por WebView directo tras bind Wi-Fi; sin proxy Java por recurso; conserva fluidez/sync web; produccion/Cloud Sync/Bridge/Core intactos",
+  "publishedAt": "2026-09-17T17:13:29Z",
+  "purpose": "V2.8 UI24R SIN BLOQUEO HEALTH: botón accionable en Android; al tocar enlaza WebView a Wi-Fi EGP y abre mixer directo; sin proxy Java por recurso; producción/Cloud Sync/Bridge/Core intactos",
   "pwaSourceCommit": "12a03708af6f84ed5962efad15d2e5a32c6c5a08"
 }

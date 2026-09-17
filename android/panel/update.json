@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 16,
-  "versionName": "2.5",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.5-HIBRIDA-ROTACION-UI24R-NOBLOCK-AUTO-PWA.apk",
-  "sha256": "26cbea3981a3944320a3cf5e8e01ed6fe735efe50eab31a35792fcfba7626f43",
-  "size": 28341240,
+  "versionCode": 17,
+  "versionName": "2.6",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.6-HIBRIDA-UI24R-RUTA-SELECTIVA-AUTO-PWA.apk",
+  "sha256": "a1a96292034f3ed2d9215893b1f48ef68b27f55d87cfdfd404227fd679b278e0",
+  "size": 28341804,
   "mandatory": true,
-  "publishedAt": "2026-09-17T16:10:10Z",
-  "purpose": "V2.5 ROTACION+UI24R NOBLOCK: conserva fluidez V2.4; elimina relayout/observer global en giro; health Ui24R cacheado por worker sin red en hilo JS; produccion/Cloud Sync/Bridge/Core intactos",
+  "publishedAt": "2026-09-17T16:36:27Z",
+  "purpose": "V2.6 UI24R RUTA SELECTIVA: conserva fluidez V2.5; ui.elenagirjoaba.com GET/HEAD por Wi-Fi nativa fuera del hilo UI; sin interceptor sincrono 8790; produccion/Cloud Sync/Bridge/Core intactos",
   "pwaSourceCommit": "12a03708af6f84ed5962efad15d2e5a32c6c5a08"
 }

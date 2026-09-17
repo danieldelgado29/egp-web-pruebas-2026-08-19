@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 23,
-  "versionName": "3.2",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V3.2-HIBRIDA-UI24R-VISTA-LIMPIA-AUTO-PWA.apk",
-  "sha256": "322437f122d1b30e2d2db9e1e80da94518103cc22d972b8bccdfae6ba026c702",
-  "size": 28346141,
+  "versionCode": 24,
+  "versionName": "3.3",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V3.3-HIBRIDA-UI24R-ESTADO-REAL-AUTO-PWA.apk",
+  "sha256": "d75bca118234f88426bfa5895c301b626870518c3035ea0c7b82e4fc1e4abe7d",
+  "size": 28346347,
   "mandatory": true,
-  "publishedAt": "2026-09-17T19:48:32Z",
-  "purpose": "V3.2 UI24R VISTA LIMPIA: conserva WebView dedicado multiproceso V3.1; elimina barra superior/reintentar; mixer ocupa área útil y PANEL vuelve a ser flotante/movible; producción/Cloud Sync/Bridge/Core intactos",
+  "publishedAt": "2026-09-17T20:44:38Z",
+  "purpose": "V3.3 UI24R ESTADO REAL: conserva V3.2; botón gris/inactivo si probe nativo cacheado a 10.10.10.10:80 falla y azul/activo si responde; sin red síncrona JS; producción/Cloud Sync/Bridge/Core intactos",
   "pwaSourceCommit": "12a03708af6f84ed5962efad15d2e5a32c6c5a08"
 }

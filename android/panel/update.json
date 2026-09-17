@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 22,
-  "versionName": "3.1",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V3.1-HIBRIDA-UI24R-WEBVIEW-PROCESO-FIX-AUTO-PWA.apk",
-  "sha256": "d6931e872dd2c0272f1a6ee5d022c2399eca92efb8e6e367f2032df87c887cb1",
-  "size": 28345676,
+  "versionCode": 23,
+  "versionName": "3.2",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V3.2-HIBRIDA-UI24R-VISTA-LIMPIA-AUTO-PWA.apk",
+  "sha256": "322437f122d1b30e2d2db9e1e80da94518103cc22d972b8bccdfae6ba026c702",
+  "size": 28346141,
   "mandatory": true,
-  "publishedAt": "2026-09-17T19:33:26Z",
-  "purpose": "V3.1 UI24R WEBVIEW MULTIPROCESS FIX: asigna data directory WebView exclusivo al proceso :ui24r antes de crear el mixer; conserva Activity separada + Wi-Fi EGP + 10.10.10.10; producción/Cloud Sync/Bridge/Core intactos",
+  "publishedAt": "2026-09-17T19:48:32Z",
+  "purpose": "V3.2 UI24R VISTA LIMPIA: conserva WebView dedicado multiproceso V3.1; elimina barra superior/reintentar; mixer ocupa área útil y PANEL vuelve a ser flotante/movible; producción/Cloud Sync/Bridge/Core intactos",
   "pwaSourceCommit": "12a03708af6f84ed5962efad15d2e5a32c6c5a08"
 }

@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 15,
-  "versionName": "2.4",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.4-HIBRIDA-FLUIDEZ-HOTFIX-AUTO-PWA.apk",
-  "sha256": "b7291fc5f4d7465d126f8c7f9b8a8c10bbfc8f615c87d3f963d5d5381a7b0e8a",
-  "size": 28340667,
+  "versionCode": 16,
+  "versionName": "2.5",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.5-HIBRIDA-ROTACION-UI24R-NOBLOCK-AUTO-PWA.apk",
+  "sha256": "26cbea3981a3944320a3cf5e8e01ed6fe735efe50eab31a35792fcfba7626f43",
+  "size": 28341240,
   "mandatory": true,
-  "publishedAt": "2026-09-17T15:28:34Z",
-  "purpose": "V2.4 HOTFIX FLUIDEZ: conserva PWA exacta + sin login + rotacion estable + DEVICE_ID; revierte el interceptado LAN sincrono ampliado de V2.3; produccion/Cloud Sync/Bridge/Core intactos",
+  "publishedAt": "2026-09-17T16:10:10Z",
+  "purpose": "V2.5 ROTACION+UI24R NOBLOCK: conserva fluidez V2.4; elimina relayout/observer global en giro; health Ui24R cacheado por worker sin red en hilo JS; produccion/Cloud Sync/Bridge/Core intactos",
   "pwaSourceCommit": "12a03708af6f84ed5962efad15d2e5a32c6c5a08"
 }

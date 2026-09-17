@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 17,
-  "versionName": "2.6",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.6-HIBRIDA-UI24R-RUTA-SELECTIVA-AUTO-PWA.apk",
-  "sha256": "a1a96292034f3ed2d9215893b1f48ef68b27f55d87cfdfd404227fd679b278e0",
-  "size": 28341804,
+  "versionCode": 18,
+  "versionName": "2.7",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.7-HIBRIDA-UI24R-DIRECTA-WIFI-AUTO-PWA.apk",
+  "sha256": "14cbfaef185c582450164856399be3659a74df8955277b08988b1e8072a47d97",
+  "size": 28342037,
   "mandatory": true,
-  "publishedAt": "2026-09-17T16:36:27Z",
-  "purpose": "V2.6 UI24R RUTA SELECTIVA: conserva fluidez V2.5; ui.elenagirjoaba.com GET/HEAD por Wi-Fi nativa fuera del hilo UI; sin interceptor sincrono 8790; produccion/Cloud Sync/Bridge/Core intactos",
+  "publishedAt": "2026-09-17T17:05:01Z",
+  "purpose": "V2.7 UI24R DIRECTA WIFI: mixer/WebSocket por WebView directo tras bind Wi-Fi; sin proxy Java por recurso; conserva fluidez/sync web; produccion/Cloud Sync/Bridge/Core intactos",
   "pwaSourceCommit": "12a03708af6f84ed5962efad15d2e5a32c6c5a08"
 }

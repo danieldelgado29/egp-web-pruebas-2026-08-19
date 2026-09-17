@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 14,
-  "versionName": "2.3",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.3-HIBRIDA-RUNTIME-PARITY-AUTO-PWA.apk",
-  "sha256": "d69031ed5750b3a6aac12b9c32f509a858175b2917e6bd74915d85acb5294186",
-  "size": 28342036,
+  "versionCode": 15,
+  "versionName": "2.4",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V2.4-HIBRIDA-FLUIDEZ-HOTFIX-AUTO-PWA.apk",
+  "sha256": "b7291fc5f4d7465d126f8c7f9b8a8c10bbfc8f615c87d3f963d5d5381a7b0e8a",
+  "size": 28340667,
   "mandatory": true,
-  "publishedAt": "2026-09-17T02:08:59Z",
-  "purpose": "V2.3 HYBRID: PWA exacta + sin login + rotacion sin recarga + DEVICE_ID estable + Core 8788/Requests 8790/Ui24R por Wi-Fi nativa + auto-update PWA; produccion/Cloud Sync/Bridge/Core intactos",
+  "publishedAt": "2026-09-17T15:28:34Z",
+  "purpose": "V2.4 HOTFIX FLUIDEZ: conserva PWA exacta + sin login + rotacion estable + DEVICE_ID; revierte el interceptado LAN sincrono ampliado de V2.3; produccion/Cloud Sync/Bridge/Core intactos",
   "pwaSourceCommit": "12a03708af6f84ed5962efad15d2e5a32c6c5a08"
 }

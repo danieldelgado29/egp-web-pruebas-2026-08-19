@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "packageName": "com.egp.redprobe",
-  "versionCode": 27,
-  "versionName": "3.6",
-  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V3.6-HIBRIDA-PANTALLA-COMPLETA-VERSION-VISIBLE-AUTO-PWA.apk",
-  "sha256": "2a9161640dae4baaf6e14f394e2905a2837395eb8f5dddec35bb144d2f084357",
-  "size": 28349942,
+  "versionCode": 28,
+  "versionName": "3.7",
+  "apkUrl": "https://raw.githubusercontent.com/danieldelgado29/egp-web-pruebas-2026-08-19/egp-native-android-updates/android/panel/EGP-PANEL-ANDROID-RED-V3.7-HIBRIDA-CORE-AUTORIDAD-SIN-RELAY-DISPOSITIVO-AUTO-PWA.apk",
+  "sha256": "b9e786fd39df13e9594f4086186044a46183ca2dcb90b9254727a5bd43a2641a",
+  "size": 28350231,
   "mandatory": true,
-  "publishedAt": "2026-09-17T23:07:05Z",
-  "purpose": "V3.6 PANTALLA COMPLETA + VERSION VISIBLE: conserva V3.5; oculta status/navigation bars y elimina espacio reservado; muestra App v3.6 bajo Guardar configuracion y comenzar show; produccion/Cloud Sync/Bridge/Core intactos",
+  "publishedAt": "2026-09-19T14:22:38Z",
+  "purpose": "V3.7 CORE AUTORIDAD: conserva V3.6; desactiva SOLO el relay periodico Core->Firebase dentro de la PWA privada Android; Cloud Sync queda como unico mediador cuando Core esta vivo; failover Firebase se conserva si Core cae; Ui24R/fullscreen/red intactos",
   "pwaSourceCommit": "810763901dc4d275fe5f74d2ea37bfef2864a699"
 }
